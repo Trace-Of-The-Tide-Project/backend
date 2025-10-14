@@ -1,63 +1,63 @@
-// app.module.ts
-import { Module } from '@nestjs/common';
-import { SequelizeModule } from '@nestjs/sequelize';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 
-// feature modules
+// 🧩 Modules
+import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { RolesModule } from './roles/roles.module';
 import { ContributionsModule } from './contributions/contributions.module';
 import { FilesModule } from './files/files.module';
 import { CollectionsModule } from './collections/collections.module';
-
-// models
-import { User } from './users/models/user.model';
-import { Role } from './roles/models/role.model';
-import { UserRole } from './users/models/user-role.model';
-import { UserProfile } from './users/models/user-profile.model';
-import { Contribution } from './contributions/models/contribution.model';
-import { CollectionContribution } from './collections/models/collection-contribution.model';
-import { File } from './files/models/file.model';
-import { ContributionType } from './contributions/models/contribution-type.model';
-import { Collection } from './collections/models/collection.model';
-
+import { OpenCallsModule } from './open call/open-call.module';
+import { DiscussionsModule } from './discussions/discussions.module';
+import { CommentsModule } from './comments/comments.module';
+import { ReactionsModule } from './reactions/reactions.module';
+import { GroupsModule } from './groups/groups.module';
+import { CollectivesModule } from './collectives/collectives.module';
+import { ReferencesModule } from './references/references.module';
+import { PartnersModule } from './partners/partners.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { LogsModule } from './logs/logs.module';
+import { DonationsModule } from './donations/donations.module';
+import { ModerationModule } from './moderation/moderation.module';
+import { AuditTrailsModule } from './audit-trails/audit-trails.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
-    SequelizeModule.forRoot({
-      dialect: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'hikaya_user',
-      password: '123456789**Sql',
-      database: 'hikaya_db',
-      models: [
-        User,
-        Role,
-        UserRole,
-        UserProfile,
-        Contribution,
-        CollectionContribution,
-        File,
-        ContributionType,
-        Collection
-      ],
-      autoLoadModels: true,
-      synchronize: true,
+    // 🌿 Load environment variables
+    ConfigModule.forRoot({ isGlobal: true }),
 
-      logging: console.log,
-    }),
-    SequelizeModule.forFeature([User, Role, UserRole]),
+    // 🧱 Database
+    DatabaseModule,
+
+    // 🚀 Feature Modules
     UsersModule,
     AuthModule,
     RolesModule,
     ContributionsModule,
     FilesModule,
     CollectionsModule,
-  ],
-  controllers: [],
-  providers: [
-    // Add any global providers here
+    OpenCallsModule,
+    DiscussionsModule,
+    CommentsModule,
+    ReactionsModule,
+    GroupsModule,
+    CollectivesModule,
+    ReferencesModule,
+    PartnersModule,
+    NotificationsModule,
+    DonationsModule,
+    LogsModule,
+    ModerationModule,
+    AuditTrailsModule,
+    TagsModule,
   ],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('*');
+  }
+}

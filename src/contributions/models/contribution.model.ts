@@ -7,12 +7,16 @@ import {
   BelongsTo,
   HasMany,
   BelongsToMany,
+  AfterUpdate,
+  AfterCreate,
+  AfterDestroy,
 } from 'sequelize-typescript';
 import { ContributionType } from './contribution-type.model';
 import { User } from '../../users/models/user.model';
 import { File } from '../../files/models/file.model';
 import { CollectionContribution } from '../../collections/models/collection-contribution.model';
 import { Collection } from 'src/collections/models/collection.model';
+import { ActivityLogger } from '../../common/utils/activity-logger';
 
 @Table({ tableName: 'contributions' })
 export class Contribution extends Model<Contribution> {
@@ -57,4 +61,23 @@ export class Contribution extends Model<Contribution> {
 
   @HasMany(() => CollectionContribution)
   declare collectionContributions: CollectionContribution[];
+
+  // 🪄 Sequelize Hooks
+  @AfterCreate
+  static async afterCreateHook(instance: Contribution) {
+    await ActivityLogger.logAction(instance.user_id, 'CREATE', 'Contribution', instance.id, instance);
+    await ActivityLogger.recordAudit(instance.user_id, 'CREATE', 'Contribution', instance.id, { created: instance });
+  }
+
+  @AfterUpdate
+  static async afterUpdateHook(instance: Contribution) {
+    await ActivityLogger.logAction(instance.user_id, 'UPDATE', 'Contribution', instance.id, instance);
+    await ActivityLogger.recordAudit(instance.user_id, 'UPDATE', 'Contribution', instance.id, { updated: instance });
+  }
+
+  @AfterDestroy
+  static async afterDestroyHook(instance: Contribution) {
+    await ActivityLogger.logAction(instance.user_id, 'DELETE', 'Contribution', instance.id, {});
+    await ActivityLogger.recordAudit(instance.user_id, 'DELETE', 'Contribution', instance.id, { deleted: true });
+  }
 }
