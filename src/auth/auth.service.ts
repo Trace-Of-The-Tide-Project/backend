@@ -10,13 +10,16 @@ import { UsersService } from '../users/users.service';
 import { User } from '../users/models/user.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Role } from '../roles/models/role.model';
+import { LoginDto } from './dto/login.dto';
+import { TokenService } from './token.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+    private tokenService: TokenService,
+  ) { }
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
@@ -33,26 +36,17 @@ export class AuthService {
     return result;
   }
 
-  async login(user: any) {
-    const foundUser = await this.validateUser(user.email, user.password);
-    if (!foundUser) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  async login(loginDto: LoginDto) {
+    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const roles = await this.usersService.getUserRoles(user.id);
+    const payload = { sub: user.id, email: user.email, roles };
 
-    const roles = await this.usersService.getUserRoles(foundUser.id);
-
-    if (!roles || roles.length === 0) {
-      throw new UnauthorizedException('User has no roles assigned');
-    }
-
-    const payload = { sub: foundUser.id, email: foundUser.email, roles };
-
-    if (!payload) {
-      throw new UnauthorizedException('Invalid payload');
-    }
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const refreshToken = await this.tokenService.createRefreshToken(user.id);
 
     return {
-      access_token: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: { id: user.id, email: user.email, roles },
     };
   }
@@ -117,4 +111,17 @@ export class AuthService {
       throw new BadRequestException('Invalid token');
     }
   }
+
+  async refreshAccessToken(refreshToken: string) {
+    const tokenRecord = await this.tokenService.verifyAndConsumeRefreshToken(refreshToken);
+    if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
+
+    const user = await this.usersService.findOne(tokenRecord.user_id);
+    const roles = await this.usersService.getUserRoles(user.id);
+    const payload = { sub: user.id, email: user.email, roles };
+
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    return { accessToken };
+  }
+
 }

@@ -10,7 +10,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
 import { CollectionContribution } from './collection-contribution.model';
-import { Contribution } from '../../contributions/models/contribution.model'
+import { Contribution } from '../../contributions/models/contribution.model';
 
 @Table({ tableName: 'collections' })
 export class Collection extends Model<Collection> {
@@ -42,7 +42,7 @@ export class Collection extends Model<Collection> {
 
   @BelongsToMany(() => Contribution, () => CollectionContribution)
   declare contributions: Contribution[];
-  
+
   @HasMany(() => CollectionContribution)
   declare collectionContributions: CollectionContribution[];
 }

@@ -65,19 +65,55 @@ export class Contribution extends Model<Contribution> {
   // 🪄 Sequelize Hooks
   @AfterCreate
   static async afterCreateHook(instance: Contribution) {
-    await ActivityLogger.logAction(instance.user_id, 'CREATE', 'Contribution', instance.id, instance);
-    await ActivityLogger.recordAudit(instance.user_id, 'CREATE', 'Contribution', instance.id, { created: instance });
+    await ActivityLogger.logAction(
+      instance.user_id,
+      'CREATE',
+      'Contribution',
+      instance.id,
+      instance,
+    );
+    await ActivityLogger.recordAudit(
+      instance.user_id,
+      'CREATE',
+      'Contribution',
+      instance.id,
+      { created: instance },
+    );
   }
 
   @AfterUpdate
   static async afterUpdateHook(instance: Contribution) {
-    await ActivityLogger.logAction(instance.user_id, 'UPDATE', 'Contribution', instance.id, instance);
-    await ActivityLogger.recordAudit(instance.user_id, 'UPDATE', 'Contribution', instance.id, { updated: instance });
+    await ActivityLogger.logAction(
+      instance.user_id,
+      'UPDATE',
+      'Contribution',
+      instance.id,
+      instance,
+    );
+    await ActivityLogger.recordAudit(
+      instance.user_id,
+      'UPDATE',
+      'Contribution',
+      instance.id,
+      { updated: instance },
+    );
   }
 
   @AfterDestroy
   static async afterDestroyHook(instance: Contribution) {
-    await ActivityLogger.logAction(instance.user_id, 'DELETE', 'Contribution', instance.id, {});
-    await ActivityLogger.recordAudit(instance.user_id, 'DELETE', 'Contribution', instance.id, { deleted: true });
+    await ActivityLogger.logAction(
+      instance.user_id,
+      'DELETE',
+      'Contribution',
+      instance.id,
+      {},
+    );
+    await ActivityLogger.recordAudit(
+      instance.user_id,
+      'DELETE',
+      'Contribution',
+      instance.id,
+      { deleted: true },
+    );
   }
 }

@@ -1,4 +1,11 @@
-import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  ForeignKey,
+  BelongsTo,
+} from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
 import { OpenCall } from './open-call.model';
 import { Contribution } from '../../contributions/models/contribution.model';

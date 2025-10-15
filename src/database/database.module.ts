@@ -3,7 +3,6 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import databaseConfig from './database.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
- 
 import { User } from '../users/models/user.model';
 import { Role } from '../roles/models/role.model';
 import { UserRole } from '../users/models/user-role.model';
@@ -39,6 +38,7 @@ import { ModerationLog } from '../moderation/models/moderation-log.model';
 import { AuditTrail } from '../audit-trails/models/audit-trail.model';
 import { Tag } from '../tags/models/tag.model';
 import { ContributionTag } from 'src/tags/models/contribution-tag.model';
+import { RefreshToken } from 'src/auth/models/refresh-tokens.model';
 
 @Module({
   imports: [
@@ -91,7 +91,8 @@ import { ContributionTag } from 'src/tags/models/contribution-tag.model';
           ModerationLog,
           AuditTrail,
           Tag,
-          ContributionTag
+          ContributionTag,
+          RefreshToken,
         ],
       }),
     }),

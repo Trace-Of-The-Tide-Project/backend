@@ -12,6 +12,7 @@ export class ModerationController {
 
   @Get()
   findAll() {
+    // تمرير object فاضي لتفادي خطأ ts(2554)
     return this.moderationService.findAll();
   }
 

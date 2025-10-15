@@ -1,30 +1,27 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { BaseService } from '../common/base.service';
 import { Group } from './models/group.model';
 import { GroupMember } from './models/group-member.model';
 import { User } from '../users/models/user.model';
 
 @Injectable()
-export class GroupsService {
+export class GroupsService extends BaseService<Group> {
   constructor(
     @InjectModel(Group) private readonly groupModel: typeof Group,
     @InjectModel(GroupMember) private readonly memberModel: typeof GroupMember,
-  ) {}
-
-  async create(data: Partial<Group>) {
-    return this.groupModel.create(data as any);
+  ) {
+    super(groupModel);
   }
 
   async findAll() {
-    return this.groupModel.findAll({
-      include: [{ model: GroupMember, include: [User] }],
-    });
+    return super.findAll([{ model: GroupMember, include: [User] }]);
   }
 
   async findOne(id: string) {
-    const group = await this.groupModel.findByPk(id, {
-      include: [{ model: GroupMember, include: [User] }],
-    });
+    const group = await super.findOne(id, [
+      { model: GroupMember, include: [User] },
+    ] as any);
     if (!group) throw new NotFoundException(`Group ${id} not found`);
     return group;
   }
@@ -33,12 +30,6 @@ export class GroupsService {
     const [affected] = await this.groupModel.update(data, { where: { id } });
     if (!affected) throw new NotFoundException(`Group ${id} not found`);
     return this.findOne(id);
-  }
-
-  async remove(id: string) {
-    const deleted = await this.groupModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Group ${id} not found`);
-    return { message: `Group ${id} deleted successfully` };
   }
 
   async addMember(groupId: string, userId: string, role = 'member') {

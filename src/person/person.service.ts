@@ -19,11 +19,15 @@ export class PersonService {
   }
 
   async findAllProfiles() {
-    return this.profileModel.findAll({ include: [BiographicalCard, LifeEvent, TimelineEvent] });
+    return this.profileModel.findAll({
+      include: [BiographicalCard, LifeEvent, TimelineEvent],
+    });
   }
 
   async findProfile(id: string) {
-    const profile = await this.profileModel.findByPk(id, { include: [BiographicalCard, LifeEvent, TimelineEvent] });
+    const profile = await this.profileModel.findByPk(id, {
+      include: [BiographicalCard, LifeEvent, TimelineEvent],
+    });
     if (!profile) throw new NotFoundException(`Profile ${id} not found`);
     return profile;
   }

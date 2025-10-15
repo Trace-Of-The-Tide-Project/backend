@@ -1,58 +1,28 @@
 import {
-  BadRequestException,
   Injectable,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
-import { CreateRoleDto } from './dto/create-role.dto';
-import { UpdateRoleDto } from './dto/update-role.dto';
+import { InjectModel } from '@nestjs/sequelize';
 import { Role } from './models/role.model';
 import { UserRole } from '../users/models/user-role.model';
-
-import { validate as isUUID } from 'uuid';
-import { Op } from 'sequelize';
+import { BaseService } from 'src/common/base.service';
 
 @Injectable()
-export class RolesService {
-  async create(createRoleDto: CreateRoleDto) {
-    const checkRole = await Role.findOne({
-      where: { name: createRoleDto.name },
-    });
-    if (checkRole) {
-      throw new Error('Role already exists');
-    }
-    return Role.create(createRoleDto as any);
+export class RolesService extends BaseService<Role> {
+  constructor(@InjectModel(Role) private readonly roleModel: typeof Role) {
+    super(roleModel);
   }
 
-  findAll() {
-    return Role.findAll();
+  async create(data: any) {
+    const existing = await this.model.findOne({ where: { name: data.name } });
+    if (existing) throw new BadRequestException('Role already exists');
+    return this.model.create(data);
   }
 
-  findOne(id: string) {
-    return Role.findOne({ where: { id } });
-  }
-
-  update(id: string, updateRoleDto: UpdateRoleDto) {
-    const checkRole = Role.findOne({ where: { id } });
-    if (!checkRole) {
-      throw new Error('Role not found');
-    }
-    return Role.update(updateRoleDto, { where: { id } });
-  }
-
-  remove(id: string) {
-    const checkRole = Role.findOne({ where: { id } });
-    if (!checkRole) {
-      throw new Error('Role not found');
-    }
-    return Role.destroy({ where: { id } });
-  }
-
-  // change role for user
   async assignRole(userId: string, roleName: string) {
-    const role = await Role.findOne({ where: { name: roleName } });
-    if (!role) {
-      throw new NotFoundException('Role not found');
-    }
+    const role = await this.model.findOne({ where: { name: roleName } });
+    if (!role) throw new NotFoundException('Role not found');
 
     await UserRole.destroy({ where: { user_id: userId } });
     await UserRole.create({ user_id: userId, role_id: role.id } as any);

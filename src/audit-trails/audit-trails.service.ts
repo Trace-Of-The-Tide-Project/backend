@@ -1,29 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { BaseService } from 'src/common/base.service';
 import { AuditTrail } from './models/audit-trail.model';
 import { User } from '../users/models/user.model';
 
 @Injectable()
-export class AuditTrailsService {
-  constructor(@InjectModel(AuditTrail) private readonly auditModel: typeof AuditTrail) {}
-
-  async create(data: Partial<AuditTrail>) {
-    return this.auditModel.create(data as any);
+export class AuditTrailsService extends BaseService<AuditTrail> {
+  constructor(
+    @InjectModel(AuditTrail)
+    private readonly auditModel: typeof AuditTrail,
+  ) {
+    super(auditModel);
   }
 
-  async findAll() {
-    return this.auditModel.findAll({ include: [User], order: [['timestamp', 'DESC']] });
+  async findAll(query?: any) {
+    return super.findAll(query, {
+      include: [User],
+      order: [['timestamp', 'DESC']],
+    });
   }
 
   async findOne(id: string) {
-    const audit = await this.auditModel.findByPk(id, { include: [User] });
-    if (!audit) throw new NotFoundException(`Audit ${id} not found`);
-    return audit;
-  }
-
-  async remove(id: string) {
-    const deleted = await this.auditModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Audit ${id} not found`);
-    return { message: `Audit ${id} deleted successfully` };
+    return super.findOne(id, [User] as any);
   }
 }

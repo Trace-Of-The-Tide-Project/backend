@@ -4,73 +4,88 @@ import { Book } from './models/book.model';
 import { KnowledgeArticle } from './models/knowledge-article.model';
 import { Adventure } from './models/adventure.model';
 import { Location } from './models/location.model';
+import { BaseService } from 'src/common/base.service';
 
 @Injectable()
 export class KnowledgeService {
-    constructor(
-        @InjectModel(Book) private readonly bookModel: typeof Book,
-        @InjectModel(KnowledgeArticle) private readonly articleModel: typeof KnowledgeArticle,
-        @InjectModel(Adventure) private readonly adventureModel: typeof Adventure,
-        @InjectModel(Location) private readonly locationModel: typeof Location,
-    ) { }
+  private bookBase: BaseService;
+  private articleBase: BaseService;
+  private adventureBase: BaseService;
+  private locationBase: BaseService;
 
-    // ----------- BOOKS ------------
-    async createBook(data: Partial<Book>) {
-        return this.bookModel.create(data as any);
-    }
+  constructor(
+    @InjectModel(Book) private readonly bookModel: typeof Book,
+    @InjectModel(KnowledgeArticle)
+    private readonly articleModel: typeof KnowledgeArticle,
+    @InjectModel(Adventure) private readonly adventureModel: typeof Adventure,
+    @InjectModel(Location) private readonly locationModel: typeof Location,
+  ) {
+    this.bookBase = new BaseService(this.bookModel);
+    this.articleBase = new BaseService(this.articleModel);
+    this.adventureBase = new BaseService(this.adventureModel);
+    this.locationBase = new BaseService(this.locationModel);
+  }
 
-    async findAllBooks() {
-        return this.bookModel.findAll();
-    }
+  // ----------- BOOKS ------------
+  async createBook(data: Partial<Book>) {
+    return this.bookBase.create(data);
+  }
 
-    async findBookById(id: string) {
-        const book = await this.bookModel.findByPk(id);
-        if (!book) throw new NotFoundException(`Book ${id} not found`);
-        return book;
-    }
+  async findAllBooks(query: any = {}) {
+    return this.bookBase.findAll(query, {
+      searchableFields: ['title', 'author'],
+    });
+  }
 
-    async updateBook(id: string, data: any) {
-        const [updated] = await this.bookModel.update(data, { where: { id } });
-        if (!updated) throw new NotFoundException(`Book ${id} not found`);
-        return this.findBookById(id);
-    }
+  async findBookById(id: string) {
+    return this.bookBase.findOne(id);
+  }
 
-    async deleteBook(id: string) {
-        const deleted = await this.bookModel.destroy({ where: { id } });
-        if (!deleted) throw new NotFoundException(`Book ${id} not found`);
-        return { message: `Book ${id} deleted successfully` };
-    }
+  async updateBook(id: string, data: any) {
+    return this.bookBase.update(id, data);
+  }
 
-    // ----------- ARTICLES ------------
-    async createArticle(data: Partial<KnowledgeArticle>) {
-        return this.articleModel.create(data as any);
-    }
+  async deleteBook(id: string) {
+    return this.bookBase.remove(id);
+  }
 
-    async findAllArticles() {
-        return this.articleModel.findAll();
-    }
+  // ----------- ARTICLES ------------
+  async createArticle(data: Partial<KnowledgeArticle>) {
+    return this.articleBase.create(data);
+  }
 
-    async findArticleById(id: string) {
-        const article = await this.articleModel.findByPk(id);
-        if (!article) throw new NotFoundException(`Article ${id} not found`);
-        return article;
-    }
+  async findAllArticles(query: any = {}) {
+    return this.articleBase.findAll(query, {
+      searchableFields: ['title', 'summary'],
+    });
+  }
 
-    // ----------- ADVENTURES ------------
-    async createAdventure(data: Partial<Adventure>) {
-        return this.adventureModel.create(data as any);
-    }
+  async findArticleById(id: string) {
+    return this.articleBase.findOne(id);
+  }
 
-    async findAllAdventures() {
-        return this.adventureModel.findAll({ include: [Location] });
-    }
+  // ----------- ADVENTURES ------------
+  async createAdventure(data: Partial<Adventure>) {
+    return this.adventureBase.create(data);
+  }
 
-    // ----------- LOCATIONS ------------
-    async createLocation(data: Partial<Location>) {
-        return this.locationModel.create(data as any);
-    }
+  async findAllAdventures(query: any = {}) {
+    return this.adventureBase.findAll(query, {
+      include: [Location],
+      searchableFields: ['title', 'description'],
+      // example order by createdAt descending by default if no sortBy
+      order: [['createdAt', 'DESC']],
+    });
+  }
 
-    async findAllLocations() {
-        return this.locationModel.findAll();
-    }
+  // ----------- LOCATIONS ------------
+  async createLocation(data: Partial<Location>) {
+    return this.locationBase.create(data);
+  }
+
+  async findAllLocations(query: any = {}) {
+    return this.locationBase.findAll(query, {
+      searchableFields: ['name', 'address'],
+    });
+  }
 }

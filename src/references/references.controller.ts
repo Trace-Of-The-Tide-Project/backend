@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { ReferencesService } from './references.service';
 
 @Controller('references')
@@ -11,8 +20,10 @@ export class ReferencesController {
   }
 
   @Get()
-  findAll() {
-    return this.referencesService.findAll();
+  findAll(@Query() query: any) {
+    return this.referencesService.findAll(query, {
+      searchableFields: ['title', 'author'],
+    });
   }
 
   @Get(':id')

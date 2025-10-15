@@ -1,10 +1,23 @@
-import { Controller, Post, Body, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseGuards,
+  Req,
+  Get,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-// import { JwtAuthGuard } from './jwt-auth.guard';
+import { TokenService } from './token.service';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly tokenService: TokenService,
+  ) { }
+
 
   // --- Signup ---
   @Post('signup')
@@ -39,4 +52,11 @@ export class AuthController {
   async logout(@Req() req) {
     return this.authService.logout(req.user);
   }
+
+  @Post('refresh-token')
+async refreshToken(@Body('refreshToken') refreshToken: string) {
+  return this.authService.refreshAccessToken(refreshToken);
+}
+
+
 }

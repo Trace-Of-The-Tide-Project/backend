@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { PartnersService } from './partners.service';
 
 @Controller('partners')
@@ -11,8 +19,8 @@ export class PartnersController {
   }
 
   @Get()
-  findAll() {
-    return this.partnersService.findAll();
+  findAll(@Query() query: any) {
+    return this.partnersService.findAll(query);
   }
 
   @Get(':id')

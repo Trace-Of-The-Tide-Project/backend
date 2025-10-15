@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { OpenCallsService } from './open-call.service';
 
 @Controller('open-calls')
@@ -6,13 +6,13 @@ export class OpenCallsController {
   constructor(private readonly openCallsService: OpenCallsService) {}
 
   @Post()
-  createOpenCall(@Body() body: any) {
+  create(@Body() body: any) {
     return this.openCallsService.createOpenCall(body);
   }
 
   @Get()
-  findAll() {
-    return this.openCallsService.findAllOpenCalls();
+  findAll(@Query() query: any) {
+    return this.openCallsService.findAllOpenCalls(query);
   }
 
   @Get(':id')

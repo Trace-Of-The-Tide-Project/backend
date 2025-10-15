@@ -1,56 +1,80 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Patch,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { KnowledgeService } from './knowledge.service';
 
 @Controller('knowledge')
 export class KnowledgeController {
-    constructor(private readonly knowledgeService: KnowledgeService) { }
+  constructor(private readonly knowledgeService: KnowledgeService) {}
 
-    // -------- BOOKS --------
-    @Post('books')
-    createBook(@Body() body: any) {
-        return this.knowledgeService.createBook(body);
-    }
+  // -------- BOOKS --------
+  @Post('books')
+  createBook(@Body() body: any) {
+    return this.knowledgeService.createBook(body);
+  }
 
-    @Get('books')
-    findAllBooks() {
-        return this.knowledgeService.findAllBooks();
-    }
+  @Get('books')
+  findAllBooks(@Query() query: any) {
+    return this.knowledgeService.findAllBooks(query);
+  }
 
-    @Get('books/:id')
-    findBookById(@Param('id') id: string) {
-        return this.knowledgeService.findBookById(id);
-    }
+  @Get('books/:id')
+  findBookById(@Param('id') id: string) {
+    return this.knowledgeService.findBookById(id);
+  }
 
-    // -------- ARTICLES --------
-    @Post('articles')
-    createArticle(@Body() body: any) {
-        return this.knowledgeService.createArticle(body);
-    }
+  @Patch('books/:id')
+  updateBook(@Param('id') id: string, @Body() body: any) {
+    return this.knowledgeService.updateBook(id, body);
+  }
 
-    @Get('articles')
-    findAllArticles() {
-        return this.knowledgeService.findAllArticles();
-    }
+  @Delete('books/:id')
+  deleteBook(@Param('id') id: string) {
+    return this.knowledgeService.deleteBook(id);
+  }
 
-    // -------- ADVENTURES --------
-    @Post('adventures')
-    createAdventure(@Body() body: any) {
-        return this.knowledgeService.createAdventure(body);
-    }
+  // -------- ARTICLES --------
+  @Post('articles')
+  createArticle(@Body() body: any) {
+    return this.knowledgeService.createArticle(body);
+  }
 
-    @Get('adventures')
-    findAllAdventures() {
-        return this.knowledgeService.findAllAdventures();
-    }
+  @Get('articles')
+  findAllArticles(@Query() query: any) {
+    return this.knowledgeService.findAllArticles(query);
+  }
 
-    // -------- LOCATIONS --------
-    @Post('locations')
-    createLocation(@Body() body: any) {
-        return this.knowledgeService.createLocation(body);
-    }
+  @Get('articles/:id')
+  findArticleById(@Param('id') id: string) {
+    return this.knowledgeService.findArticleById(id);
+  }
 
-    @Get('locations')
-    findAllLocations() {
-        return this.knowledgeService.findAllLocations();
-    }
+  // -------- ADVENTURES --------
+  @Post('adventures')
+  createAdventure(@Body() body: any) {
+    return this.knowledgeService.createAdventure(body);
+  }
+
+  @Get('adventures')
+  findAllAdventures(@Query() query: any) {
+    return this.knowledgeService.findAllAdventures(query);
+  }
+
+  // -------- LOCATIONS --------
+  @Post('locations')
+  createLocation(@Body() body: any) {
+    return this.knowledgeService.createLocation(body);
+  }
+
+  @Get('locations')
+  findAllLocations(@Query() query: any) {
+    return this.knowledgeService.findAllLocations(query);
+  }
 }

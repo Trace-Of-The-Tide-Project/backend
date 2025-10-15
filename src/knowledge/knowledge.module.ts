@@ -8,7 +8,9 @@ import { Adventure } from './models/adventure.model';
 import { Location } from './models/location.model';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Book, KnowledgeArticle, Adventure, Location])],
+  imports: [
+    SequelizeModule.forFeature([Book, KnowledgeArticle, Adventure, Location]),
+  ],
   controllers: [KnowledgeController],
   providers: [KnowledgeService],
   exports: [KnowledgeService],

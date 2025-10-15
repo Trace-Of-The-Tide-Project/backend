@@ -1,44 +1,34 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { BaseService } from '../common/base.service';
 import { Collective } from './models/collective.model';
 import { CollectiveMember } from './models/collective-member.model';
 import { User } from '../users/models/user.model';
 
 @Injectable()
-export class CollectivesService {
+export class CollectivesService extends BaseService<Collective> {
   constructor(
-    @InjectModel(Collective) private readonly collectiveModel: typeof Collective,
-    @InjectModel(CollectiveMember) private readonly memberModel: typeof CollectiveMember,
-  ) {}
+    @InjectModel(Collective)
+    private readonly collectiveModel: typeof Collective,
 
-  async create(data: Partial<Collective>) {
-    return this.collectiveModel.create(data as any);
+    @InjectModel(CollectiveMember)
+    private readonly memberModel: typeof CollectiveMember,
+  ) {
+    super(collectiveModel);
   }
 
-  async findAll() {
-    return this.collectiveModel.findAll({
+  async findAll(query: any = {}) {
+    return super.findAll(query, {
       include: [{ model: CollectiveMember, include: [User] }],
+      searchableFields: ['name', 'description'],
+      order: [['created_at', 'DESC']],
     });
   }
 
   async findOne(id: string) {
-    const collective = await this.collectiveModel.findByPk(id, {
+    return super.findOne(id, {
       include: [{ model: CollectiveMember, include: [User] }],
     });
-    if (!collective) throw new NotFoundException(`Collective ${id} not found`);
-    return collective;
-  }
-
-  async update(id: string, data: any) {
-    const [affected] = await this.collectiveModel.update(data, { where: { id } });
-    if (!affected) throw new NotFoundException(`Collective ${id} not found`);
-    return this.findOne(id);
-  }
-
-  async remove(id: string) {
-    const deleted = await this.collectiveModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Collective ${id} not found`);
-    return { message: `Collective ${id} deleted successfully` };
   }
 
   async addMember(collectiveId: string, userId: string, role = 'member') {
@@ -47,6 +37,6 @@ export class CollectivesService {
       user_id: userId,
       role,
       joined_at: new Date(),
-    } as any );
+    } as any);
   }
 }

@@ -1,47 +1,33 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Reaction } from './models/reaction.model';
-import { User } from '../users/models/user.model';
-import { Comment } from '../comments/models/comment.model';
+import { BaseService } from 'src/common/base.service';
 
 @Injectable()
-export class ReactionsService {
+export class ReactionsService extends BaseService<Reaction> {
   constructor(
-    @InjectModel(Reaction) private readonly reactionModel: typeof Reaction
-  ) {}
-
-  async create(data: Partial<Reaction>): Promise<Reaction> {
-    return this.reactionModel.create(data as any);
+    @InjectModel(Reaction) private readonly reactionModel: typeof Reaction,
+  ) {
+    super(reactionModel);
   }
-  
-  async findAll() {
-    const reactions = await this.reactionModel.findAll({
-      include: [User, Comment],
+
+  async findAll(
+    query: any,
+    options?: { searchableFields?: string[]; include?: any[] },
+  ) {
+    const { rows, meta } = await super.findAll(query, {
+      searchableFields: ['type'],
+      include: ['user', 'comment'],
     });
-    return {
-      status: 200,
-      results: reactions.length,
-      data: reactions,
-    };
+
+    return { rows, meta };
   }
 
-  async findOne(id: string): Promise<Reaction> {
-    const reaction = await this.reactionModel.findByPk(id, {
-      include: [User, Comment],
+  async findOne(id: string) {
+    const reaction = await this.model.findByPk(id, {
+      include: ['user', 'comment'],
     });
     if (!reaction) throw new NotFoundException(`Reaction ${id} not found`);
     return reaction;
-  }
-
-  async update(id: string, data: Partial<Reaction>): Promise<Reaction> {
-    const [affected] = await this.reactionModel.update(data, { where: { id } });
-    if (!affected) throw new NotFoundException(`Reaction ${id} not found`);
-    return this.findOne(id);
-  }
-
-  async remove(id: string): Promise<{ message: string }> {
-    const deleted = await this.reactionModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Reaction ${id} not found`);
-    return { message: `Reaction ${id} deleted successfully` };
   }
 }

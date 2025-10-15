@@ -9,7 +9,15 @@ import { TimelineEvent } from './models/timeline-event.model';
 import { User } from '../users/models/user.model';
 
 @Module({
-  imports: [SequelizeModule.forFeature([PersonProfile, BiographicalCard, LifeEvent, TimelineEvent, User])],
+  imports: [
+    SequelizeModule.forFeature([
+      PersonProfile,
+      BiographicalCard,
+      LifeEvent,
+      TimelineEvent,
+      User,
+    ]),
+  ],
   providers: [PersonService],
   controllers: [PersonController],
   exports: [PersonService],

@@ -1,13 +1,13 @@
 import { Controller, Get, Post, Param, Body, Delete } from '@nestjs/common';
-import { FilesService } from '../files/files.service';
+import { FilesService } from './files.service';
 
 @Controller('files')
 export class FilesController {
   constructor(private readonly filesService: FilesService) {}
 
   @Post()
-  create(@Body() data: Partial<File>) {
-    return this.filesService.create(data as any);
+  create(@Body() data: any) {
+    return this.filesService.create(data);
   }
 
   @Get()
@@ -17,7 +17,7 @@ export class FilesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.filesService.findById(id);
+    return this.filesService.findOne(id);
   }
 
   @Get('contribution/:contributionId')

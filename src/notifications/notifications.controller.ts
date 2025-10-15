@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Delete, Param, Body, Patch } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Patch,
+} from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 
 @Controller('notifications')
@@ -12,7 +20,7 @@ export class NotificationsController {
 
   @Get()
   findAll() {
-    return this.notificationsService.findAll();
+    return this.notificationsService.findAll({});
   }
 
   @Get('user/:userId')

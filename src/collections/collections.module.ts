@@ -6,9 +6,9 @@ import { Collection } from './models/collection.model';
 import { CollectionContribution } from './models/collection-contribution.model';
 
 @Module({
-    imports: [SequelizeModule.forFeature([Collection, CollectionContribution])],
-    controllers: [CollectionsController],
-    providers: [CollectionsService],
-    exports: [CollectionsService],
+  imports: [SequelizeModule.forFeature([Collection, CollectionContribution])],
+  controllers: [CollectionsController],
+  providers: [CollectionsService],
+  exports: [CollectionsService],
 })
-export class CollectionsModule { }
+export class CollectionsModule {}

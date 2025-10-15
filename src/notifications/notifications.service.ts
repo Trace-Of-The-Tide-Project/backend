@@ -1,38 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Notification } from './models/notification.model';
+import { BaseService } from '../common/base.service';
 
 @Injectable()
-export class NotificationsService {
+export class NotificationsService extends BaseService<Notification> {
   constructor(
     @InjectModel(Notification)
     private readonly notificationModel: typeof Notification,
-  ) {}
-
-  async create(data: Partial<Notification>) {
-    return this.notificationModel.create(data as any);
-  }
-
-  async findAll() {
-    return this.notificationModel.findAll();
+  ) {
+    super(notificationModel);
   }
 
   async findByUser(userId: string) {
-    return this.notificationModel.findAll({ where: { user_id: userId } });
+    return this.model.findAll({ where: { user_id: userId } });
   }
 
   async markAsRead(id: string) {
-    const [affected] = await this.notificationModel.update(
+    const [affected] = await this.model.update(
       { status: 'read' },
       { where: { id } },
     );
-    if (!affected) throw new NotFoundException(`Notification ${id} not found`);
-    return this.notificationModel.findByPk(id);
-  }
 
-  async remove(id: string) {
-    const deleted = await this.notificationModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Notification ${id} not found`);
-    return { message: `Notification ${id} deleted successfully` };
+    if (!affected) throw new NotFoundException(`Notification ${id} not found`);
+    return this.model.findByPk(id);
   }
 }

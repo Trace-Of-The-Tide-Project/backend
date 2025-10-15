@@ -7,9 +7,9 @@ import { CollectiveMember } from './models/collective-member.model';
 import { User } from '../users/models/user.model';
 
 @Module({
-    imports: [SequelizeModule.forFeature([Collective, CollectiveMember, User])],
-    providers: [CollectivesService],
-    controllers: [CollectivesController],
-    exports: [CollectivesService],
+  imports: [SequelizeModule.forFeature([Collective, CollectiveMember, User])],
+  providers: [CollectivesService],
+  controllers: [CollectivesController],
+  exports: [CollectivesService],
 })
-export class CollectivesModule { }
+export class CollectivesModule {}

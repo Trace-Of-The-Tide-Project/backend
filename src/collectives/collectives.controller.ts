@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { CollectivesService } from './collectives.service';
 
 @Controller('collectives')
@@ -32,6 +40,10 @@ export class CollectivesController {
 
   @Post(':id/members')
   addMember(@Param('id') collectiveId: string, @Body() body: any) {
-    return this.collectivesService.addMember(collectiveId, body.user_id, body.role);
+    return this.collectivesService.addMember(
+      collectiveId,
+      body.user_id,
+      body.role,
+    );
   }
 }
