@@ -6,18 +6,19 @@ import {
   Req,
   Get,
   Request,
+  Headers,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { AuthGuard } from '@nestjs/passport';
+
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly tokenService: TokenService,
-  ) { }
-
+  ) {}
 
   // --- Signup ---
   @Post('signup')
@@ -54,9 +55,18 @@ export class AuthController {
   }
 
   @Post('refresh-token')
-async refreshToken(@Body('refreshToken') refreshToken: string) {
-  return this.authService.refreshAccessToken(refreshToken);
-}
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    return this.authService.refreshAccessToken(refreshToken);
+  }
 
+  @Get('me')
+  async me(@Headers('authorization') authHeader: string) {
+    const token = authHeader.replace('Bearer ', '');
+    return this.authService.getUserFromToken(token);
+  }
 
+  @Get('test')
+  testErr(){
+  return 'hahahahaahahha'
+  }
 }

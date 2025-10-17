@@ -19,7 +19,7 @@ export class AuthService {
     private usersService: UsersService,
     private jwtService: JwtService,
     private tokenService: TokenService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
     const user = await this.usersService.findByEmail(email);
@@ -113,7 +113,8 @@ export class AuthService {
   }
 
   async refreshAccessToken(refreshToken: string) {
-    const tokenRecord = await this.tokenService.verifyAndConsumeRefreshToken(refreshToken);
+    const tokenRecord =
+      await this.tokenService.verifyAndConsumeRefreshToken(refreshToken);
     if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
 
     const user = await this.usersService.findOne(tokenRecord.user_id);
@@ -124,4 +125,17 @@ export class AuthService {
     return { accessToken };
   }
 
+  async getUserFromToken(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+      const user = await this.usersService.findOne(decoded.sub);
+      if (!user) throw new NotFoundException('User not found');
+
+      const roles = await this.usersService.getUserRoles(user.id);
+      const { password, ...result } = user['dataValues'];
+      return { ...result, roles };
+    } catch (error) {
+      throw new BadRequestException('Invalid token');
+    }
+  }
 }

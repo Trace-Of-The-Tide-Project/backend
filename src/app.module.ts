@@ -1,6 +1,9 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/throttler-exception.guard';
+import { APP_GUARD } from '@nestjs/core';
 
 // 🧩 Modules
 import { DatabaseModule } from './database/database.module';
@@ -24,6 +27,7 @@ import { DonationsModule } from './donations/donations.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { AuditTrailsModule } from './audit-trails/audit-trails.module';
 import { TagsModule } from './tags/tags.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -32,6 +36,14 @@ import { TagsModule } from './tags/tags.module';
 
     // 🧱 Database
     DatabaseModule,
+
+    // 🚦 Rate Limiting
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,   
+        limit: 20, 
+      },
+    ]),
 
     // 🚀 Feature Modules
     UsersModule,
@@ -54,6 +66,17 @@ import { TagsModule } from './tags/tags.module';
     ModerationModule,
     AuditTrailsModule,
     TagsModule,
+    DashboardModule,
+  ],
+  providers: [
+    {
+    provide: APP_GUARD,
+    useClass: CustomThrottlerGuard,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(RequestContextMiddleware).forRoutes('*');
+  }
+}
