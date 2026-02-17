@@ -6,10 +6,14 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PartnersService } from './partners.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('partners')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class PartnersController {
   constructor(private readonly partnersService: PartnersService) {}
 

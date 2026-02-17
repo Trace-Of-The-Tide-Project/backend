@@ -7,10 +7,14 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TagsService } from './tags.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('tags')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class TagsController {
   constructor(private readonly tagsService: TagsService) {}
 

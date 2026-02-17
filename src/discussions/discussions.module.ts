@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
+
 import { SequelizeModule } from '@nestjs/sequelize';
 import { DiscussionsService } from './discussions.service';
 import { DiscussionsController } from './discussions.controller';
@@ -10,6 +12,7 @@ import { Collection } from '../collections/models/collection.model';
 
 @Module({
   imports: [
+    forwardRef(() => AuthModule),
     SequelizeModule.forFeature([
       Discussion,
       Comment,

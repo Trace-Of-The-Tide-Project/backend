@@ -6,10 +6,14 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { GroupsService } from './groups.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('groups')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 

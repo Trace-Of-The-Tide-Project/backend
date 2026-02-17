@@ -40,8 +40,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
     // 🚦 Rate Limiting
     ThrottlerModule.forRoot([
       {
-        ttl: 60,   
-        limit: 20, 
+        ttl: 60,
+        limit: 20,
       },
     ]),
 
@@ -70,8 +70,8 @@ import { DashboardModule } from './dashboard/dashboard.module';
   ],
   providers: [
     {
-    provide: APP_GUARD,
-    useClass: CustomThrottlerGuard,
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })

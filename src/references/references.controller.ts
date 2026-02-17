@@ -7,10 +7,14 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ReferencesService } from './references.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('references')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ReferencesController {
   constructor(private readonly referencesService: ReferencesService) {}
 

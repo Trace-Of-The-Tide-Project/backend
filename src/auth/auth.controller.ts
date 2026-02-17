@@ -12,7 +12,6 @@ import { AuthService } from './auth.service';
 import { TokenService } from './token.service';
 import { AuthGuard } from '@nestjs/passport';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -66,7 +65,7 @@ export class AuthController {
   }
 
   @Get('test')
-  testErr(){
-  return 'hahahahaahahha'
+  testErr() {
+    return 'hahahahaahahha';
   }
 }

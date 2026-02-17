@@ -1,11 +1,15 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { Reference } from './models/reference.model';
 import { ReferencesService } from './references.service';
 import { ReferencesController } from './references.controller';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Reference])],
+  imports: [
+    forwardRef(() => AuthModule),
+    SequelizeModule.forFeature([Reference]),
+  ],
   controllers: [ReferencesController],
   providers: [ReferencesService],
   exports: [ReferencesService],
