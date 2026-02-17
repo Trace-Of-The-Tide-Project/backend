@@ -1,7 +1,18 @@
-import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { OpenCallsService } from './open-call.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('open-calls')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class OpenCallsController {
   constructor(private readonly openCallsService: OpenCallsService) {}
 

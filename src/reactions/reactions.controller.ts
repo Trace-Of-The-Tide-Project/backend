@@ -7,14 +7,20 @@ import {
   Param,
   Body,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ReactionsService } from './reactions.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
+import { Roles } from '../auth/jwt/roles.decorator';
 
 @Controller('reactions')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class ReactionsController {
   constructor(private readonly reactionsService: ReactionsService) {}
 
   @Post()
+  @Roles('user', 'admin')
   create(@Body() body: any) {
     return this.reactionsService.create(body);
   }

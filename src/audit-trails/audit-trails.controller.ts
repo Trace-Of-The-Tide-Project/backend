@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { AuditTrailsService } from './audit-trails.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
+import { Roles } from '../auth/jwt/roles.decorator';
 
 @Controller('audit-trails')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class AuditTrailsController {
   constructor(private readonly auditService: AuditTrailsService) {}
 
@@ -21,6 +33,7 @@ export class AuditTrailsController {
   }
 
   @Delete(':id')
+  @Roles('admin')
   remove(@Param('id') id: string) {
     return this.auditService.remove(id);
   }

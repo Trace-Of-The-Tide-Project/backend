@@ -1,4 +1,5 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { CollectivesService } from './collectives.service';
 import { CollectivesController } from './collectives.controller';
@@ -7,7 +8,10 @@ import { CollectiveMember } from './models/collective-member.model';
 import { User } from '../users/models/user.model';
 
 @Module({
-  imports: [SequelizeModule.forFeature([Collective, CollectiveMember, User])],
+  imports: [
+    forwardRef(() => AuthModule),
+    SequelizeModule.forFeature([Collective, CollectiveMember, User]),
+  ],
   providers: [CollectivesService],
   controllers: [CollectivesController],
   exports: [CollectivesService],

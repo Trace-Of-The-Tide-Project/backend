@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
+import { AuthModule } from 'src/auth/auth.module';
+
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ContributionsService } from './contributions.service';
 import { ContributionsController } from './contributions.controller';
@@ -8,6 +10,7 @@ import { File } from '../files/models/file.model';
 
 @Module({
   imports: [
+    forwardRef(() => AuthModule),
     SequelizeModule.forFeature([Contribution, CollectionContribution, File]),
   ],
   providers: [ContributionsService],

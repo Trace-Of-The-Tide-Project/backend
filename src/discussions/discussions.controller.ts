@@ -6,10 +6,14 @@ import {
   Delete,
   Param,
   Body,
+  UseGuards,
 } from '@nestjs/common';
 import { DiscussionsService } from './discussions.service';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { RolesGuard } from '../auth/jwt/roles.guard';
 
 @Controller('discussions')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class DiscussionsController {
   constructor(private readonly discussionsService: DiscussionsService) {}
 
