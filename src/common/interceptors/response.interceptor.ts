@@ -14,8 +14,16 @@ export class ResponseInterceptor implements NestInterceptor {
       map((data) => {
         const status = context.switchToHttp().getResponse().statusCode || 200;
 
+        if (data === null || data === undefined) {
+          return {
+            status,
+            results: 0,
+            data: null,
+          };
+        }
+
+        // Paginated responses from BaseService.findAll
         if (
-          data &&
           typeof data === 'object' &&
           'rows' in data &&
           'meta' in data
@@ -28,12 +36,32 @@ export class ResponseInterceptor implements NestInterceptor {
           };
         }
 
-        const formattedData = Array.isArray(data) ? data : [data];
+        if (
+          typeof data === 'object' &&
+          !Array.isArray(data) &&
+          'message' in data &&
+          Object.keys(data).length <= 2
+        ) {
+          return {
+            status,
+            ...data,
+          };
+        }
 
+        // Array responses
+        if (Array.isArray(data)) {
+          return {
+            status,
+            results: data.length,
+            data,
+          };
+        }
+
+        // Single object response
         return {
           status,
-          results: formattedData.length,
-          data: formattedData,
+          results: 1,
+          data,
         };
       }),
     );

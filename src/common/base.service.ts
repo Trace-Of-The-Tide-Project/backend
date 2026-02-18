@@ -4,29 +4,34 @@ import { Op } from 'sequelize';
 export class BaseService<T = any> {
   constructor(protected readonly model: any) {}
 
-  // findAll: يدعم query pagination/filter/search/sort + include + order
   async findAll(
     query: any = {},
     options: {
       searchableFields?: string[];
       include?: any[];
       order?: any[];
+      attributes?: any; // ✅ FIX: Allow excluding fields (e.g. password)
     } = {},
   ) {
     const page = Number(query.page) || 1;
-    const limit = Number(query.limit) || 10;
+    const limit = Math.min(Number(query.limit) || 10, 100); // ✅ FIX: Cap limit to prevent abuse
     const offset = (page - 1) * limit;
 
     const where: any = {};
 
-    // dynamic filtering: أي query key غير محفوظ يدخل كـ where
+    // ✅ FIX: Whitelist reserved keys more safely
+    const reservedKeys = ['page', 'limit', 'sortBy', 'order', 'search'];
+
     for (const key in query) {
-      if (!['page', 'limit', 'sortBy', 'order', 'search'].includes(key)) {
-        where[key] = query[key];
+      if (!reservedKeys.includes(key)) {
+        // ✅ FIX: Only allow filtering on actual model fields
+        if (this.model.rawAttributes && this.model.rawAttributes[key]) {
+          where[key] = query[key];
+        }
       }
     }
 
-    // search across fields
+    // Search across fields
     if (
       query.search &&
       Array.isArray(options.searchableFields) &&
@@ -37,24 +42,31 @@ export class BaseService<T = any> {
       }));
     }
 
-    // sorting
+    // Sorting
     let order: any[] | undefined = undefined;
     if (query.sortBy) {
-      order = [
-        [query.sortBy, query.order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'],
-      ];
+      // ✅ FIX: Only allow sorting on actual model fields
+      if (this.model.rawAttributes && this.model.rawAttributes[query.sortBy]) {
+        order = [
+          [query.sortBy, query.order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC'],
+        ];
+      }
     } else if (options.order) {
       order = options.order;
     }
 
-    const { rows, count } = await this.model.findAndCountAll({
+    const findOptions: any = {
       where,
       include: options.include || [],
       limit,
       offset,
-      order,
       distinct: true,
-    });
+    };
+
+    if (order) findOptions.order = order;
+    if (options.attributes) findOptions.attributes = options.attributes;
+
+    const { rows, count } = await this.model.findAndCountAll(findOptions);
 
     return {
       rows,
@@ -67,10 +79,13 @@ export class BaseService<T = any> {
     };
   }
 
-  async findOne(id: string, options?: { include?: any[] }) {
-    const record = await this.model.findByPk(id, {
+  async findOne(id: string, options?: { include?: any[]; attributes?: any }) {
+    const findOptions: any = {
       include: options?.include || [],
-    });
+    };
+    if (options?.attributes) findOptions.attributes = options.attributes;
+
+    const record = await this.model.findByPk(id, findOptions);
     if (!record)
       throw new NotFoundException(
         `${this.model.name || 'Record'} ${id} not found`,
@@ -88,7 +103,6 @@ export class BaseService<T = any> {
       throw new NotFoundException(
         `${this.model.name || 'Record'} ${id} not found`,
       );
-    // return the updated record (with no include)
     return this.findOne(id);
   }
 

@@ -6,7 +6,10 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Role } from './models/role.model';
 import { UserRole } from '../users/models/user-role.model';
-import { BaseService } from 'src/common/base.service';
+import { BaseService } from '../common/base.service';
+
+// Protected role names that cannot be deleted
+const PROTECTED_ROLES = ['admin', 'user', 'moderator'];
 
 @Injectable()
 export class RolesService extends BaseService<Role> {
@@ -15,18 +18,35 @@ export class RolesService extends BaseService<Role> {
   }
 
   async create(data: any) {
-    const existing = await this.model.findOne({ where: { name: data.name } });
+    const existing = await this.roleModel.findOne({ where: { name: data.name } });
     if (existing) throw new BadRequestException('Role already exists');
-    return this.model.create(data);
+    return this.roleModel.create(data);
+  }
+
+  async remove(id: string) {
+    const role = await this.roleModel.findByPk(id);
+    if (!role) throw new NotFoundException('Role not found');
+    if (PROTECTED_ROLES.includes(role.name)) {
+      throw new BadRequestException(`Cannot delete built-in role "${role.name}"`);
+    }
+    await role.destroy();
+    return { message: `Role "${role.name}" deleted successfully` };
   }
 
   async assignRole(userId: string, roleName: string) {
-    const role = await this.model.findOne({ where: { name: roleName } });
-    if (!role) throw new NotFoundException('Role not found');
+    const role = await this.roleModel.findOne({ where: { name: roleName } });
+    if (!role) throw new NotFoundException(`Role "${roleName}" not found`);
 
-    await UserRole.destroy({ where: { user_id: userId } });
+    const existing = await UserRole.findOne({
+      where: { user_id: userId, role_id: role.id },
+    });
+    if (existing) {
+      return { message: `User already has role "${roleName}"` };
+    }
+
+  
     await UserRole.create({ user_id: userId, role_id: role.id } as any);
 
-    return { message: `Role ${roleName} assigned successfully` };
+    return { message: `Role "${roleName}" assigned successfully` };
   }
 }

@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   BadRequestException,
   NotFoundException,
+  ConflictException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -11,6 +12,7 @@ import { User } from '../users/models/user.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Role } from '../roles/models/role.model';
 import { LoginDto } from './dto/login.dto';
+import { SignupDto } from './dto/signup.dto';
 import { TokenService } from './token.service';
 
 @Injectable()
@@ -22,14 +24,16 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    let user: User;
+    try {
+      user = await this.usersService.findByEmail(email);
+    } catch {
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const { password, ...result } = user['dataValues'];
@@ -51,7 +55,16 @@ export class AuthService {
     };
   }
 
-  async signup(signupDto: any) {
+  async signup(signupDto: SignupDto) {
+    // Check if email already exists
+    try {
+      await this.usersService.findByEmail(signupDto.email);
+      throw new ConflictException('Email already registered');
+    } catch (error) {
+      if (error instanceof ConflictException) throw error;
+      // NotFoundException means email is available — continue
+    }
+
     const hashedPassword = await bcrypt.hash(signupDto.password, 10);
 
     const newUser = await this.usersService.create({
@@ -63,7 +76,7 @@ export class AuthService {
     });
 
     const defaultRole = await Role.findOne({ where: { name: 'user' } });
-    if (!defaultRole) throw new Error('Default role not found');
+    if (!defaultRole) throw new Error('Default role not found. Run seeders first.');
 
     await UserRole.create({
       user_id: newUser.id,
@@ -81,19 +94,21 @@ export class AuthService {
     };
   }
 
-  async logout(token: any) {
+  async logout(userId: string, refreshToken?: string) {
+    await this.tokenService.revokeRefreshToken(userId, refreshToken);
     return { message: 'Logged out successfully' };
   }
 
   async generateResetToken(email: string) {
-    const user = await this.usersService.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('User not found');
+    try {
+      const user = await this.usersService.findByEmail(email);
+      const payload = { email: user.email, sub: user.id };
+      const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+      return { resetToken, message: 'Reset token generated' };
+    } catch {
+      // Return same response whether email exists or not
+      return { message: 'If the email exists, a reset token has been generated' };
     }
-
-    const payload = { email: user.email, sub: user.id };
-    const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-    return { resetToken };
   }
 
   async resetPassword(token: string, newPassword: string) {
@@ -106,9 +121,13 @@ export class AuthService {
       }
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await this.usersService.update(user.id, { password: hashedPassword });
+
+      await this.tokenService.revokeRefreshToken(user.id);
+
       return { message: 'Password reset successfully' };
     } catch (error) {
-      throw new BadRequestException('Invalid token');
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException('Invalid or expired token');
     }
   }
 
@@ -125,17 +144,12 @@ export class AuthService {
     return { accessToken };
   }
 
-  async getUserFromToken(token: string) {
-    try {
-      const decoded = this.jwtService.verify(token);
-      const user = await this.usersService.findOne(decoded.sub);
-      if (!user) throw new NotFoundException('User not found');
+  async getUserFromToken(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
 
-      const roles = await this.usersService.getUserRoles(user.id);
-      const { password, ...result } = user['dataValues'];
-      return { ...result, roles };
-    } catch (error) {
-      throw new BadRequestException('Invalid token');
-    }
+    const roles = await this.usersService.getUserRoles(user.id);
+    const { password, ...result } = user['dataValues'];
+    return { ...result, roles };
   }
 }
