@@ -39,6 +39,9 @@ import { AuditTrail } from '../audit-trails/models/audit-trail.model';
 import { Tag } from '../tags/models/tag.model';
 import { ContributionTag } from 'src/tags/models/contribution-tag.model';
 import { RefreshToken } from 'src/auth/models/refresh-tokens.model';
+import { Trip } from '../trips/models/trip.model';
+import { TripStop } from '../trips/models/trip-stop.model';
+import { TripParticipant } from '../trips/models/trip-participant.model';
 
 @Module({
   imports: [
@@ -93,6 +96,9 @@ import { RefreshToken } from 'src/auth/models/refresh-tokens.model';
           Tag,
           ContributionTag,
           RefreshToken,
+          Trip,
+          TripStop,
+          TripParticipant,
         ],
       }),
     }),
