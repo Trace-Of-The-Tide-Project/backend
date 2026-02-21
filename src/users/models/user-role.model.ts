@@ -23,14 +23,14 @@ export class UserRole extends Model<UserRole> {
   declare user_id: string;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 
   @ForeignKey(() => Role)
   @Column(DataType.UUID)
   declare role_id: string;
 
   @BelongsTo(() => Role, { as: 'role' })
-  role: Role;
+  declare role: Role;
 
   @Column(DataType.DATE)
   declare assigned_at: Date;
