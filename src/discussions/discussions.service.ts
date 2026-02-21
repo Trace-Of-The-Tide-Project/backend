@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../common/base.service';
 import { Discussion } from './models/discussion.model';
@@ -9,6 +9,18 @@ import { Comment } from '../comments/models/comment.model';
 
 @Injectable()
 export class DiscussionsService extends BaseService<Discussion> {
+  private readonly defaultInclude = [
+    { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+    { model: Contribution, attributes: ['id', 'title', 'status'] },
+    { model: Collection, attributes: ['id', 'name'] },
+    {
+      model: Comment,
+      include: [
+        { model: User, attributes: ['id', 'username', 'full_name'] },
+      ],
+    },
+  ];
+
   constructor(
     @InjectModel(Discussion)
     private readonly discussionModel: typeof Discussion,
@@ -16,32 +28,16 @@ export class DiscussionsService extends BaseService<Discussion> {
     super(discussionModel);
   }
 
-  async findAll() {
-    return super.findAll([User, Contribution, Collection, Comment]);
+  async findAll(query: any = {}) {
+    return super.findAll(query, {
+      include: this.defaultInclude,
+      searchableFields: ['title', 'description'],
+      order: [['createdAt', 'DESC']],
+    });
   }
 
   async findOne(id: string) {
-    const discussion = await super.findOne(id, [
-      User,
-      Contribution,
-      Collection,
-      Comment,
-    ] as any);
-    if (!discussion) throw new NotFoundException(`Discussion ${id} not found`);
-    return discussion;
+    return super.findOne(id, { include: this.defaultInclude });
   }
 
-  async update(id: string, data: Partial<Discussion>) {
-    const [affected] = await this.discussionModel.update(data, {
-      where: { id },
-    });
-    if (!affected) throw new NotFoundException(`Discussion ${id} not found`);
-    return this.findOne(id);
-  }
-
-  async remove(id: string) {
-    const deleted = await this.discussionModel.destroy({ where: { id } });
-    if (!deleted) throw new NotFoundException(`Discussion ${id} not found`);
-    return { message: `Discussion ${id} deleted successfully` };
-  }
 }

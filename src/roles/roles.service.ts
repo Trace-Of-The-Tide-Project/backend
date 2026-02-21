@@ -6,15 +6,22 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Role } from './models/role.model';
 import { UserRole } from '../users/models/user-role.model';
+import { User } from '../users/models/user.model';
 import { BaseService } from '../common/base.service';
 
-// Protected role names that cannot be deleted
 const PROTECTED_ROLES = ['admin', 'user', 'moderator'];
 
 @Injectable()
 export class RolesService extends BaseService<Role> {
   constructor(@InjectModel(Role) private readonly roleModel: typeof Role) {
     super(roleModel);
+  }
+
+  async findAll(query: any = {}) {
+    return super.findAll(query, {
+      searchableFields: ['name'],
+      order: [['name', 'ASC']],
+    });
   }
 
   async create(data: any) {
@@ -34,6 +41,9 @@ export class RolesService extends BaseService<Role> {
   }
 
   async assignRole(userId: string, roleName: string) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
     const role = await this.roleModel.findOne({ where: { name: roleName } });
     if (!role) throw new NotFoundException(`Role "${roleName}" not found`);
 
@@ -44,9 +54,24 @@ export class RolesService extends BaseService<Role> {
       return { message: `User already has role "${roleName}"` };
     }
 
-  
     await UserRole.create({ user_id: userId, role_id: role.id } as any);
-
     return { message: `Role "${roleName}" assigned successfully` };
+  }
+
+  async revokeRole(userId: string, roleName: string) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    const role = await this.roleModel.findOne({ where: { name: roleName } });
+    if (!role) throw new NotFoundException(`Role "${roleName}" not found`);
+
+    const deleted = await UserRole.destroy({
+      where: { user_id: userId, role_id: role.id },
+    } as any);
+    if (!deleted) {
+      throw new NotFoundException(`User does not have role "${roleName}"`);
+    }
+
+    return { message: `Role "${roleName}" revoked successfully` };
   }
 }

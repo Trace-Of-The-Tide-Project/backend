@@ -1,7 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { BaseService } from '../common/base.service';
 import { Reference } from './models/reference.model';
-import { BaseService } from 'src/common/base.service';
 
 @Injectable()
 export class ReferencesService extends BaseService<Reference> {
@@ -9,5 +9,12 @@ export class ReferencesService extends BaseService<Reference> {
     @InjectModel(Reference) private readonly referenceModel: typeof Reference,
   ) {
     super(referenceModel);
+  }
+
+  async findAll(query: any = {}) {
+    return super.findAll(query, {
+      searchableFields: ['title', 'author'],
+      order: [['createdAt', 'DESC']],
+    });
   }
 }

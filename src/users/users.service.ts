@@ -3,17 +3,43 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { User } from './models/user.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { Role } from 'src/roles/models/role.model';
+import { BaseService } from '../common/base.service';
+import { User } from './models/user.model';
 import { UserRole } from './models/user-role.model';
-import { BaseService } from 'src/common/base.service';
+import { UserProfile } from './models/user-profile.model';
+import { Role } from '../roles/models/role.model';
+
 @Injectable()
 export class UsersService extends BaseService<User> {
+  private readonly defaultInclude = [
+    {
+      model: UserRole,
+      include: [{ model: Role, as: 'role', attributes: ['id', 'name'] }],
+    },
+    UserProfile,
+  ];
+
   constructor(@InjectModel(User) private readonly userModel: typeof User) {
     super(userModel);
   }
 
+  async findAll(query: any = {}) {
+    return super.findAll(query, {
+      include: this.defaultInclude,
+      searchableFields: ['username', 'full_name', 'email'],
+      order: [['createdAt', 'DESC']],
+    });
+  }
+
+  async findOne(id: string) {
+    const user = await this.userModel.findByPk(id, {
+      include: this.defaultInclude,
+      attributes: { exclude: ['password'] },
+    });
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+    return user;
+  }
 
   async findByEmail(email: string) {
     if (!email) throw new BadRequestException('Email is required');
@@ -23,23 +49,13 @@ export class UsersService extends BaseService<User> {
     return user;
   }
 
-  async findOne(id: string, options?: any): Promise<User> {
-    const user = await super.findOne(id, options);
-    return user;
-  }
-
-  async findAll(query: any = {}, options: any = {}): Promise<any> {
-    const result = await super.findAll(query, {
-      ...options,
-      attributes: { exclude: ['password'] },
-    });
-    return result;
-  }
-
   async getUserRoles(userId: string): Promise<string[]> {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
     const userRoles = await UserRole.findAll({
       where: { user_id: userId },
-      include: [{ model: Role, as: 'role' }],
+      include: [{ model: Role, as: 'role', attributes: ['id', 'name'] }],
     });
     return userRoles
       .map((ur) => (ur.toJSON() as any).role?.name)
@@ -48,10 +64,30 @@ export class UsersService extends BaseService<User> {
 
   async getUserProfile(userId: string) {
     const user = await this.userModel.findByPk(userId, {
-      include: ['profile'],
+      include: [UserProfile],
       attributes: { exclude: ['password'] },
     });
-    if (!user) throw new NotFoundException(`User with ID ${userId} not found`);
-    return user.profile;
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+    return user;
+  }
+
+  async updateProfile(userId: string, data: Partial<UserProfile>) {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    let profile = await UserProfile.findOne({
+      where: { user_id: userId },
+    });
+
+    if (profile) {
+      await profile.update(data);
+    } else {
+      profile = await UserProfile.create({
+        user_id: userId,
+        ...data,
+      } as any);
+    }
+
+    return profile;
   }
 }

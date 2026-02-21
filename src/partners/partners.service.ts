@@ -1,31 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { BaseService } from '../common/base.service';
 import { Partner } from './models/partner.model';
-import { BaseService } from 'src/common/base.service';
+import { Donation } from '../donations/models/donation.model';
 
 @Injectable()
 export class PartnersService extends BaseService<Partner> {
+  private readonly defaultInclude = [
+    { model: Donation, attributes: ['id', 'amount', 'type', 'status', 'date'] },
+  ];
+
   constructor(@InjectModel(Partner) private partnerModel: typeof Partner) {
     super(partnerModel);
   }
 
-  // Find all مع relations + pagination + search
-  async findAll(query: any) {
+  async findAll(query: any = {}) {
     return super.findAll(query, {
+      include: this.defaultInclude,
       searchableFields: ['name', 'email', 'phone_number'],
-      include: ['donations'],
+      order: [['createdAt', 'DESC']],
     });
   }
 
   async findOne(id: string) {
-    return super.findOne(id, { include: ['donations'] });
+    return super.findOne(id, { include: this.defaultInclude });
   }
 
-  async create(data: Partial<Partner>) {
-    return super.create(data);
-  }
-
-  async remove(id: string) {
-    return super.remove(id);
-  }
 }
