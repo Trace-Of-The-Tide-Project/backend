@@ -29,6 +29,7 @@ import { AuditTrailsModule } from './audit-trails/audit-trails.module';
 import { TagsModule } from './tags/tags.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TripsModule } from './trips/trips.module';
+import { ArticlesModule } from './articles/articles.module';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { TripsModule } from './trips/trips.module';
     TagsModule,
     DashboardModule,
     TripsModule,
+    ArticlesModule,
   ],
   providers: [
     {

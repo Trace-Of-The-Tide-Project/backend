@@ -42,6 +42,10 @@ import { RefreshToken } from 'src/auth/models/refresh-tokens.model';
 import { Trip } from '../trips/models/trip.model';
 import { TripStop } from '../trips/models/trip-stop.model';
 import { TripParticipant } from '../trips/models/trip-participant.model';
+import { Article } from 'src/articles/models/article.model';
+import { ArticleBlock } from 'src/articles/models/article-block.model';
+import { ArticleContributor } from 'src/articles/models/article-contributor.model';
+import { ArticleTag } from 'src/articles/models/article-tag.model';
 
 @Module({
   imports: [
@@ -99,10 +103,14 @@ import { TripParticipant } from '../trips/models/trip-participant.model';
           Trip,
           TripStop,
           TripParticipant,
+          Article,
+          ArticleBlock,
+          ArticleContributor,
+          ArticleTag,
         ],
       }),
     }),
   ],
   exports: [SequelizeModule],
 })
-export class DatabaseModule {}
+export class DatabaseModule { }
