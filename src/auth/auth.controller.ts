@@ -5,33 +5,31 @@ import {
   UseGuards,
   Req,
   Get,
-  Headers,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { TokenService } from './token.service';
 import { JwtAuthGuard } from './jwt/auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
-import { ApiBearerAuth, ApiTags, ApiBody, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+} from '@nestjs/swagger';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly tokenService: TokenService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
-  // --- Signup ---
   @Post('signup')
-  @ApiOperation({ summary: 'Register a new user' })
+  @ApiOperation({ summary: 'Register a new user (auto-login on success)' })
   async signup(@Body() signupDto: SignupDto) {
     return this.authService.signup(signupDto);
   }
 
-  // --- Login ---
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email and password' })
@@ -39,18 +37,29 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
-  // --- Forgot Password ---
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request a password reset token' })
+  @ApiBody({
+    schema: {
+      properties: { email: { type: 'string', example: 'user@trace.ps' } },
+    },
+  })
   async forgotPassword(@Body('email') email: string) {
     return this.authService.generateResetToken(email);
   }
 
-  // --- Reset Password ---
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password using token' })
+  @ApiBody({
+    schema: {
+      properties: {
+        token: { type: 'string' },
+        newPassword: { type: 'string', minLength: 8 },
+      },
+    },
+  })
   async resetPassword(
     @Body('token') token: string,
     @Body('newPassword') newPassword: string,
@@ -58,30 +67,60 @@ export class AuthController {
     return this.authService.resetPassword(token, newPassword);
   }
 
-  // --- Logout ---
-  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Logout and revoke refresh tokens' })
   async logout(@Req() req, @Body('refreshToken') refreshToken?: string) {
     return this.authService.logout(req.user.sub, refreshToken);
   }
 
-  // --- Refresh Token ---
   @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Get new access token using refresh token' })
+  @ApiBody({
+    schema: {
+      properties: { refreshToken: { type: 'string' } },
+    },
+  })
   async refreshToken(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshAccessToken(refreshToken);
   }
 
-  // --- Get Current User ---
-  @UseGuards(JwtAuthGuard)
   @Get('me')
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current authenticated user' })
+  @ApiOperation({ summary: 'Get current authenticated user with roles' })
   async me(@Req() req) {
     return this.authService.getUserFromToken(req.user.sub);
+  }
+
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Change password (authenticated user)',
+    description: 'Requires current password. Revokes all sessions after change.',
+  })
+  @ApiBody({
+    schema: {
+      properties: {
+        currentPassword: { type: 'string' },
+        newPassword: { type: 'string', minLength: 8 },
+      },
+    },
+  })
+  async changePassword(
+    @Req() req,
+    @Body('currentPassword') currentPassword: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.authService.changePassword(
+      req.user.sub,
+      currentPassword,
+      newPassword,
+    );
   }
 }

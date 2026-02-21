@@ -28,7 +28,16 @@ export class AuthService {
     try {
       user = await this.usersService.findByEmail(email);
     } catch {
+      // Don't reveal whether email exists
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    // Check if account is suspended/inactive
+    if (user.status === 'suspended') {
+      throw new UnauthorizedException('Account is suspended. Contact support.');
+    }
+    if (user.status === 'inactive') {
+      throw new UnauthorizedException('Account is deactivated.');
     }
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
@@ -51,7 +60,13 @@ export class AuthService {
     return {
       accessToken,
       refreshToken,
-      user: { id: user.id, email: user.email, roles },
+      user: {
+        id: user.id,
+        username: user.username,
+        full_name: user.full_name,
+        email: user.email,
+        roles,
+      },
     };
   }
 
@@ -75,21 +90,35 @@ export class AuthService {
       password: hashedPassword,
     });
 
+    // Assign default 'user' role
     const defaultRole = await Role.findOne({ where: { name: 'user' } });
-    if (!defaultRole) throw new Error('Default role not found. Run seeders first.');
+    if (!defaultRole) {
+      throw new BadRequestException(
+        'Default role not found. Please run seeders first.',
+      );
+    }
 
     await UserRole.create({
       user_id: newUser.id,
       role_id: defaultRole.id,
+      assigned_at: new Date(),
     } as any);
+
+    // Auto-login: return tokens so user doesn't have to login again
+    const roles = ['user'];
+    const payload = { sub: newUser.id, email: newUser.email, roles };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const refreshToken = await this.tokenService.createRefreshToken(newUser.id);
 
     return {
       message: 'User registered successfully',
+      accessToken,
+      refreshToken,
       user: {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
-        roles: [defaultRole.name],
+        roles,
       },
     };
   }
@@ -102,36 +131,51 @@ export class AuthService {
   async generateResetToken(email: string) {
     try {
       const user = await this.usersService.findByEmail(email);
-      const payload = { email: user.email, sub: user.id };
+      const payload = { email: user.email, sub: user.id, purpose: 'password-reset' };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+      // In production: send email with reset link containing this token
       return { resetToken, message: 'Reset token generated' };
     } catch {
-      // Return same response whether email exists or not
-      return { message: 'If the email exists, a reset token has been generated' };
+      // Always return same response — don't reveal whether email exists
+      return { message: 'If the email exists, a reset link has been sent' };
     }
   }
 
   async resetPassword(token: string, newPassword: string) {
     try {
       const decoded = this.jwtService.verify(token);
-      const user = await this.usersService.findByEmail(decoded.email);
 
-      if (!user) {
-        throw new NotFoundException('User not found');
+      // Validate token purpose to prevent access tokens being used as reset tokens
+      if (decoded.purpose !== 'password-reset') {
+        throw new BadRequestException('Invalid reset token');
       }
+
+      const user = await this.usersService.findByEmail(decoded.email);
+      if (!user) throw new NotFoundException('User not found');
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
       await this.usersService.update(user.id, { password: hashedPassword });
 
+      // Revoke all refresh tokens — force re-login on all devices
       await this.tokenService.revokeRefreshToken(user.id);
 
       return { message: 'Password reset successfully' };
     } catch (error) {
-      if (error instanceof NotFoundException) throw error;
-      throw new BadRequestException('Invalid or expired token');
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Invalid or expired reset token');
     }
   }
 
   async refreshAccessToken(refreshToken: string) {
+    if (!refreshToken) {
+      throw new BadRequestException('Refresh token is required');
+    }
+
     const tokenRecord =
       await this.tokenService.verifyAndConsumeRefreshToken(refreshToken);
     if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
@@ -151,5 +195,27 @@ export class AuthService {
     const roles = await this.usersService.getUserRoles(user.id);
     const { password, ...result } = user['dataValues'];
     return { ...result, roles };
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const isValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update(userId, { password: hashedPassword });
+
+    // Revoke all refresh tokens except current session
+    await this.tokenService.revokeRefreshToken(userId);
+
+    return { message: 'Password changed successfully' };
   }
 }
