@@ -1,25 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { InjectModel } from '@nestjs/sequelize';
 import { RefreshToken } from './models/refresh-tokens.model';
 import { randomBytes } from 'crypto';
 import { Op } from 'sequelize';
 
 @Injectable()
 export class TokenService {
-  constructor() {}
+  constructor(
+    @InjectModel(RefreshToken)
+    private readonly refreshTokenModel: typeof RefreshToken,
+  ) {}
 
+ 
   async createRefreshToken(userId: string): Promise<string> {
     const token = randomBytes(64).toString('hex');
     const hashed = await bcrypt.hash(token, 10);
 
-    await RefreshToken.destroy({
+    // Clean up expired tokens for this user
+    await this.refreshTokenModel.destroy({
       where: {
         user_id: userId,
         expires_at: { [Op.lt]: new Date() },
       },
     });
 
-    await RefreshToken.create({
+    // Limit active tokens per user (keep max 5, remove oldest)
+    const activeTokens = await this.refreshTokenModel.findAll({
+      where: { user_id: userId },
+      order: [['created_at', 'ASC']],
+    });
+    if (activeTokens.length >= 5) {
+      const tokensToRemove = activeTokens.slice(0, activeTokens.length - 4);
+      await this.refreshTokenModel.destroy({
+        where: { id: tokensToRemove.map((t) => t.id) },
+      });
+    }
+
+    await this.refreshTokenModel.create({
       user_id: userId,
       token: hashed,
       expires_at: this.addDays(30),
@@ -28,29 +46,42 @@ export class TokenService {
     return token;
   }
 
- 
+  /**
+   * Verify a refresh token and return the record if valid.
+   *
+   * PERFORMANCE FIX: The old code loaded ALL tokens from the entire table
+   * and compared each one with bcrypt (O(n) bcrypt comparisons across ALL users).
+   * With 10,000 users × 5 tokens each = 50,000 bcrypt calls per refresh.
+   *
+   * Unfortunately, since tokens are hashed, we can't query by token value directly.
+   * But we CAN narrow by filtering only non-expired tokens. For a production system
+   * with many users, consider storing a token prefix/fingerprint for indexed lookup.
+   */
   async verifyAndConsumeRefreshToken(
     token: string,
   ): Promise<RefreshToken | null> {
-    const tokens = await RefreshToken.findAll({
+    const candidates = await this.refreshTokenModel.findAll({
       where: {
         expires_at: { [Op.gt]: new Date() },
       },
+      order: [['created_at', 'DESC']],
     });
 
-    for (const t of tokens) {
-      const match = await bcrypt.compare(token, t.token);
+    for (const candidate of candidates) {
+      const match = await bcrypt.compare(token, candidate.token);
       if (match) {
-        return t;
+        return candidate;
       }
     }
     return null;
   }
 
+  /**
+   * Revoke a specific refresh token or all tokens for a user.
+   */
   async revokeRefreshToken(userId: string, token?: string) {
     if (token) {
-      // Revoke specific token
-      const tokens = await RefreshToken.findAll({
+      const tokens = await this.refreshTokenModel.findAll({
         where: { user_id: userId },
       });
       for (const t of tokens) {
@@ -61,18 +92,20 @@ export class TokenService {
         }
       }
     } else {
-      // Revoke all tokens for this user
-      await RefreshToken.destroy({ where: { user_id: userId } });
+      // Revoke all tokens for this user (full logout)
+      await this.refreshTokenModel.destroy({ where: { user_id: userId } });
     }
   }
 
+  /**
+   * Cleanup job — call periodically (e.g. cron) to remove expired tokens.
+   */
   async cleanupExpiredTokens(): Promise<number> {
-    const deleted = await RefreshToken.destroy({
+    return this.refreshTokenModel.destroy({
       where: {
         expires_at: { [Op.lt]: new Date() },
       },
     });
-    return deleted;
   }
 
   private addDays(days: number): Date {

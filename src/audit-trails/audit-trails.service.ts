@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
-import { BaseService } from 'src/common/base.service';
+import { BaseService } from '../common/base.service';
 import { AuditTrail } from './models/audit-trail.model';
 import { User } from '../users/models/user.model';
 
 @Injectable()
 export class AuditTrailsService extends BaseService<AuditTrail> {
+  private readonly defaultInclude = [
+    { model: User, attributes: ['id', 'username', 'full_name'] },
+  ];
+
   constructor(
     @InjectModel(AuditTrail)
     private readonly auditModel: typeof AuditTrail,
@@ -13,14 +17,15 @@ export class AuditTrailsService extends BaseService<AuditTrail> {
     super(auditModel);
   }
 
-  async findAll(query?: any) {
+  async findAll(query: any = {}) {
     return super.findAll(query, {
-      include: [User],
+      include: this.defaultInclude,
+      searchableFields: ['action', 'entity_type'],
       order: [['timestamp', 'DESC']],
     });
   }
 
   async findOne(id: string) {
-    return super.findOne(id, [User] as any);
+    return super.findOne(id, { include: this.defaultInclude });
   }
 }

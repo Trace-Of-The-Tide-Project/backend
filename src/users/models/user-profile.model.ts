@@ -19,29 +19,29 @@ export class UserProfile extends Model<UserProfile> {
 
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, unique: true })
-  user_id: string;
+  declare user_id: string;
 
   @Column(DataType.STRING)
-  avatar: string;
+  declare avatar: string;
 
   @Column(DataType.STRING)
-  display_name: string;
+  declare display_name: string;
 
   @Column(DataType.DATE)
-  birth_date: Date;
+  declare birth_date: Date;
 
   @Column(DataType.STRING)
-  gender: string;
+  declare gender: string;
 
   @Column(DataType.STRING)
-  location: string;
+  declare location: string;
 
   @Column(DataType.TEXT)
-  about: string;
+  declare about: string;
 
   @Column(DataType.TEXT)
-  social_links: string;
+  declare social_links: string;
 
   @BelongsTo(() => User)
-  user: User;
+  declare user: User;
 }
