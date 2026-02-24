@@ -30,6 +30,7 @@ import { TagsModule } from './tags/tags.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TripsModule } from './trips/trips.module';
 import { ArticlesModule } from './articles/articles.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -71,6 +72,7 @@ import { ArticlesModule } from './articles/articles.module';
     DashboardModule,
     TripsModule,
     ArticlesModule,
+    AnalyticsModule,
   ],
   providers: [
     {

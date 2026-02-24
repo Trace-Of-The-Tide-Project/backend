@@ -1,0 +1,337 @@
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
+import { User } from '../users/models/user.model';
+import { UserRole } from '../users/models/user-role.model';
+import { Role } from '../roles/models/role.model';
+import { Article } from '../articles/models/article.model';
+import { Contribution } from '../contributions/models/contribution.model';
+import { Donation } from '../donations/models/donation.model';
+import { Trip } from '../trips/models/trip.model';
+import { TripParticipant } from '../trips/models/trip-participant.model';
+import { OpenCall } from '../open call/models/open-call.model';
+import { Participant } from '../open call/models/participant.model';
+import { Discussion } from '../discussions/models/discussion.model';
+import { Comment } from '../comments/models/comment.model';
+import { Reaction } from '../reactions/models/reaction.model';
+import { Collection } from '../collections/models/collection.model';
+import { Sequelize, Op, fn, col, literal } from 'sequelize';
+
+@Injectable()
+export class AnalyticsService {
+  constructor(
+    @InjectModel(User) private readonly userModel: typeof User,
+    @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
+    @InjectModel(Role) private readonly roleModel: typeof Role,
+    @InjectModel(Article) private readonly articleModel: typeof Article,
+    @InjectModel(Contribution) private readonly contributionModel: typeof Contribution,
+    @InjectModel(Donation) private readonly donationModel: typeof Donation,
+    @InjectModel(Trip) private readonly tripModel: typeof Trip,
+    @InjectModel(TripParticipant) private readonly tripParticipantModel: typeof TripParticipant,
+    @InjectModel(OpenCall) private readonly openCallModel: typeof OpenCall,
+    @InjectModel(Participant) private readonly participantModel: typeof Participant,
+    @InjectModel(Discussion) private readonly discussionModel: typeof Discussion,
+    @InjectModel(Comment) private readonly commentModel: typeof Comment,
+    @InjectModel(Reaction) private readonly reactionModel: typeof Reaction,
+    @InjectModel(Collection) private readonly collectionModel: typeof Collection,
+  ) {}
+
+  // ─── HELPER: date range filter ────────────────────────────
+
+  private getDateRange(period: string): { start: Date; end: Date } {
+    const end = new Date();
+    const start = new Date();
+    switch (period) {
+      case '7d': start.setDate(end.getDate() - 7); break;
+      case '30d': start.setDate(end.getDate() - 30); break;
+      case '90d': start.setDate(end.getDate() - 90); break;
+      case '1y': start.setFullYear(end.getFullYear() - 1); break;
+      default: start.setDate(end.getDate() - 30);
+    }
+    return { start, end };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 1: OVERVIEW
+  // ═══════════════════════════════════════════════════════════
+
+  async getOverview(period: string = '30d') {
+    const { start, end } = this.getDateRange(period);
+    const prevStart = new Date(start);
+    prevStart.setTime(prevStart.getTime() - (end.getTime() - start.getTime()));
+
+    // Current period stats
+    const totalPageViews = await this.articleModel.sum('view_count') || 0;
+    const totalUsers = await this.userModel.count();
+    const newUsersThisPeriod = await this.userModel.count({
+      where: { createdAt: { [Op.between]: [start, end] } },
+    });
+    const newUsersPrevPeriod = await this.userModel.count({
+      where: { createdAt: { [Op.between]: [prevStart, start] } },
+    });
+
+    const totalArticles = await this.articleModel.count();
+    const publishedArticles = await this.articleModel.count({ where: { status: 'published' } });
+
+    const totalContributions = await this.contributionModel.count();
+    const newContributions = await this.contributionModel.count({
+      where: { createdAt: { [Op.between]: [start, end] } },
+    });
+
+    // Growth chart data — user registrations grouped by day
+    const userGrowth = await this.userModel.findAll({
+      attributes: [
+        [fn('DATE', col('createdAt')), 'date'],
+        [fn('COUNT', col('id')), 'count'],
+      ],
+      where: { createdAt: { [Op.between]: [start, end] } },
+      group: [fn('DATE', col('createdAt'))],
+      order: [[fn('DATE', col('createdAt')), 'ASC']],
+      raw: true,
+    });
+
+    // Engagement trends — articles created per day
+    const contentGrowth = await this.articleModel.findAll({
+      attributes: [
+        [fn('DATE', col('createdAt')), 'date'],
+        [fn('COUNT', col('id')), 'count'],
+      ],
+      where: { createdAt: { [Op.between]: [start, end] } },
+      group: [fn('DATE', col('createdAt'))],
+      order: [[fn('DATE', col('createdAt')), 'ASC']],
+      raw: true,
+    });
+
+    return {
+      summary: {
+        total_page_views: totalPageViews,
+        total_users: totalUsers,
+        new_users: newUsersThisPeriod,
+        user_growth_pct: newUsersPrevPeriod > 0
+          ? Math.round(((newUsersThisPeriod - newUsersPrevPeriod) / newUsersPrevPeriod) * 100)
+          : 0,
+        total_articles: totalArticles,
+        published_articles: publishedArticles,
+        total_contributions: totalContributions,
+        new_contributions: newContributions,
+      },
+      charts: {
+        user_growth: userGrowth,
+        content_growth: contentGrowth,
+      },
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 2: CONTENT PERFORMANCE
+  // ═══════════════════════════════════════════════════════════
+
+  async getContentPerformance(period: string = '30d') {
+    const { start, end } = this.getDateRange(period);
+
+    // Top categories by total views
+    const topCategories = await this.articleModel.findAll({
+      attributes: [
+        'category',
+        [fn('SUM', col('view_count')), 'total_views'],
+        [fn('COUNT', col('id')), 'article_count'],
+      ],
+      where: {
+        category: { [Op.ne]: null as any },
+        status: 'published',
+      },
+      group: ['category'],
+      order: [[fn('SUM', col('view_count')), 'DESC']],
+      limit: 10,
+      raw: true,
+    });
+
+    // Top articles by views
+    const topArticles = await this.articleModel.findAll({
+      attributes: ['id', 'title', 'slug', 'category', 'view_count', 'published_at'],
+      where: { status: 'published' },
+      include: [{ model: User, as: 'author', attributes: ['id', 'username', 'full_name'] }],
+      order: [['view_count', 'DESC']],
+      limit: 10,
+    });
+
+    // Content type distribution
+    const contentTypeDistribution = await this.articleModel.findAll({
+      attributes: [
+        'content_type',
+        [fn('COUNT', col('id')), 'count'],
+      ],
+      group: ['content_type'],
+      order: [[fn('COUNT', col('id')), 'DESC']],
+      raw: true,
+    });
+
+    // Status distribution
+    const statusDistribution = await this.articleModel.findAll({
+      attributes: [
+        'status',
+        [fn('COUNT', col('id')), 'count'],
+      ],
+      group: ['status'],
+      raw: true,
+    });
+
+    return {
+      top_categories: topCategories,
+      top_articles: topArticles,
+      content_type_distribution: contentTypeDistribution,
+      status_distribution: statusDistribution,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 3: TOP CREATORS
+  // ═══════════════════════════════════════════════════════════
+
+  async getTopCreators(period: string = '30d', limit: number = 10) {
+    // Top authors by article count + total views
+    const topAuthors = await this.articleModel.findAll({
+      attributes: [
+        'author_id',
+        [fn('COUNT', col('Article.id')), 'article_count'],
+        [fn('SUM', col('view_count')), 'total_views'],
+      ],
+      include: [{ model: User, as: 'author', attributes: ['id', 'username', 'full_name'] }],
+      where: { status: 'published' },
+      group: ['author_id', 'author.id'],
+      order: [[fn('SUM', col('view_count')), 'DESC']],
+      limit,
+    });
+
+    // Top contributors by contribution count
+    const topContributors = await this.contributionModel.findAll({
+      attributes: [
+        'user_id',
+        [fn('COUNT', col('Contribution.id')), 'contribution_count'],
+      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
+      group: ['user_id', 'User.id'],
+      order: [[fn('COUNT', col('Contribution.id')), 'DESC']],
+      limit,
+    });
+
+    // Authors with most donations received (earnings)
+    const topEarners = await this.donationModel.findAll({
+      attributes: [
+        [fn('SUM', col('amount')), 'total_earnings'],
+        [fn('COUNT', col('Donation.id')), 'donation_count'],
+      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
+      group: ['User.id'],
+      order: [[fn('SUM', col('amount')), 'DESC']],
+      limit,
+    });
+
+    return {
+      top_authors: topAuthors,
+      top_contributors: topContributors,
+      top_earners: topEarners,
+    };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // TAB 4: CONVERSION FUNNEL
+  // ═══════════════════════════════════════════════════════════
+
+  async getConversionFunnel() {
+    const totalUsers = await this.userModel.count();
+
+    // Count users by role
+    const roleCounts: Record<string, number> = {};
+    const roles = await this.roleModel.findAll({ attributes: ['id', 'name'] });
+
+    for (const role of roles) {
+      roleCounts[role.name] = await this.userRoleModel.count({
+        where: { role_id: role.id },
+      });
+    }
+
+    // Users who made at least 1 contribution
+    const contributorCount = await this.contributionModel.count({
+      distinct: true,
+      col: 'user_id',
+    });
+
+    // Users who published at least 1 article
+    const authorCount = await this.articleModel.count({
+      distinct: true,
+      col: 'author_id',
+      where: { status: 'published' },
+    });
+
+    const funnel = [
+      { stage: 'Registered Users', count: totalUsers, conversion: 100 },
+      {
+        stage: 'Contributors',
+        count: contributorCount,
+        conversion: totalUsers > 0 ? Math.round((contributorCount / totalUsers) * 1000) / 10 : 0,
+      },
+      {
+        stage: 'Authors',
+        count: authorCount,
+        conversion: contributorCount > 0 ? Math.round((authorCount / contributorCount) * 1000) / 10 : 0,
+      },
+      {
+        stage: 'Editors',
+        count: roleCounts['editor'] || 0,
+        conversion: authorCount > 0 ? Math.round(((roleCounts['editor'] || 0) / authorCount) * 1000) / 10 : 0,
+      },
+      {
+        stage: 'Admins',
+        count: roleCounts['admin'] || 0,
+        conversion: 0,
+      },
+    ];
+
+    return { funnel, role_distribution: roleCounts };
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // PLATFORM SUMMARY (for main dashboard cards)
+  // ═══════════════════════════════════════════════════════════
+
+  async getPlatformSummary() {
+    const [
+      totalUsers,
+      totalArticles,
+      totalContributions,
+      totalCollections,
+      totalTrips,
+      totalOpenCalls,
+      totalDiscussions,
+      totalComments,
+      totalReactions,
+      totalDonations,
+      donationSum,
+    ] = await Promise.all([
+      this.userModel.count(),
+      this.articleModel.count(),
+      this.contributionModel.count(),
+      this.collectionModel.count(),
+      this.tripModel.count(),
+      this.openCallModel.count(),
+      this.discussionModel.count(),
+      this.commentModel.count(),
+      this.reactionModel.count(),
+      this.donationModel.count(),
+      this.donationModel.sum('amount') || 0,
+    ]);
+
+    return {
+      users: totalUsers,
+      articles: totalArticles,
+      contributions: totalContributions,
+      collections: totalCollections,
+      trips: totalTrips,
+      open_calls: totalOpenCalls,
+      discussions: totalDiscussions,
+      comments: totalComments,
+      reactions: totalReactions,
+      donations: { count: totalDonations, total_amount: donationSum },
+    };
+  }
+}
