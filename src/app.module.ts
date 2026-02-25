@@ -31,6 +31,9 @@ import { DashboardModule } from './dashboard/dashboard.module';
 import { TripsModule } from './trips/trips.module';
 import { ArticlesModule } from './articles/articles.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { CmsModule } from './cms/cms.module';
+import { FinanceModule } from './finance/finance.module';
+import { MessagingModule } from './messaging/messaging.module';
 
 @Module({
   imports: [
@@ -73,6 +76,9 @@ import { AnalyticsModule } from './analytics/analytics.module';
     TripsModule,
     ArticlesModule,
     AnalyticsModule,
+    CmsModule,
+    FinanceModule,
+    MessagingModule,
   ],
   providers: [
     {

@@ -46,6 +46,16 @@ import { Article } from 'src/articles/models/article.model';
 import { ArticleBlock } from 'src/articles/models/article-block.model';
 import { ArticleContributor } from 'src/articles/models/article-contributor.model';
 import { ArticleTag } from 'src/articles/models/article-tag.model';
+import { Page } from '../cms/models/page.model';
+import { PageSection } from '../cms/models/page-section.model';
+import { SiteSettings } from '../cms/models/site-settings.model';
+import { Invoice } from '../finance/models/invoice.model';
+import { Payout } from '../finance/models/payout.model';
+import { FraudFlag } from '../finance/models/fraud-flag.model';
+import { Conversation } from '../messaging/models/conversation.model';
+import { Message } from '../messaging/models/message.model';
+import { Broadcast } from '../messaging/models/broadcast.model';
+import { MessageTemplate } from '../messaging/models/message-template.model';
 
 @Module({
   imports: [
@@ -107,6 +117,16 @@ import { ArticleTag } from 'src/articles/models/article-tag.model';
           ArticleBlock,
           ArticleContributor,
           ArticleTag,
+          Page,
+          PageSection,
+          SiteSettings,
+          Invoice,
+          Payout,
+          FraudFlag,
+          Conversation,
+          Message,
+          Broadcast,
+          MessageTemplate,
         ],
       }),
     }),
