@@ -3,31 +3,40 @@ import { Discussion } from '../discussions/models/discussion.model';
 import { User } from '../users/models/user.model';
 
 export async function seedComments(adminUser: User, discussions: Discussion[]) {
-  const comments = await Comment.bulkCreate(
-    [
-      {
-        discussion_id: discussions[0].id,
-        user_id: adminUser.id,
-        content: 'This story deeply resonates with my family’s experience too.',
-        depth: 0,
-      },
-      {
-        discussion_id: discussions[0].id,
-        user_id: adminUser.id,
-        content: 'Can you share more about the village mentioned?',
-        parent_comment_id: null,
-        depth: 0,
-      },
-      {
-        discussion_id: discussions[1].id,
-        user_id: adminUser.id,
-        content: 'We should digitize these songs to preserve them!',
-        depth: 0,
-      },
-    ] as any[]
-  );
+  const commentsData = [
+    {
+      discussion_id: discussions[0].id,
+      user_id: adminUser.id,
+      content: 'This story deeply resonates with my family\'s experience too.',
+      depth: 0,
+    },
+    {
+      discussion_id: discussions[0].id,
+      user_id: adminUser.id,
+      content: 'Can you share more about the village mentioned?',
+      depth: 0,
+    },
+    {
+      discussion_id: discussions[1].id,
+      user_id: adminUser.id,
+      content: 'We should digitize these songs to preserve them!',
+      depth: 0,
+    },
+  ];
 
-  console.log('✅ Discussions and Comments seeded successfully.');
+  const comments: Comment[] = [];
+  for (const data of commentsData) {
+    const [comment] = await Comment.findOrCreate({
+      where: {
+        discussion_id: data.discussion_id,
+        user_id: data.user_id,
+        content: data.content,
+      },
+      defaults: data as any,
+    });
+    comments.push(comment);
+  }
 
+  console.log('✅ Comments seeded');
   return comments;
 }

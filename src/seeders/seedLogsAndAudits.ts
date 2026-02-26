@@ -9,39 +9,31 @@ export async function seedLogsAndAudits() {
     return;
   }
 
-  await Log.bulkCreate([
-    {
-      user_id: adminUser.id,
-      action: 'LOGIN',
-      entity_type: 'User',
-      entity_id: adminUser.id,
-      details: 'Admin logged into the system',
-    },
-    {
-      user_id: adminUser.id,
-      action: 'CREATE_COLLECTION',
-      entity_type: 'Collection',
-      entity_id: '00000000-0000-0000-0000-000000000001', // dummy UUID
-      details: 'Created Nakba 1948 collection',
-    },
-  ] as any[]);
+  // Logs
+  const logsData = [
+    { user_id: adminUser.id, action: 'LOGIN', entity_type: 'User', entity_id: adminUser.id, details: 'Admin logged into the system' },
+    { user_id: adminUser.id, action: 'CREATE_COLLECTION', entity_type: 'Collection', entity_id: '00000000-0000-0000-0000-000000000001', details: 'Created Nakba 1948 collection' },
+  ];
 
-  await AuditTrail.bulkCreate([
-    {
-      user_id: adminUser.id,
-      action: 'UPDATE_CONTRIBUTION',
-      entity_type: 'Contribution',
-      entity_id: '00000000-0000-0000-0000-000000000002', // dummy UUID
-      changes: JSON.stringify({ status: ['pending_review', 'approved'] }),
-    },
-    {
-      user_id: adminUser.id,
-      action: 'DELETE_FILE',
-      entity_type: 'File',
-      entity_id: '00000000-0000-0000-0000-000000000003', // dummy UUID
-      changes: JSON.stringify({ deleted: true }),
-    },
-  ] as any[]);
+  for (const data of logsData) {
+    await Log.findOrCreate({
+      where: { user_id: data.user_id, action: data.action, entity_type: data.entity_type },
+      defaults: data as any,
+    });
+  }
 
-  console.log('✅ Logs and Audit Trails seeded successfully');
+  // Audit Trails
+  const auditsData = [
+    { user_id: adminUser.id, action: 'UPDATE_CONTRIBUTION', entity_type: 'Contribution', entity_id: '00000000-0000-0000-0000-000000000002', changes: JSON.stringify({ status: ['pending_review', 'approved'] }) },
+    { user_id: adminUser.id, action: 'DELETE_FILE', entity_type: 'File', entity_id: '00000000-0000-0000-0000-000000000003', changes: JSON.stringify({ deleted: true }) },
+  ];
+
+  for (const data of auditsData) {
+    await AuditTrail.findOrCreate({
+      where: { user_id: data.user_id, action: data.action, entity_type: data.entity_type },
+      defaults: data as any,
+    });
+  }
+
+  console.log('✅ Logs and Audit Trails seeded');
 }
