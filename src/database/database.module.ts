@@ -56,6 +56,7 @@ import { Conversation } from '../messaging/models/conversation.model';
 import { Message } from '../messaging/models/message.model';
 import { Broadcast } from '../messaging/models/broadcast.model';
 import { MessageTemplate } from '../messaging/models/message-template.model';
+import { UserSettings } from 'src/author-dashboard/models/user-settings.model';
 
 @Module({
   imports: [
@@ -127,6 +128,7 @@ import { MessageTemplate } from '../messaging/models/message-template.model';
           Message,
           Broadcast,
           MessageTemplate,
+          UserSettings,
         ],
       }),
     }),

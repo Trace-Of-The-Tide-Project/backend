@@ -34,6 +34,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { CmsModule } from './cms/cms.module';
 import { FinanceModule } from './finance/finance.module';
 import { MessagingModule } from './messaging/messaging.module';
+import { AuthorDashboardModule } from './author-dashboard/author-dashboard.module';
 
 @Module({
   imports: [
@@ -79,6 +80,7 @@ import { MessagingModule } from './messaging/messaging.module';
     CmsModule,
     FinanceModule,
     MessagingModule,
+    AuthorDashboardModule,
   ],
   providers: [
     {
