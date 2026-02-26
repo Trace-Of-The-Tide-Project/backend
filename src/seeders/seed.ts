@@ -24,6 +24,7 @@ import { seedArticles } from './seedArticles';
 import { seedCms } from './seedCms';
 import { seedFinance } from './seedFinance';
 import { seedMessaging } from './seedMessaging';
+import {seedAuthorDashboard} from './seedAuthorDashboard';
 
 export async function seed() {
   try {
@@ -40,6 +41,8 @@ export async function seed() {
 
     // 4. User-Role assignments
     await seedUserRoles(users, roles);
+    
+    await seedAuthorDashboard();
 
     // 5. Collections
     const collections = await seedCollections(users[0]);
