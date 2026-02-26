@@ -5,88 +5,47 @@ import { Location } from '../knowledge/models/location.model';
 import { User } from '../users/models/user.model';
 
 export async function seedKnowledge(adminUser: User, locations: Location[]) {
-    console.log('🚀 Starting Knowledge seeding...');
+  console.log('🚀 Starting Knowledge seeding...');
 
-    // 🔹 1. Books
-    const books = await Book.bulkCreate(
-        [
-            {
-                title: 'Memory and Resistance',
-                author: 'Edward Said',
-                summary: 'Exploring cultural identity and displacement in Palestine.',
-                cover_image: 'memory_resistance.jpg',
-                created_by: adminUser.id,
-                created_at: new Date(),
-            },
-            {
-                title: 'Voices of the Land',
-                author: 'Lila Abu-Lughod',
-                summary: 'Anthology of oral heritage and traditions.',
-                cover_image: 'voices_land.jpg',
-                created_by: adminUser.id,
-                created_at: new Date(),
-            },
-        ] as any[],
-        { ignoreDuplicates: true }
-    );
+  // Books
+  const booksData = [
+    { title: 'Memory and Resistance', author: 'Edward Said', summary: 'Exploring cultural identity and displacement in Palestine.', cover_image: 'memory_resistance.jpg', created_by: adminUser.id },
+    { title: 'Voices of the Land', author: 'Lila Abu-Lughod', summary: 'Anthology of oral heritage and traditions.', cover_image: 'voices_land.jpg', created_by: adminUser.id },
+  ];
 
-    // 🔹 2. Knowledge Articles
-    const articles = await KnowledgeArticle.bulkCreate(
-        [
-            {
-                title: 'Preserving Oral Histories Digitally',
-                content:
-                    'An overview of best practices for archiving oral testimonies using digital tools.',
-                author_id: adminUser.id,
-                created_at: new Date(),
-                updated_at: new Date(),
-            },
-            {
-                title: 'Traditional Architecture of Gaza',
-                content:
-                    'Examining historical construction techniques and their cultural meanings.',
-                author_id: adminUser.id,
-                created_at: new Date(),
-                updated_at: new Date(),
-            },
-        ] as any[],
-        { ignoreDuplicates: true }
-    );
+  for (const data of booksData) {
+    await Book.findOrCreate({
+      where: { title: data.title },
+      defaults: data as any,
+    });
+  }
 
-    // 🔹 3. Adventures
-    const adventures = await Adventure.bulkCreate(
-        [
-            {
-                title: 'Journey Through Old Gaza',
-                description: 'A cultural tour documenting stories from old neighborhoods.',
-                start_date: new Date('2025-01-10'),
-                end_date: new Date('2025-01-15'),
-                created_by: adminUser.id,
-                created_at: new Date(),
-            },
-            {
-                title: 'Discovering Northern Villages',
-                description: 'Collecting oral histories from northern Palestine.',
-                start_date: new Date('2025-02-01'),
-                end_date: new Date('2025-02-10'),
-                created_by: adminUser.id,
-                created_at: new Date(),
-            },
-        ] as any[],
-        { ignoreDuplicates: true }
-    );
+  // Knowledge Articles
+  const articlesData = [
+    { title: 'Preserving Oral Histories Digitally', content: 'An overview of best practices for archiving oral testimonies using digital tools.', author_id: adminUser.id },
+    { title: 'Traditional Architecture of Gaza', content: 'Examining historical construction techniques and their cultural meanings.', author_id: adminUser.id },
+  ];
 
-    // 🔹 4. Link Adventures → Locations
-    if (locations && locations.length && adventures.length) {
-        const firstAdventure = adventures[0];
-        const firstLocation = locations[0];
+  for (const data of articlesData) {
+    await KnowledgeArticle.findOrCreate({
+      where: { title: data.title },
+      defaults: data as any,
+    });
+  }
 
-        if (firstAdventure && firstLocation) {
-            // Assign the foreign key directly
-            (firstAdventure as any).location_id = firstLocation.id;
-            await firstAdventure.save();
-        }
-    }
-    console.log('✅ Knowledge (Books, Articles, Adventures) seeded successfully.');
-    return { books, articles, adventures };
+  // Adventures
+  const adventuresData = [
+    { title: 'Journey Through Old Gaza', description: 'A cultural tour documenting stories from old neighborhoods.', start_date: new Date('2025-01-10'), end_date: new Date('2025-01-15'), created_by: adminUser.id },
+    { title: 'Discovering Northern Villages', description: 'Collecting oral histories from northern Palestine.', start_date: new Date('2025-02-01'), end_date: new Date('2025-02-10'), created_by: adminUser.id },
+  ];
+
+  for (const data of adventuresData) {
+    await Adventure.findOrCreate({
+      where: { title: data.title },
+      defaults: data as any,
+    });
+  }
+
+
+  console.log('✅ Knowledge (Books, Articles, Adventures) seeded');
 }

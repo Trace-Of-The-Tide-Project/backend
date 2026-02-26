@@ -27,6 +27,13 @@ export class Discussion extends Model<Discussion> {
   @Column({ type: DataType.TEXT })
   declare description: string;
 
+  @Column({
+    type: DataType.STRING(20),
+    defaultValue: 'open',
+    allowNull: false,
+  })
+  declare status: string;
+
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   declare created_by: string;
