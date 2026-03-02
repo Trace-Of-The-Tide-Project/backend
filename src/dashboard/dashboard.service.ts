@@ -398,7 +398,6 @@ export class DashboardService {
 
   // ============================================================
   // 7. RECENT ACTIVITY FEED
-  // FIX: ModerationLog User alias must be 'reviewer'
   // ============================================================
 
   async getRecentActivity(limit: number = 20) {
