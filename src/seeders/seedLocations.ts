@@ -21,7 +21,6 @@ export async function seedLocations() {
         longitude: 35.0826,
         address: 'Acre, Palestine',
         created_by: adminUser.id,
-        created_at: new Date(),
       },
       {
         name: 'Gaza City',
@@ -30,7 +29,6 @@ export async function seedLocations() {
         longitude: 34.4667,
         address: 'Gaza, Palestine',
         created_by: adminUser.id,
-        created_at: new Date(),
       },
       {
         name: 'Jerusalem',
@@ -39,7 +37,6 @@ export async function seedLocations() {
         longitude: 35.2137,
         address: 'Jerusalem, Palestine',
         created_by: adminUser.id,
-        created_at: new Date(),
       },
       {
         name: 'Beirut',
@@ -48,7 +45,6 @@ export async function seedLocations() {
         longitude: 35.5018,
         address: 'Beirut, Lebanon',
         created_by: adminUser.id,
-        created_at: new Date(),
       },
       {
         name: 'Haifa',
@@ -57,7 +53,6 @@ export async function seedLocations() {
         longitude: 34.9896,
         address: 'Haifa, Palestine',
         created_by: adminUser.id,
-        created_at: new Date(),
       },
     ] as any[],
     { ignoreDuplicates: true }

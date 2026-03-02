@@ -10,7 +10,7 @@ import {
 import { User } from '../../users/models/user.model';
 import { CollectiveMember } from './collective-member.model';
 
-@Table({ tableName: 'collectives' })
+@Table({ tableName: 'collectives', timestamps: false })
 export class Collective extends Model<Collective> {
   @Column({
     type: DataType.UUID,

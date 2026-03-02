@@ -24,12 +24,13 @@ describe('ContributionsController', () => {
   });
 
   it('should create a contribution', async () => {
-    const body = { title: 'Story', description: 'desc', user_id: 'u1' };
-    service.create.mockResolvedValue({ id: 'c1', ...body } as any);
+    const body = { title: 'Story', description: 'desc' };
+    const req = { user: { sub: 'u1' } };
+    service.create.mockResolvedValue({ id: 'c1', ...body, user_id: 'u1' } as any);
 
-    const result = await controller.create(body);
+    const result = await controller.create(body, req);
 
-    expect(service.create).toHaveBeenCalledWith(body);
+    expect(service.create).toHaveBeenCalledWith({ ...body, user_id: 'u1' });
     expect(result).toHaveProperty('id');
   });
 

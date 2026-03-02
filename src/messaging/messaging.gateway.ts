@@ -15,6 +15,7 @@ import { Message } from './models/message.model';
 import { User } from '../users/models/user.model';
 import { JwtService } from '@nestjs/jwt';
 import { Logger } from '@nestjs/common';
+import { Op } from 'sequelize';
 
 interface AuthenticatedSocket extends Socket {
   userId?: string;
@@ -24,7 +25,7 @@ interface AuthenticatedSocket extends Socket {
 @WebSocketGateway({
   namespace: '/messaging',
   cors: {
-    origin: '*', // Restrict in production
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3001',
     credentials: true,
   },
 })
@@ -132,8 +133,22 @@ export class MessagingGateway
   // ─── ROOM MANAGEMENT ─────────────────────────────
 
   @SubscribeMessage('join_admin')
-  handleJoinAdmin(@ConnectedSocket() client: AuthenticatedSocket) {
-    // Admin joins the admin room to receive notifications
+  async handleJoinAdmin(@ConnectedSocket() client: AuthenticatedSocket) {
+    // Verify user has admin role before allowing them to join admin room
+    if (!client.userId) return { error: 'Unauthorized' };
+
+    const { UserRole } = require('../users/models/user-role.model');
+    const { Role } = require('../roles/models/role.model');
+    const adminRoles = await UserRole.findAll({
+      where: { user_id: client.userId },
+      include: [{ model: Role, as: 'role', where: { name: ['admin', 'editor'] } }],
+    });
+
+    if (!adminRoles || adminRoles.length === 0) {
+      this.logger.warn(`${client.username} tried to join admin room without permission`);
+      return { error: 'Forbidden: admin role required' };
+    }
+
     client.join('admins');
     this.logger.log(`${client.username} joined admin room`);
     return { event: 'joined', data: 'admins' };
@@ -272,7 +287,7 @@ export class MessagingGateway
         {
           where: {
             conversation_id: data.conversation_id,
-            sender_id: { [require('sequelize').Op.ne]: client.userId },
+            sender_id: { [Op.ne]: client.userId },
             is_read: false,
           },
         },

@@ -9,7 +9,7 @@ import {
 import { User } from '../../users/models/user.model';
 import { Comment } from '../../comments/models/comment.model';
 
-@Table({ tableName: 'reactions' })
+@Table({ tableName: 'reactions', timestamps: false })
 export class Reaction extends Model<Reaction> {
   @Column({
     type: DataType.UUID,

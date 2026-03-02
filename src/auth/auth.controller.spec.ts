@@ -59,7 +59,7 @@ describe('AuthController', () => {
         message: 'Reset token generated',
       });
 
-      const result = await controller.forgotPassword('test@trace.ps');
+      const result = await controller.forgotPassword({ email: 'test@trace.ps' } as any);
 
       expect(authService.generateResetToken).toHaveBeenCalledWith('test@trace.ps');
       expect(result).toHaveProperty('resetToken');
@@ -72,7 +72,7 @@ describe('AuthController', () => {
         message: 'Password reset successfully',
       });
 
-      const result = await controller.resetPassword('reset-tok', 'NewPass@123');
+      const result = await controller.resetPassword({ token: 'reset-tok', newPassword: 'NewPass@123' } as any);
 
       expect(authService.resetPassword).toHaveBeenCalledWith('reset-tok', 'NewPass@123');
       expect(result).toEqual({ message: 'Password reset successfully' });
@@ -124,7 +124,7 @@ describe('AuthController', () => {
         message: 'Password changed successfully',
       });
 
-      const result = await controller.changePassword(req, 'oldPass', 'newPass@123');
+      const result = await controller.changePassword(req, { currentPassword: 'oldPass', newPassword: 'newPass@123' } as any);
 
       expect(authService.changePassword).toHaveBeenCalledWith(
         'user-uuid-1',

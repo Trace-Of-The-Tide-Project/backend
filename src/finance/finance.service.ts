@@ -28,11 +28,11 @@ export class FinanceService {
       await Promise.all([
         // Today's donations
         this.donationModel.sum('amount', {
-          where: { createdAt: { [Op.gte]: today } },
+          where: { date: { [Op.gte]: today } },
         }),
         // Monthly revenue
         this.donationModel.sum('amount', {
-          where: { createdAt: { [Op.gte]: monthStart } },
+          where: { date: { [Op.gte]: monthStart } },
         }),
         // Pending payouts
         this.payoutModel.findAndCountAll({

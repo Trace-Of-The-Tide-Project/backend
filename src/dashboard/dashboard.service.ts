@@ -408,7 +408,7 @@ export class DashboardService {
           attributes: ['id', 'username', 'full_name'],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['timestamp', 'DESC']],
       limit,
     });
 
@@ -442,7 +442,7 @@ export class DashboardService {
               name: log.user.full_name || log.user.username,
             }
           : null,
-        timestamp: log.createdAt,
+        timestamp: log.timestamp,
         details: log.details ? this.safeJsonParse(log.details) : null,
       })),
       ...recentModerations.map((mod) => ({
@@ -551,7 +551,7 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: Math.floor(filters.offset / filters.limit) + 1,
+      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
@@ -580,6 +580,7 @@ export class DashboardService {
       {
         model: ContributionType,
         where: filters.type ? { name: filters.type } : undefined,
+        required: !!filters.type,
       },
       {
         model: User,
@@ -602,7 +603,7 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: Math.floor(filters.offset / filters.limit) + 1,
+      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
@@ -875,7 +876,7 @@ export class DashboardService {
           attributes: ['id', 'username', 'full_name'],
         },
       ],
-      group: ['user_id', 'user.id', 'user.username', 'user.full_name'],
+      group: ['user_id', 'User.id', 'User.username', 'User.full_name'],
       order: [[fn('COUNT', col('Contribution.id')), 'DESC']],
       limit: 10,
       raw: false,

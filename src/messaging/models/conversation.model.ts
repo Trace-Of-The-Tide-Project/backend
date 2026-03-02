@@ -51,10 +51,10 @@ export class Conversation extends Model<Conversation> {
     @Column({ type: DataType.INTEGER, defaultValue: 0 })
     declare unread_count: number;
 
-    @BelongsTo(() => User, 'user_id')
+    @BelongsTo(() => User, { foreignKey: 'user_id', as: 'user' })
     declare user: User;
 
-    @BelongsTo(() => User, 'assigned_to')
+    @BelongsTo(() => User, { foreignKey: 'assigned_to', as: 'assignee' })
     declare assignee: User;
 
     @HasMany(() => Message)

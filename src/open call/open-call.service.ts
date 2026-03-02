@@ -62,7 +62,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
   async findActiveOpenCalls(query: any = {}) {
     const now = new Date();
     return super.findAll(
-      { ...query, status: 'open' },
+      { ...query, status: 'open', timeline_end: { [Op.gte]: now } },
       {
         include: this.openCallInclude,
         searchableFields: ['title', 'description', 'category'],

@@ -175,7 +175,13 @@ export class CmsService {
     if (!created) {
       await setting.update({ value });
     }
-    return { key, value: JSON.parse(value), created };
+    let parsedValue: any;
+    try {
+      parsedValue = JSON.parse(value);
+    } catch {
+      parsedValue = value;
+    }
+    return { key, value: parsedValue, created };
   }
 
   async deleteSetting(key: string) {

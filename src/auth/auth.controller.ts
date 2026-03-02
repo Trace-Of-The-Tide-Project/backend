@@ -12,6 +12,9 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt/auth.guard';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -40,31 +43,15 @@ export class AuthController {
   @Post('forgot-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Request a password reset token' })
-  @ApiBody({
-    schema: {
-      properties: { email: { type: 'string', example: 'user@trace.ps' } },
-    },
-  })
-  async forgotPassword(@Body('email') email: string) {
-    return this.authService.generateResetToken(email);
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.generateResetToken(dto.email);
   }
 
   @Post('reset-password')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Reset password using token' })
-  @ApiBody({
-    schema: {
-      properties: {
-        token: { type: 'string' },
-        newPassword: { type: 'string', minLength: 8 },
-      },
-    },
-  })
-  async resetPassword(
-    @Body('token') token: string,
-    @Body('newPassword') newPassword: string,
-  ) {
-    return this.authService.resetPassword(token, newPassword);
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 
   @Post('logout')
@@ -104,23 +91,11 @@ export class AuthController {
     summary: 'Change password (authenticated user)',
     description: 'Requires current password. Revokes all sessions after change.',
   })
-  @ApiBody({
-    schema: {
-      properties: {
-        currentPassword: { type: 'string' },
-        newPassword: { type: 'string', minLength: 8 },
-      },
-    },
-  })
-  async changePassword(
-    @Req() req,
-    @Body('currentPassword') currentPassword: string,
-    @Body('newPassword') newPassword: string,
-  ) {
+  async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(
       req.user.sub,
-      currentPassword,
-      newPassword,
+      dto.currentPassword,
+      dto.newPassword,
     );
   }
 }

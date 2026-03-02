@@ -56,9 +56,9 @@ export class FraudFlag extends Model<FraudFlag> {
   @Column(DataType.DATE)
   declare resolved_at: Date;
 
-  @BelongsTo(() => User, 'user_id')
+  @BelongsTo(() => User, { foreignKey: 'user_id', as: 'suspect' })
   declare suspect: User;
 
-  @BelongsTo(() => User, 'resolved_by')
+  @BelongsTo(() => User, { foreignKey: 'resolved_by', as: 'resolver' })
   declare resolver: User;
 }

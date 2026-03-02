@@ -121,6 +121,14 @@ export class TripsController {
     return this.tripsService.addStop(id, dto);
   }
 
+  @Patch(':id/stops/reorder')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reorder stops — send array of stop IDs in desired order' })
+  reorderStops(@Param('id') id: string, @Body('stopIds') stopIds: string[]) {
+    return this.tripsService.reorderStops(id, stopIds);
+  }
+
   @Patch(':id/stops/:stopId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -139,14 +147,6 @@ export class TripsController {
   @ApiOperation({ summary: 'Remove a stop from a trip' })
   removeStop(@Param('id') id: string, @Param('stopId') stopId: string) {
     return this.tripsService.removeStop(id, stopId);
-  }
-
-  @Patch(':id/stops/reorder')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reorder stops — send array of stop IDs in desired order' })
-  reorderStops(@Param('id') id: string, @Body('stopIds') stopIds: string[]) {
-    return this.tripsService.reorderStops(id, stopIds);
   }
 
   // ═══════════════════════════════════════════════════════════

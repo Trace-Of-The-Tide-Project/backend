@@ -10,7 +10,7 @@ import {
 import { User } from '../../users/models/user.model';
 import { GroupMember } from './group-member.model';
 
-@Table({ tableName: 'groups' })
+@Table({ tableName: 'groups', timestamps: false })
 export class Group extends Model<Group> {
   @Column({
     type: DataType.UUID,

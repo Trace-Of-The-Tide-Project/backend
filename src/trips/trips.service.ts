@@ -5,6 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 import { BaseService } from '../common/base.service';
 import { Trip } from './models/trip.model';
 import { TripStop } from './models/trip-stop.model';
@@ -51,7 +52,8 @@ export class TripsService extends BaseService<Trip> {
   }
 
   async createTrip(data: any, userId: string) {
-    return super.create({ ...data, created_by: userId });
+    const trip = await super.create({ ...data, created_by: userId });
+    return this.findOne(trip.id);
   }
 
   async updateTrip(id: string, data: any) {
@@ -93,7 +95,7 @@ export class TripsService extends BaseService<Trip> {
     // Cancel all registered participants
     await this.tripParticipantModel.update(
       { status: 'cancelled' },
-      { where: { trip_id: id, status: ['registered', 'confirmed', 'waitlisted'] } },
+      { where: { trip_id: id, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } } },
     );
 
     await trip.update({ status: 'cancelled' });
@@ -177,7 +179,7 @@ export class TripsService extends BaseService<Trip> {
 
     // Check if already registered
     const existing = await this.tripParticipantModel.findOne({
-      where: { trip_id: tripId, user_id: userId, status: ['registered', 'confirmed', 'waitlisted'] },
+      where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
     });
     if (existing) throw new ConflictException('Already registered for this trip');
 
@@ -185,7 +187,7 @@ export class TripsService extends BaseService<Trip> {
     let status = 'registered';
     if (trip.max_participants) {
       const activeCount = await this.tripParticipantModel.count({
-        where: { trip_id: tripId, status: ['registered', 'confirmed'] },
+        where: { trip_id: tripId, status: { [Op.in]: ['registered', 'confirmed'] } },
       });
       if (activeCount >= trip.max_participants) {
         status = 'waitlisted';
@@ -205,21 +207,24 @@ export class TripsService extends BaseService<Trip> {
 
   async cancelRegistration(tripId: string, userId: string) {
     const participant = await this.tripParticipantModel.findOne({
-      where: { trip_id: tripId, user_id: userId, status: ['registered', 'confirmed', 'waitlisted'] },
+      where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
     });
     if (!participant) throw new NotFoundException('Registration not found');
 
+    const wasActive = ['registered', 'confirmed'].includes(participant.status);
     await participant.update({ status: 'cancelled' });
 
-    // Promote first waitlisted person if a confirmed/registered spot opened
-    const trip = await this.tripModel.findByPk(tripId);
-    if (trip?.max_participants) {
-      const nextWaitlisted = await this.tripParticipantModel.findOne({
-        where: { trip_id: tripId, status: 'waitlisted' },
-        order: [['registered_at', 'ASC']],
-      });
-      if (nextWaitlisted) {
-        await nextWaitlisted.update({ status: 'registered' });
+    // Only promote waitlisted if an active (registered/confirmed) spot was freed
+    if (wasActive) {
+      const trip = await this.tripModel.findByPk(tripId);
+      if (trip?.max_participants) {
+        const nextWaitlisted = await this.tripParticipantModel.findOne({
+          where: { trip_id: tripId, status: 'waitlisted' },
+          order: [['registered_at', 'ASC']],
+        });
+        if (nextWaitlisted) {
+          await nextWaitlisted.update({ status: 'registered' });
+        }
       }
     }
 

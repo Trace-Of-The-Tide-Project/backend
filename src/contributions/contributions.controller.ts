@@ -7,11 +7,13 @@ import {
   Param,
   Body,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ContributionsService } from './contributions.service';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
+import { Roles } from '../auth/jwt/roles.decorator';
 import {
   ApiTags,
   ApiOperation,
@@ -25,11 +27,11 @@ export class ContributionsController {
   constructor(private readonly contributionsService: ContributionsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new contribution' })
-  create(@Body() body: any) {
-    return this.contributionsService.create(body);
+  create(@Body() body: any, @Req() req: any) {
+    return this.contributionsService.create({ ...body, user_id: req.user.sub });
   }
 
   @Get()

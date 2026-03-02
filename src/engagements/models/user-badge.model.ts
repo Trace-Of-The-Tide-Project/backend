@@ -27,18 +27,19 @@ export class UserBadge extends Model<UserBadge> {
   declare badge_id: string;
 
   // Who awarded it (admin user id)
+  @ForeignKey(() => User)
   @Column(DataType.UUID)
   declare awarded_by: string;
 
   @Column(DataType.TEXT)
   declare reason: string;
 
-  @BelongsTo(() => User, 'user_id')
+  @BelongsTo(() => User, { foreignKey: 'user_id', as: 'user' })
   declare user: User;
 
-  @BelongsTo(() => Badge, 'badge_id')
+  @BelongsTo(() => Badge, { foreignKey: 'badge_id', as: 'badge' })
   declare badge: Badge;
 
-  @BelongsTo(() => User, 'awarded_by')
+  @BelongsTo(() => User, { foreignKey: 'awarded_by', as: 'awarder' })
   declare awarder: User;
 }

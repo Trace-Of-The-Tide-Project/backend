@@ -37,6 +37,8 @@ import { MessagingModule } from 'src/messaging/messaging.module';
 import { AuthorDashboardModule } from 'src/author-dashboard/author-dashboard.module';
 import { SystemSettingsModule } from 'src/system-settings/system-settings.module';
 import { EngagementsModule } from 'src/engagements/engagements.module';
+import { PersonModule } from 'src/person/person.module';
+import { KnowledgeModule } from 'src/knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -85,6 +87,8 @@ import { EngagementsModule } from 'src/engagements/engagements.module';
     AuthorDashboardModule,
     SystemSettingsModule,
     EngagementsModule,
+    PersonModule,
+    KnowledgeModule,
   ],
   providers: [
     {

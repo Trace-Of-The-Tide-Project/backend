@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { UserRole } from './user-role.model';
 import { UserProfile } from './user-profile.model';
-import { UserStatus } from 'src/enums/user-status.enum';
+import { UserStatus } from '../../enums/user-status.enum';
 
 @Table({ tableName: 'users' })
 export class User extends Model<User> {
@@ -30,7 +30,7 @@ export class User extends Model<User> {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: true,
     unique: 'unique_phone_number',
   })
   declare phone_number: string;

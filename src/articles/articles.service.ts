@@ -218,7 +218,8 @@ export class ArticlesService extends BaseService<Article> {
     const article = await this.articleModel.findByPk(id);
     if (!article) throw new NotFoundException(`Article ${id} not found`);
     await article.increment('view_count');
-    return { view_count: article.view_count + 1 };
+    await article.reload();
+    return { view_count: article.view_count };
   }
 
   // ─── BLOCKS MANAGEMENT ────────────────────────────────────
