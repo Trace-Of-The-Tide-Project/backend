@@ -59,17 +59,25 @@ export class TokenService {
    */
   async verifyAndConsumeRefreshToken(
     token: string,
+    userId?: string,
   ): Promise<RefreshToken | null> {
+    const where: any = {
+      expires_at: { [Op.gt]: new Date() },
+    };
+    if (userId) {
+      where.user_id = userId;
+    }
+
     const candidates = await this.refreshTokenModel.findAll({
-      where: {
-        expires_at: { [Op.gt]: new Date() },
-      },
+      where,
       order: [['created_at', 'DESC']],
     });
 
     for (const candidate of candidates) {
       const match = await bcrypt.compare(token, candidate.token);
       if (match) {
+        // Consume the token — delete it so it cannot be reused
+        await candidate.destroy();
         return candidate;
       }
     }

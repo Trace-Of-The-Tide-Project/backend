@@ -51,9 +51,9 @@ export class Payout extends Model<Payout> {
   @Column(DataType.DATE)
   declare completed_at: Date;
 
-  @BelongsTo(() => User, 'creator_id')
+  @BelongsTo(() => User, { foreignKey: 'creator_id', as: 'creator' })
   declare creator: User;
 
-  @BelongsTo(() => User, 'reviewed_by')
+  @BelongsTo(() => User, { foreignKey: 'reviewed_by', as: 'reviewer' })
   declare reviewer: User;
 }

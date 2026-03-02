@@ -52,6 +52,25 @@ export class ArticlesController {
         return this.articlesService.findAll(query);
     }
 
+    @Get('author/me')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get current user\'s articles' })
+    @ApiQuery({ name: 'status', required: false })
+    @ApiQuery({ name: 'limit', required: false })
+    @ApiQuery({ name: 'offset', required: false })
+    myArticles(@Req() req: any, @Query() query: any) {
+        return this.articlesService.findByAuthor(req.user.sub, query);
+    }
+
+    @Get('author/me/stats')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get current user\'s article stats (published, drafts, views)' })
+    myStats(@Req() req: any) {
+        return this.articlesService.getAuthorStats(req.user.sub);
+    }
+
     @Get('slug/:slug')
     @ApiOperation({ summary: 'Get article by slug (public page)' })
     findBySlug(@Param('slug') slug: string) {
@@ -153,6 +172,14 @@ export class ArticlesController {
         return this.articlesService.addBlock(id, dto);
     }
 
+    @Patch(':id/blocks/reorder')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Reorder blocks — send array of block IDs in desired order' })
+    reorderBlocks(@Param('id') id: string, @Body('blockIds') blockIds: string[]) {
+        return this.articlesService.reorderBlocks(id, blockIds);
+    }
+
     @Patch(':id/blocks/:blockId')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
@@ -171,14 +198,6 @@ export class ArticlesController {
     @ApiOperation({ summary: 'Remove a content block' })
     removeBlock(@Param('id') id: string, @Param('blockId') blockId: string) {
         return this.articlesService.removeBlock(id, blockId);
-    }
-
-    @Patch(':id/blocks/reorder')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Reorder blocks — send array of block IDs in desired order' })
-    reorderBlocks(@Param('id') id: string, @Body('blockIds') blockIds: string[]) {
-        return this.articlesService.reorderBlocks(id, blockIds);
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -207,26 +226,4 @@ export class ArticlesController {
         return this.articlesService.removeContributor(id, contributorId);
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // AUTHOR-SPECIFIC
-    // ═══════════════════════════════════════════════════════════
-
-    @Get('author/me')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get current user\'s articles' })
-    @ApiQuery({ name: 'status', required: false })
-    @ApiQuery({ name: 'limit', required: false })
-    @ApiQuery({ name: 'offset', required: false })
-    myArticles(@Req() req: any, @Query() query: any) {
-        return this.articlesService.findByAuthor(req.user.sub, query);
-    }
-
-    @Get('author/me/stats')
-    @UseGuards(JwtAuthGuard)
-    @ApiBearerAuth()
-    @ApiOperation({ summary: 'Get current user\'s article stats (published, drafts, views)' })
-    myStats(@Req() req: any) {
-        return this.articlesService.getAuthorStats(req.user.sub);
-    }
 }

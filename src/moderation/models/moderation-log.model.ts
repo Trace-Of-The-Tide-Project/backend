@@ -9,7 +9,7 @@ import {
 import { Contribution } from '../../contributions/models/contribution.model';
 import { User } from '../../users/models/user.model';
 
-@Table({ tableName: 'moderation_logs' })
+@Table({ tableName: 'moderation_logs', timestamps: false })
 export class ModerationLog extends Model<ModerationLog> {
   @Column({
     type: DataType.UUID,

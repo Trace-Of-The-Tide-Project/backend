@@ -66,9 +66,9 @@ export class Invoice extends Model<Invoice> {
   @BelongsTo(() => Donation, 'donation_id')
   declare donation: Donation;
 
-  @BelongsTo(() => User, 'payer_id')
+  @BelongsTo(() => User, { foreignKey: 'payer_id', as: 'payer' })
   declare payer: User;
 
-  @BelongsTo(() => User, 'payee_id')
+  @BelongsTo(() => User, { foreignKey: 'payee_id', as: 'payee' })
   declare payee: User;
 }

@@ -175,9 +175,7 @@ export class MessagingService {
     await conversation.update({
       last_message_at: new Date(),
       status: isAdmin ? 'pending' : 'open', // pending = waiting for user reply
-      unread_count: isAdmin
-        ? conversation.unread_count // admin replied, keep user's unread
-        : conversation.unread_count + 1, // user replied, increment for admin
+      unread_count: conversation.unread_count + 1, // increment unread for the other party
     });
 
     return message;
@@ -382,7 +380,7 @@ export class MessagingService {
       authors: 'author',
       editors: 'editor',
       admins: 'admin',
-      contributors: 'visitor', // visitors who have contributed
+      contributors: 'user', // users who have contributed
     };
 
     const roleName = roleMap[targetAudience];

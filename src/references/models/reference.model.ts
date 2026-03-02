@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { Contribution } from '../../contributions/models/contribution.model';
 
-@Table({ tableName: 'references' })
+@Table({ tableName: 'references', timestamps: false })
 export class Reference extends Model<Reference> {
   @Column({
     type: DataType.UUID,

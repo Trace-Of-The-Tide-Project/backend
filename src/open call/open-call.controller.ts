@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { OpenCallsService } from './open-call.service';
@@ -42,6 +43,19 @@ export class OpenCallsController {
     return this.openCallsService.findActiveOpenCalls(query);
   }
 
+  // ═══════════════════════════════════════════════════════════
+  //  ADMIN ENDPOINTS — Open call management
+  // ═══════════════════════════════════════════════════════════
+
+  @Get('stats/overview')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get open call statistics (admin dashboard)' })
+  getStats() {
+    return this.openCallsService.getStats();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get open call details (public)',
@@ -70,13 +84,9 @@ export class OpenCallsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Withdraw from an open call' })
-  leave(@Param('id') id: string, @Body('user_id') userId: string) {
-    return this.openCallsService.leaveOpenCall(id, userId);
+  leave(@Param('id') id: string, @Req() req: any) {
+    return this.openCallsService.leaveOpenCall(id, req.user.sub);
   }
-
-  // ═══════════════════════════════════════════════════════════
-  //  ADMIN ENDPOINTS — Open call management
-  // ═══════════════════════════════════════════════════════════
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -95,15 +105,6 @@ export class OpenCallsController {
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
     return this.openCallsService.findAll(query);
-  }
-
-  @Get('stats/overview')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin', 'editor')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get open call statistics (admin dashboard)' })
-  getStats() {
-    return this.openCallsService.getStats();
   }
 
   @Post()

@@ -13,7 +13,7 @@ export async function seedOpenCallsAndParticipants() {
     return;
   }
 
-  const openCalls = await OpenCall.bulkCreate(
+  await OpenCall.bulkCreate(
     [
       {
         title: 'Oral History of 1967',
@@ -37,10 +37,18 @@ export async function seedOpenCallsAndParticipants() {
     { ignoreDuplicates: true }
   );
 
+  // Re-fetch to get actual IDs (bulkCreate with ignoreDuplicates may not return them)
+  const openCalls = await OpenCall.findAll({
+    where: { title: ['Oral History of 1967', 'Women in Heritage'] },
+  });
+  if (openCalls.length < 2) {
+    console.warn('⚠️ Could not find seeded open calls.');
+    return;
+  }
 
   const contributions = await Contribution.findAll({ limit: 2 });
 
-  const participants = await Participant.bulkCreate(
+  await Participant.bulkCreate(
     [
       {
         user_id: adminUser.id,
@@ -58,9 +66,9 @@ export async function seedOpenCallsAndParticipants() {
         join_date: new Date(),
         status: 'joined',
       },
-    ] as any[]
+    ] as any[],
+    { ignoreDuplicates: true }
   );
 
   console.log('✅ Open Calls and Participants seeded successfully');
-
 }

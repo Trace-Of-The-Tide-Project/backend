@@ -8,7 +8,10 @@ import { Discussion } from '../discussions/models/discussion.model';
 import { Reaction } from '../reactions/models/reaction.model';
 import { Badge } from '../system-settings/models/badge.model';
 import { User } from '../users/models/user.model';
-import { ModerationLog } from '../moderation/models/moderation-log.model';
+import { UserRole } from '../users/models/user-role.model';
+import { UserProfile } from '../users/models/user-profile.model';
+import { Role } from '../roles/models/role.model';
+import { SiteSettings } from '../cms/models/site-settings.model';
 
 @Module({
   imports: [
@@ -19,7 +22,10 @@ import { ModerationLog } from '../moderation/models/moderation-log.model';
       Reaction,
       Badge,
       User,
-      ModerationLog,
+      UserRole,
+      UserProfile,
+      Role,
+      SiteSettings,
     ]),
   ],
   controllers: [EngagementsController],

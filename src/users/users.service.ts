@@ -41,6 +41,12 @@ export class UsersService extends BaseService<User> {
     return user;
   }
 
+  async create(data: any) {
+    const user = await super.create(data);
+    // Re-fetch without password to avoid leaking the hash
+    return this.findOne(user.id);
+  }
+
   async findByEmail(email: string) {
     if (!email) throw new BadRequestException('Email is required');
     const user = await this.userModel.findOne({ where: { email } });

@@ -108,6 +108,15 @@ export class CmsController {
     return this.cmsService.addSection(id, dto);
   }
 
+  @Patch('pages/:id/sections/reorder')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reorder sections (drag-and-drop)' })
+  reorderSections(@Param('id') id: string, @Body('sectionIds') sectionIds: string[]) {
+    return this.cmsService.reorderSections(id, sectionIds);
+  }
+
   @Patch('pages/:id/sections/:sectionId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
@@ -128,15 +137,6 @@ export class CmsController {
   @ApiOperation({ summary: 'Toggle section visibility (eye icon in Figma)' })
   toggleVisibility(@Param('id') id: string, @Param('sectionId') sectionId: string) {
     return this.cmsService.toggleSectionVisibility(id, sectionId);
-  }
-
-  @Patch('pages/:id/sections/reorder')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('admin')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reorder sections (drag-and-drop)' })
-  reorderSections(@Param('id') id: string, @Body('sectionIds') sectionIds: string[]) {
-    return this.cmsService.reorderSections(id, sectionIds);
   }
 
   @Delete('pages/:id/sections/:sectionId')
