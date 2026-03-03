@@ -63,6 +63,7 @@ import { ArticleTag } from 'src/articles/models/article-tag.model';
         autoLoadModels: true,
         synchronize: configService.get<boolean>('database.synchronize'),
         logging: configService.get<any>('database.logging'),
+        dialectOptions: configService.get<any>('database.dialectOptions'),
         models: [
           User,
           Role,

@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { seed } from './seeders/seed';
 import { Sequelize } from 'sequelize-typescript';
@@ -9,6 +10,9 @@ import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Security headers
+  app.use(helmet());
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -26,12 +30,10 @@ async function bootstrap() {
     credentials: true,
   });
 
-  const sequelize = app.get(Sequelize);
- 
-  await sequelize.sync({ alter: true });
-
-  // Only seed in development
+  // Only sync and seed in development
   if (process.env.NODE_ENV !== 'production') {
+    const sequelize = app.get(Sequelize);
+    await sequelize.sync({ alter: true });
     await seed();
   }
 
