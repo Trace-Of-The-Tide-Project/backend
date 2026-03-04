@@ -19,10 +19,23 @@ Your project is already configured to use **Neon**.
 3.  **New Blueprint**: 
     - Click **New +** -> **Blueprint**.
     - Connect your GitHub repository.
+    - **Note on Branch**: If Render says `render.yaml` not found, make sure you selected the branch that has the file (e.g., `main` or `TOT-004`), not `develop`.
     - Render will read the `render.yaml` file and set everything up automatically.
 4.  **Environment Variables**:
-    - During setup, Render will ask you to fill in the missing environment variables (like `POSTGRES_PASSWORD`, `JWT_SECRET`, etc.).
-    - Copy the values from your local `.env` file.
+    - During setup, Render will ask you to fill in the missing environment variables. 
+    - Use the table below to fill them in from your local `.env` or Neon dashboard:
+
+| Variable | Value / Source |
+| :--- | :--- |
+| `POSTGRES_HOST` | From Neon (e.g., `ep-blue-mouse-...`) |
+| `POSTGRES_USER` | From Neon (e.g., `neondb_owner`) |
+| `POSTGRES_PASSWORD` | From Neon |
+| `POSTGRES_DB` | `neondb` (usually) |
+| `JWT_SECRET` | Create a long random string (e.g., `uR8#z2K!p9@mS5`) |
+| `SMTP_PASSWORD` | From Mailtrap (already in your `.env`) |
+| `CORS_ORIGIN` | Your Frontend URL (e.g., `https://trace-of-the-tide.vercel.app`) |
+
+    - Leave other variables like `PORT` and `NODE_ENV` as defaults if provided by `render.yaml`.
 
 ## 🔗 Step 3: Connect Frontend
 Once the backend is live at `https://your-app.onrender.com`:

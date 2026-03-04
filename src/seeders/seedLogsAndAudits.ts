@@ -1,6 +1,6 @@
-import { Log } from '../logs/models/log.model';
-import { AuditTrail } from '../audit-trails/models/audit-trail.model';
-import { User } from '../users/models/user.model';
+import { Log } from 'src/logs/models/log.model';
+import { AuditTrail } from 'src/audit-trails/models/audit-trail.model';
+import { User } from 'src/users/models/user.model';
 
 export async function seedLogsAndAudits() {
   const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
