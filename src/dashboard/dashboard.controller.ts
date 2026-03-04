@@ -169,36 +169,6 @@ export class DashboardController {
     });
   }
 
-  // ============================================================
-  // ENGAGEMENT
-  // ============================================================
-
-  @Get('engagement/stats')
-  @ApiOperation({ summary: 'Engagement stats: comments, likes, discussions' })
-  async getEngagementStats() {
-    return this.dashboardService.getEngagementStats();
-  }
-
-  @Get('engagement/comments')
-  @ApiOperation({ summary: 'List comments with search and filters' })
-  @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'flagged', required: false })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
-  async getEngagementComments(
-    @Query('search') search?: string,
-    @Query('flagged') flagged?: string,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
-    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
-  ) {
-    const offset = (page - 1) * limit;
-    return this.dashboardService.getEngagementComments({
-      search,
-      flagged: flagged === 'true',
-      limit,
-      offset,
-    });
-  }
 
   // ============================================================
   // RECENT ACTIVITY

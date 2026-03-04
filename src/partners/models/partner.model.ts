@@ -1,7 +1,7 @@
 import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { Donation } from '../../donations/models/donation.model';
 
-@Table({ tableName: 'partners' })
+@Table({ tableName: 'partners', timestamps: false })
 export class Partner extends Model<Partner> {
   @Column({
     type: DataType.UUID,

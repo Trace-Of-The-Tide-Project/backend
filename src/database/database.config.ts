@@ -9,7 +9,7 @@ export default registerAs('database', () => ({
   database: process.env.POSTGRES_DB,
   autoLoadModels: true,
   synchronize: true,
-  logging: console.log,
+  logging: process.env.NODE_ENV === 'production' ? false : console.log,
   dialectOptions: process.env.POSTGRES_HOST?.includes('neon.tech')
     ? { ssl: { require: true, rejectUnauthorized: false } }
     : {},

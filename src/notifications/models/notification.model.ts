@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
 
-@Table({ tableName: 'notifications' })
+@Table({ tableName: 'notifications', timestamps: false })
 export class Notification extends Model<Notification> {
   @Column({
     type: DataType.UUID,

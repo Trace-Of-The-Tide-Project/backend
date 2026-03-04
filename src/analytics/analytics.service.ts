@@ -197,7 +197,7 @@ export class AnalyticsService {
       ],
       include: [{ model: User, as: 'author', attributes: ['id', 'username', 'full_name'] }],
       where: { status: 'published' },
-      group: ['author_id', 'author.id'],
+      group: ['author_id', 'author.id', 'author.username', 'author.full_name'],
       order: [[fn('SUM', col('view_count')), 'DESC']],
       limit,
     });
@@ -209,7 +209,7 @@ export class AnalyticsService {
         [fn('COUNT', col('Contribution.id')), 'contribution_count'],
       ],
       include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
-      group: ['user_id', 'User.id'],
+      group: ['user_id', 'User.id', 'User.username', 'User.full_name'],
       order: [[fn('COUNT', col('Contribution.id')), 'DESC']],
       limit,
     });
@@ -221,7 +221,7 @@ export class AnalyticsService {
         [fn('COUNT', col('Donation.id')), 'donation_count'],
       ],
       include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
-      group: ['User.id'],
+      group: ['User.id', 'User.username', 'User.full_name'],
       order: [[fn('SUM', col('amount')), 'DESC']],
       limit,
     });
@@ -318,7 +318,7 @@ export class AnalyticsService {
       this.commentModel.count(),
       this.reactionModel.count(),
       this.donationModel.count(),
-      this.donationModel.sum('amount') || 0,
+      this.donationModel.sum('amount'),
     ]);
 
     return {
@@ -331,7 +331,7 @@ export class AnalyticsService {
       discussions: totalDiscussions,
       comments: totalComments,
       reactions: totalReactions,
-      donations: { count: totalDonations, total_amount: donationSum },
+      donations: { count: totalDonations, total_amount: donationSum || 0 },
     };
   }
 }

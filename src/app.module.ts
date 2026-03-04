@@ -6,31 +6,39 @@ import { CustomThrottlerGuard } from './common/guards/throttler-exception.guard'
 import { APP_GUARD } from '@nestjs/core';
 
 // 🧩 Modules
-import { DatabaseModule } from './database/database.module';
-import { UsersModule } from './users/users.module';
-import { AuthModule } from './auth/auth.module';
-import { RolesModule } from './roles/roles.module';
-import { ContributionsModule } from './contributions/contributions.module';
-import { FilesModule } from './files/files.module';
-import { CollectionsModule } from './collections/collections.module';
-import { OpenCallsModule } from './open call/open-call.module';
-import { DiscussionsModule } from './discussions/discussions.module';
-import { CommentsModule } from './comments/comments.module';
-import { ReactionsModule } from './reactions/reactions.module';
-import { GroupsModule } from './groups/groups.module';
-import { CollectivesModule } from './collectives/collectives.module';
-import { ReferencesModule } from './references/references.module';
-import { PartnersModule } from './partners/partners.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { LogsModule } from './logs/logs.module';
-import { DonationsModule } from './donations/donations.module';
-import { ModerationModule } from './moderation/moderation.module';
-import { AuditTrailsModule } from './audit-trails/audit-trails.module';
-import { TagsModule } from './tags/tags.module';
-import { DashboardModule } from './dashboard/dashboard.module';
-import { TripsModule } from './trips/trips.module';
-import { ArticlesModule } from './articles/articles.module';
-import { AnalyticsModule } from './analytics/analytics.module';
+import { DatabaseModule } from 'src/database/database.module';
+import { UsersModule } from 'src/users/users.module';
+import { AuthModule } from 'src/auth/auth.module';
+import { RolesModule } from 'src/roles/roles.module';
+import { ContributionsModule } from 'src/contributions/contributions.module';
+import { FilesModule } from 'src/files/files.module';
+import { CollectionsModule } from 'src/collections/collections.module';
+import { OpenCallsModule } from 'src/open call/open-call.module';
+import { DiscussionsModule } from 'src/discussions/discussions.module';
+import { CommentsModule } from 'src/comments/comments.module';
+import { ReactionsModule } from 'src/reactions/reactions.module';
+import { GroupsModule } from 'src/groups/groups.module';
+import { CollectivesModule } from 'src/collectives/collectives.module';
+import { ReferencesModule } from 'src/references/references.module';
+import { PartnersModule } from 'src/partners/partners.module';
+import { NotificationsModule } from 'src/notifications/notifications.module';
+import { LogsModule } from 'src/logs/logs.module';
+import { DonationsModule } from 'src/donations/donations.module';
+import { ModerationModule } from 'src/moderation/moderation.module';
+import { AuditTrailsModule } from 'src/audit-trails/audit-trails.module';
+import { TagsModule } from 'src/tags/tags.module';
+import { DashboardModule } from 'src/dashboard/dashboard.module';
+import { TripsModule } from 'src/trips/trips.module';
+import { ArticlesModule } from 'src/articles/articles.module';
+import { AnalyticsModule } from 'src/analytics/analytics.module';
+import { CmsModule } from 'src/cms/cms.module';
+import { FinanceModule } from 'src/finance/finance.module';
+import { MessagingModule } from 'src/messaging/messaging.module';
+import { AuthorDashboardModule } from 'src/author-dashboard/author-dashboard.module';
+import { SystemSettingsModule } from 'src/system-settings/system-settings.module';
+import { EngagementsModule } from 'src/engagements/engagements.module';
+import { PersonModule } from 'src/person/person.module';
+import { KnowledgeModule } from 'src/knowledge/knowledge.module';
 
 @Module({
   imports: [
@@ -73,6 +81,14 @@ import { AnalyticsModule } from './analytics/analytics.module';
     TripsModule,
     ArticlesModule,
     AnalyticsModule,
+    CmsModule,
+    FinanceModule,
+    MessagingModule,
+    AuthorDashboardModule,
+    SystemSettingsModule,
+    EngagementsModule,
+    PersonModule,
+    KnowledgeModule,
   ],
   providers: [
     {

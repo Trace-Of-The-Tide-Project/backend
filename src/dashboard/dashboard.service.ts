@@ -51,7 +51,6 @@ export class DashboardService {
 
   // ============================================================
   // 1. COMMAND CENTER — Top Stats Cards
-  //    (Total Users, Content Published, Monthly Donations, Active Today)
   // ============================================================
 
   async getStats(period: string = '30d') {
@@ -62,13 +61,11 @@ export class DashboardService {
     const yesterdayStart = new Date(todayStart);
     yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
-    // --- Total Users ---
     const totalUsers = await User.count();
     const previousTotalUsers = await User.count({
       where: { createdAt: { [Op.lt]: start } },
     });
 
-    // --- Content Published ---
     const contentPublished = await Contribution.count({
       where: { status: 'published' },
     });
@@ -79,7 +76,6 @@ export class DashboardService {
       },
     });
 
-    // --- Monthly Donations ---
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
@@ -99,7 +95,6 @@ export class DashboardService {
         },
       })) || 0;
 
-    // --- Active Today (based on updatedAt as proxy, since no lastActiveAt) ---
     const activeToday = await User.count({
       where: {
         updatedAt: { [Op.gte]: todayStart },
@@ -142,21 +137,17 @@ export class DashboardService {
 
   // ============================================================
   // 2. ALERTS & NOTIFICATIONS
-  //    (Flagged content, pending editor apps, unusual activity)
   // ============================================================
 
   async getAlerts() {
-    // Flagged content items
     const flaggedContent = await ModerationLog.count({
       where: { action: 'flagged' },
     });
 
-    // Pending contributions awaiting review
     const pendingReviews = await Contribution.count({
       where: { status: 'pending' },
     });
 
-    // Pending editor applications (users with pending status who requested editor role)
     const pendingEditorApps = (await UserRole.count({
       include: [
         {
@@ -170,7 +161,6 @@ export class DashboardService {
       },
     })) as number;
 
-    // Unread admin notifications
     const unreadNotifications = await Notification.count({
       where: { status: 'unread' },
     });
@@ -218,7 +208,6 @@ export class DashboardService {
 
   // ============================================================
   // 3. EDITOR APPLICATIONS
-  //    (Pending editor role requests with approve/reject)
   // ============================================================
 
   async getEditorApplications(page: number = 1, limit: number = 10) {
@@ -254,11 +243,9 @@ export class DashboardService {
 
   // ============================================================
   // 4. CONTENT OVERVIEW
-  //    (Category | Published | Drafts | Flagged table)
   // ============================================================
 
   async getContentOverview() {
-    // Get all contribution types
     const types = await ContributionType.findAll({
       attributes: ['id', 'name'],
     });
@@ -304,7 +291,6 @@ export class DashboardService {
 
   // ============================================================
   // 5. USERS BY ROLE
-  //    (Users, Contributors, Authors, Editors, Admins + growth %)
   // ============================================================
 
   async getUsersByRole() {
@@ -345,7 +331,6 @@ export class DashboardService {
 
   // ============================================================
   // 6. FINANCE SNAPSHOT
-  //    (Today's Donations, Monthly Revenue, Pending Payouts, Platform Fees)
   // ============================================================
 
   async getFinanceSnapshot() {
@@ -355,7 +340,6 @@ export class DashboardService {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-    // Today's donations
     const todayDonations =
       (await Donation.sum('amount', {
         where: { date: { [Op.gte]: todayStart }, status: 'completed' },
@@ -365,7 +349,6 @@ export class DashboardService {
       where: { date: { [Op.gte]: todayStart }, status: 'completed' },
     });
 
-    // Monthly revenue
     const monthlyRevenue =
       (await Donation.sum('amount', {
         where: { date: { [Op.gte]: monthStart }, status: 'completed' },
@@ -379,7 +362,6 @@ export class DashboardService {
         },
       })) || 0;
 
-    // Pending payouts
     const pendingPayouts =
       (await Donation.sum('amount', {
         where: { status: 'pending' },
@@ -389,7 +371,6 @@ export class DashboardService {
       where: { status: 'pending' },
     });
 
-    // Platform fees (10% rate as shown in design)
     const platformFeeRate = 0.1;
     const platformFees = Math.round(monthlyRevenue * platformFeeRate * 100) / 100;
 
@@ -397,7 +378,7 @@ export class DashboardService {
       todayDonations: {
         value: todayDonations,
         transactions: todayDonationCount,
-        change: null, // daily comparison not always meaningful
+        change: null,
       },
       monthlyRevenue: {
         value: monthlyRevenue,
@@ -417,11 +398,9 @@ export class DashboardService {
 
   // ============================================================
   // 7. RECENT ACTIVITY FEED
-  //    (New authors, articles published, donations, flagged content, logins)
   // ============================================================
 
   async getRecentActivity(limit: number = 20) {
-    // Pull from the Log model which already captures activity via hooks
     const logs = await Log.findAll({
       include: [
         {
@@ -429,15 +408,16 @@ export class DashboardService {
           attributes: ['id', 'username', 'full_name'],
         },
       ],
-      order: [['createdAt', 'DESC']],
+      order: [['timestamp', 'DESC']],
       limit,
     });
 
-    // Also get recent moderation actions
+    // FIX: Added `as: 'reviewer'` — ModerationLog BelongsTo User as 'reviewer'
     const recentModerations = await ModerationLog.findAll({
       include: [
         {
           model: User,
+          as: 'reviewer',
           attributes: ['id', 'username', 'full_name'],
         },
         {
@@ -449,7 +429,6 @@ export class DashboardService {
       limit: 10,
     });
 
-    // Combine and format
     const activities = [
       ...logs.map((log) => ({
         id: log.id,
@@ -463,7 +442,7 @@ export class DashboardService {
               name: log.user.full_name || log.user.username,
             }
           : null,
-        timestamp: log.createdAt,
+        timestamp: log.timestamp,
         details: log.details ? this.safeJsonParse(log.details) : null,
       })),
       ...recentModerations.map((mod) => ({
@@ -513,8 +492,7 @@ export class DashboardService {
   }
 
   // ============================================================
-  // 8. USERS MANAGEMENT (Enhanced)
-  //    (Search, filter by role/status, with contributions count)
+  // 8. USERS MANAGEMENT
   // ============================================================
 
   async getUsers(filters: {
@@ -573,14 +551,13 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: Math.floor(filters.offset / filters.limit) + 1,
+      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
 
   // ============================================================
   // 9. CONTENT LIBRARY
-  //    (All contributions with filters, for Content Library dashboard)
   // ============================================================
 
   async getContentLibrary(filters: {
@@ -603,6 +580,7 @@ export class DashboardService {
       {
         model: ContributionType,
         where: filters.type ? { name: filters.type } : undefined,
+        required: !!filters.type,
       },
       {
         model: User,
@@ -625,102 +603,13 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: Math.floor(filters.offset / filters.limit) + 1,
+      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
 
   // ============================================================
-  // 10. ENGAGEMENT STATS
-  //     (Total comments, likes, active discussions, badges)
-  // ============================================================
-
-  async getEngagementStats() {
-    const [totalComments, totalReactions, activeDiscussions] =
-      await Promise.all([
-        Comment.count(),
-        Reaction.count(),
-        Discussion.count(),
-      ]);
-
-    // Likes specifically
-    const totalLikes = await Reaction.count({
-      where: { type: 'like' },
-    });
-
-    return {
-      totalComments,
-      totalLikes,
-      totalReactions,
-      activeDiscussions,
-      badgesAwarded: 0, // placeholder until badges model exists
-    };
-  }
-
-  // ============================================================
-  // 11. ENGAGEMENT — Comments list
-  //     (Paginated comments with search and flagged filter)
-  // ============================================================
-
-  async getEngagementComments(filters: {
-    search?: string;
-    flagged?: boolean;
-    limit: number;
-    offset: number;
-  }) {
-    const where: any = {};
-    if (filters.search) {
-      where.content = { [Op.iLike]: `%${filters.search}%` };
-    }
-
-    const { rows, count } = await Comment.findAndCountAll({
-      where,
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'username', 'full_name'],
-        },
-        {
-          model: Discussion,
-          attributes: ['id', 'title'],
-        },
-      ],
-      limit: filters.limit,
-      offset: filters.offset,
-      order: [['createdAt', 'DESC']],
-    });
-
-    // Get reaction counts for each comment
-    const commentIds = rows.map((c) => c.id);
-    const reactionCounts = await Reaction.findAll({
-      attributes: [
-        'comment_id',
-        [fn('COUNT', col('id')), 'count'],
-      ],
-      where: { comment_id: { [Op.in]: commentIds } },
-      group: ['comment_id'],
-    });
-
-    const reactionMap = new Map(
-      reactionCounts.map((r: any) => [r.comment_id, parseInt(r.get('count'))]),
-    );
-
-    const data = rows.map((comment) => ({
-      ...comment.toJSON(),
-      reactionCount: reactionMap.get(comment.id) || 0,
-    }));
-
-    return {
-      data,
-      total: count,
-      page: Math.floor(filters.offset / filters.limit) + 1,
-      limit: filters.limit,
-    };
-  }
-
-  // ============================================================
-  // 12. FINANCE — Donations list
-  //     (Paginated donations: donor, recipient, amount, date, status)
+  // 10. FINANCE — Donations list
   // ============================================================
 
   async getFinanceDonations(filters: {
@@ -753,8 +642,7 @@ export class DashboardService {
   }
 
   // ============================================================
-  // 13. REPORTS & MODERATION STATS
-  //     (Pending reports, content flagged, users reported, resolved today)
+  // 11. REPORTS & MODERATION STATS
   // ============================================================
 
   async getModerationStats() {
@@ -775,13 +663,14 @@ export class DashboardService {
     return {
       pendingReports,
       contentFlagged,
-      usersReported: 0, // placeholder — needs a user reports model
+      usersReported: 0,
       resolvedToday,
     };
   }
 
   // ============================================================
-  // 14. MODERATION — Reported content list
+  // 12. MODERATION — Reported content list
+  // FIX: ModerationLog User alias must be 'reviewer'
   // ============================================================
 
   async getModerationReports(filters: {
@@ -807,7 +696,9 @@ export class DashboardService {
           ],
         },
         {
+          // FIX: Added `as: 'reviewer'`
           model: User,
+          as: 'reviewer',
           attributes: ['id', 'username', 'full_name'],
         },
       ],
@@ -868,6 +759,7 @@ export class DashboardService {
       include: [
         {
           model: User,
+          as: 'creator',
           attributes: ['id', 'username', 'full_name'],
         },
         {
@@ -900,15 +792,18 @@ export class DashboardService {
 
   // ============================================================
   // 17. COLLECTIONS OVERVIEW
+  // FIX: Collection User alias must be 'creator'
   // ============================================================
 
   async getCollectionsOverview() {
     const totalCollections = await Collection.count();
 
+    // FIX: Added `as: 'creator'` — Collection BelongsTo User as 'creator'
     const recentCollections = await Collection.findAll({
       include: [
         {
           model: User,
+          as: 'creator',
           attributes: ['id', 'username', 'full_name'],
         },
       ],
@@ -924,7 +819,6 @@ export class DashboardService {
 
   // ============================================================
   // 18. ANALYTICS — Platform Growth
-  //     (User registrations over time)
   // ============================================================
 
   async getAnalyticsPlatformGrowth(period: string = '30d') {
@@ -967,7 +861,6 @@ export class DashboardService {
       raw: true,
     });
 
-    // Top contributors
     const topContributors = await Contribution.findAll({
       attributes: [
         'user_id',
@@ -983,7 +876,7 @@ export class DashboardService {
           attributes: ['id', 'username', 'full_name'],
         },
       ],
-      group: ['user_id', 'user.id', 'user.username', 'user.full_name'],
+      group: ['user_id', 'User.id', 'User.username', 'User.full_name'],
       order: [[fn('COUNT', col('Contribution.id')), 'DESC']],
       limit: 10,
       raw: false,
@@ -1002,7 +895,7 @@ export class DashboardService {
   }
 
   // ============================================================
-  // 20. FULL DASHBOARD SUMMARY (combines key data for single call)
+  // 20. FULL DASHBOARD SUMMARY
   // ============================================================
 
   async getFullDashboard() {

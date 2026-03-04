@@ -77,7 +77,12 @@ export class AuthService {
       throw new ConflictException('Email already registered');
     } catch (error) {
       if (error instanceof ConflictException) throw error;
-      // NotFoundException means email is available — continue
+      if (error instanceof NotFoundException) {
+        // Email not found — available, continue
+      } else {
+        // Unexpected error (DB failure, etc.) — re-throw
+        throw error;
+      }
     }
 
     const hashedPassword = await bcrypt.hash(signupDto.password, 10);
@@ -135,9 +140,13 @@ export class AuthService {
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
       // In production: send email with reset link containing this token
       return { resetToken, message: 'Reset token generated' };
-    } catch {
-      // Always return same response — don't reveal whether email exists
-      return { message: 'If the email exists, a reset link has been sent' };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        // Don't reveal whether email exists
+        return { message: 'If the email exists, a reset link has been sent' };
+      }
+      // Re-throw unexpected errors (DB failures, JWT signing errors, etc.)
+      throw error;
     }
   }
 
@@ -185,7 +194,9 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, roles };
 
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-    return { accessToken };
+    // Issue a new refresh token (token rotation)
+    const newRefreshToken = await this.tokenService.createRefreshToken(user.id);
+    return { accessToken, refreshToken: newRefreshToken };
   }
 
   async getUserFromToken(userId: string) {
