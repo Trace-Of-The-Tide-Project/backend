@@ -16,13 +16,13 @@ import { OpenCall } from '../open call/models/open-call.model';
 import { Participant } from '../open call/models/participant.model';
 import { Collection } from '../collections/models/collection.model';
 import { ModerationLog } from '../moderation/models/moderation-log.model';
-import { Log } from '../logs/models/log.model';
 import { AuditTrail } from '../audit-trails/models/audit-trail.model';
 import { Notification } from '../notifications/models/notification.model';
+import { Log } from 'src/logs/models/log.model';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly sequelize: Sequelize) {}
+  constructor(private readonly sequelize: Sequelize) { }
 
   // ============================================================
   // HELPER: Date range calculations
@@ -173,34 +173,34 @@ export class DashboardService {
       items: [
         ...(flaggedContent > 0
           ? [
-              {
-                type: 'flagged',
-                severity: 'critical',
-                message: `${flaggedContent} content items flagged`,
-                description:
-                  'Requires immediate review for policy violations',
-              },
-            ]
+            {
+              type: 'flagged',
+              severity: 'critical',
+              message: `${flaggedContent} content items flagged`,
+              description:
+                'Requires immediate review for policy violations',
+            },
+          ]
           : []),
         ...(pendingEditorApps > 0
           ? [
-              {
-                type: 'editor_application',
-                severity: 'info',
-                message: `${pendingEditorApps} pending editor applications`,
-                description: `Awaiting review for more than 16 hours`,
-              },
-            ]
+            {
+              type: 'editor_application',
+              severity: 'info',
+              message: `${pendingEditorApps} pending editor applications`,
+              description: `Awaiting review for more than 16 hours`,
+            },
+          ]
           : []),
         ...(pendingReviews > 0
           ? [
-              {
-                type: 'pending_review',
-                severity: 'warning',
-                message: `${pendingReviews} contributions awaiting review`,
-                description: 'Content pending moderation approval',
-              },
-            ]
+            {
+              type: 'pending_review',
+              severity: 'warning',
+              message: `${pendingReviews} contributions awaiting review`,
+              description: 'Content pending moderation approval',
+            },
+          ]
           : []),
       ],
     };
@@ -438,11 +438,11 @@ export class DashboardService {
         entityId: log.entity_id,
         user: log.user
           ? {
-              id: log.user.id,
-              name: log.user.full_name || log.user.username,
-            }
+            id: log.user.id,
+            name: log.user.full_name || log.user.username,
+          }
           : null,
-        timestamp: log.timestamp,
+        timestamp: log.createdAt,
         details: log.details ? this.safeJsonParse(log.details) : null,
       })),
       ...recentModerations.map((mod) => ({
@@ -453,9 +453,9 @@ export class DashboardService {
         entityId: mod.contribution_id,
         user: mod.reviewer
           ? {
-              id: mod.reviewer.id,
-              name: mod.reviewer.full_name || mod.reviewer.username,
-            }
+            id: mod.reviewer.id,
+            name: mod.reviewer.full_name || mod.reviewer.username,
+          }
           : null,
         timestamp: mod.created_at,
         details: {

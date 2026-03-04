@@ -22,7 +22,6 @@ import { CollectivesModule } from 'src/collectives/collectives.module';
 import { ReferencesModule } from 'src/references/references.module';
 import { PartnersModule } from 'src/partners/partners.module';
 import { NotificationsModule } from 'src/notifications/notifications.module';
-import { LogsModule } from 'src/logs/logs.module';
 import { DonationsModule } from 'src/donations/donations.module';
 import { ModerationModule } from 'src/moderation/moderation.module';
 import { AuditTrailsModule } from 'src/audit-trails/audit-trails.module';
@@ -39,6 +38,7 @@ import { SystemSettingsModule } from 'src/system-settings/system-settings.module
 import { EngagementsModule } from 'src/engagements/engagements.module';
 import { PersonModule } from 'src/person/person.module';
 import { KnowledgeModule } from 'src/knowledge/knowledge.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [

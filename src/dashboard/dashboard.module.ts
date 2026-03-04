@@ -17,9 +17,9 @@ import { OpenCall } from '../open call/models/open-call.model';
 import { Participant } from '../open call/models/participant.model';
 import { Collection } from '../collections/models/collection.model';
 import { ModerationLog } from '../moderation/models/moderation-log.model';
-import { Log } from '../logs/models/log.model';
 import { AuditTrail } from '../audit-trails/models/audit-trail.model';
 import { Notification } from '../notifications/models/notification.model';
+import { Log } from 'src/logs/models/log.model';
 
 @Module({
   imports: [
@@ -48,4 +48,4 @@ import { Notification } from '../notifications/models/notification.model';
   providers: [DashboardService],
   exports: [DashboardService],
 })
-export class DashboardModule {}
+export class DashboardModule { }
