@@ -10,4 +10,7 @@ export default registerAs('database', () => ({
   autoLoadModels: true,
   synchronize: true,
   logging: process.env.NODE_ENV === 'production' ? false : console.log,
+  dialectOptions: process.env.POSTGRES_HOST?.includes('neon.tech')
+    ? { ssl: { require: true, rejectUnauthorized: false } }
+    : {},
 }));

@@ -78,6 +78,7 @@ import { UserBadge } from 'src/engagements/models/user-badge.model';
         autoLoadModels: true,
         synchronize: configService.get<boolean>('database.synchronize'),
         logging: configService.get<any>('database.logging'),
+        dialectOptions: configService.get<any>('database.dialectOptions'),
         models: [
           User,
           Role,
