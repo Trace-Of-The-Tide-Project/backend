@@ -9,8 +9,15 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { OpenCallsService } from './open-call.service';
+import { CreateOpenCallDto, UpdateOpenCallDto } from './dto/open-call.dto';
+import { JoinOpenCallDto } from './dto/join-open-call.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -19,7 +26,21 @@ import {
   ApiOperation,
   ApiQuery,
   ApiBearerAuth,
+  ApiConsumes,
+  ApiResponse,
 } from '@nestjs/swagger';
+
+const ALLOWED_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'application/pdf',
+  'audio/mpeg',
+  'video/mp4',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
 @ApiTags('Open Calls')
 @Controller('open-calls')
@@ -33,14 +54,76 @@ export class OpenCallsController {
   @Get('active')
   @ApiOperation({
     summary: 'List active/open calls (public)',
-    description: 'Returns only open calls that haven\'t passed their deadline. Used on the public-facing Open Calls page.',
+    description: 'Returns only open calls that haven\'t passed their deadline.',
   })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
   @ApiQuery({ name: 'search', required: false, description: 'Search in title, description, category' })
-  @ApiQuery({ name: 'category', required: false, description: 'Filter by category (Oral History, Photography, etc.)' })
+  @ApiQuery({ name: 'category', required: false })
   findActive(@Query() query: any) {
     return this.openCallsService.findActiveOpenCalls(query);
+  }
+
+  @Get(':id')
+  @ApiOperation({
+    summary: 'Get open call details (public)',
+    description: 'Returns full details with creator info and participant list.',
+  })
+  findOne(@Param('id') id: string) {
+    return this.openCallsService.findOne(id);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  PARTICIPANT ACTIONS — Public (guest allowed)
+  // ═══════════════════════════════════════════════════════════
+
+  @Post(':id/join')
+  @ApiOperation({
+    summary: 'Join an open call (public — guest allowed)',
+    description: 'Submit participation with personal info and optional file uploads. Sends confirmation email.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Successfully joined' })
+  @ApiResponse({ status: 400, description: 'Call is closed or deadline passed' })
+  @ApiResponse({ status: 409, description: 'Already a participant' })
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads/open-calls',
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIMES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error(`File type ${file.mimetype} is not allowed`) as any, false);
+        }
+      },
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  join(
+    @Param('id') id: string,
+    @Body() dto: JoinOpenCallDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: any,
+  ) {
+    // If authenticated, attach user_id
+    if (req.user?.sub) {
+      dto.user_id = req.user.sub;
+    }
+    return this.openCallsService.joinOpenCall(id, dto, files || []);
+  }
+
+  @Delete(':id/leave')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Withdraw from an open call' })
+  leave(@Param('id') id: string, @Req() req: any) {
+    return this.openCallsService.leaveOpenCall(id, req.user.sub);
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -54,38 +137,6 @@ export class OpenCallsController {
   @ApiOperation({ summary: 'Get open call statistics (admin dashboard)' })
   getStats() {
     return this.openCallsService.getStats();
-  }
-
-  @Get(':id')
-  @ApiOperation({
-    summary: 'Get open call details (public)',
-    description: 'Returns full details with creator info and participant list.',
-  })
-  findOne(@Param('id') id: string) {
-    return this.openCallsService.findOne(id);
-  }
-
-  // ═══════════════════════════════════════════════════════════
-  //  PARTICIPANT ACTIONS — Authenticated users
-  // ═══════════════════════════════════════════════════════════
-
-  @Post(':id/join')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Join an open call',
-    description: 'Submit participation with personal info (name, email, phone, experience, about, country, city). Validates the call is still open and the deadline hasn\'t passed.',
-  })
-  join(@Param('id') id: string, @Body() body: any) {
-    return this.openCallsService.joinOpenCall(id, body);
-  }
-
-  @Delete(':id/leave')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Withdraw from an open call' })
-  leave(@Param('id') id: string, @Req() req: any) {
-    return this.openCallsService.leaveOpenCall(id, req.user.sub);
   }
 
   @Get()
@@ -111,12 +162,12 @@ export class OpenCallsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'editor')
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Create a new open call',
-    description: 'Creates a themed call for content submissions. Fields: title, description, category, timeline_start, timeline_end, created_by.',
-  })
-  create(@Body() body: any) {
-    return this.openCallsService.createOpenCall(body);
+  @ApiOperation({ summary: 'Create a new open call' })
+  create(@Body() dto: CreateOpenCallDto, @Req() req: any) {
+    return this.openCallsService.createOpenCall({
+      ...dto,
+      created_by: dto.created_by || req.user.sub,
+    } as any);
   }
 
   @Patch(':id')
@@ -124,18 +175,15 @@ export class OpenCallsController {
   @Roles('admin', 'editor')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update an open call' })
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.openCallsService.updateOpenCall(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateOpenCallDto) {
+    return this.openCallsService.updateOpenCall(id, dto as any);
   }
 
   @Patch(':id/close')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'editor')
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Close an open call',
-    description: 'Stops accepting new participants. Existing submissions remain.',
-  })
+  @ApiOperation({ summary: 'Close an open call' })
   close(@Param('id') id: string) {
     return this.openCallsService.closeOpenCall(id);
   }
@@ -166,10 +214,7 @@ export class OpenCallsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'editor')
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'List participants for an open call',
-    description: 'Paginated list with user info and linked contributions.',
-  })
+  @ApiOperation({ summary: 'List participants for an open call' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
   @ApiQuery({ name: 'status', required: false, enum: ['active', 'approved', 'rejected', 'withdrawn'] })
@@ -182,10 +227,7 @@ export class OpenCallsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin', 'editor')
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Update participant status or role',
-    description: 'Approve, reject, or change the role of a participant.',
-  })
+  @ApiOperation({ summary: 'Update participant status or role' })
   updateParticipant(
     @Param('id') openCallId: string,
     @Param('participantId') participantId: string,
@@ -201,10 +243,7 @@ export class OpenCallsController {
   @Patch(':id/participants/:participantId/link-contribution')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
-  @ApiOperation({
-    summary: 'Link a contribution to a participant',
-    description: 'Connects a submitted contribution to their participation entry.',
-  })
+  @ApiOperation({ summary: 'Link a contribution to a participant' })
   linkContribution(
     @Param('id') openCallId: string,
     @Param('participantId') participantId: string,

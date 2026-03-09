@@ -26,6 +26,7 @@ import {
     ApiOperation,
     ApiQuery,
     ApiBearerAuth,
+    ApiResponse,
 } from '@nestjs/swagger';
 
 @ApiTags('Articles')
@@ -78,9 +79,19 @@ export class ArticlesController {
     }
 
     @Get(':id')
-    @ApiOperation({ summary: 'Get article by ID with blocks, contributors, tags' })
+    @ApiOperation({ summary: 'Get article by ID with blocks, contributors, tags, collection' })
     findOne(@Param('id') id: string) {
         return this.articlesService.findOne(id);
+    }
+
+    @Get(':id/related')
+    @ApiOperation({
+        summary: 'Get related articles (same category/tags)',
+        description: 'Returns up to 4 related published articles based on shared category and tags.',
+    })
+    @ApiResponse({ status: 200, description: 'Array of related articles' })
+    getRelated(@Param('id') id: string) {
+        return this.articlesService.getRelatedArticles(id);
     }
 
     @Post()
@@ -115,7 +126,7 @@ export class ArticlesController {
     @Patch(':id/publish')
     @UseGuards(JwtAuthGuard)
     @ApiBearerAuth()
-    @ApiOperation({ summary: 'Publish article (requires at least 1 block)' })
+    @ApiOperation({ summary: 'Publish article (requires at least 1 block, recalculates reading time)' })
     publish(@Param('id') id: string) {
         return this.articlesService.publishArticle(id);
     }

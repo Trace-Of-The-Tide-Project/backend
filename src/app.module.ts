@@ -39,6 +39,7 @@ import { EngagementsModule } from 'src/engagements/engagements.module';
 import { PersonModule } from 'src/person/person.module';
 import { KnowledgeModule } from 'src/knowledge/knowledge.module';
 import { LogsModule } from './logs/logs.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
   imports: [
@@ -47,6 +48,9 @@ import { LogsModule } from './logs/logs.module';
 
     // 🧱 Database
     DatabaseModule,
+
+    // 📧 Email (global)
+    EmailModule,
 
     // 🚦 Rate Limiting
     ThrottlerModule.forRoot([

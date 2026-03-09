@@ -38,7 +38,7 @@ export class Contribution extends Model<Contribution> {
   declare type_id: string;
 
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, allowNull: true })
   declare user_id: string;
 
   @Column(DataType.DATE)
@@ -47,6 +47,24 @@ export class Contribution extends Model<Contribution> {
   @Column(DataType.STRING)
   declare status: string;
 
+  // Guest contributor fields (for non-logged-in users)
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare contributor_name: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare contributor_email: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare contributor_phone: string;
+
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  declare consent_given: boolean;
+
+  // Optional FK to OpenCall (for contributions linked to an open call)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare open_call_id: string;
+
+  // Associations
   @BelongsTo(() => ContributionType)
   declare type: ContributionType;
 
@@ -62,7 +80,7 @@ export class Contribution extends Model<Contribution> {
   @HasMany(() => CollectionContribution)
   declare collectionContributions: CollectionContribution[];
 
-  // 🪄 Sequelize Hooks
+  // Sequelize Hooks
   @AfterCreate
   static async afterCreateHook(instance: Contribution) {
     await ActivityLogger.logAction(

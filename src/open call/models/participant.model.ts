@@ -5,10 +5,12 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  HasMany,
 } from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
 import { OpenCall } from './open-call.model';
 import { Contribution } from '../../contributions/models/contribution.model';
+import { File } from '../../files/models/file.model';
 
 @Table({ tableName: 'participants' })
 export class Participant extends Model<Participant> {
@@ -20,7 +22,7 @@ export class Participant extends Model<Participant> {
   declare id: string;
 
   @ForeignKey(() => User)
-  @Column(DataType.UUID)
+  @Column({ type: DataType.UUID, allowNull: true })
   declare user_id: string;
 
   @ForeignKey(() => OpenCall)
@@ -40,6 +42,35 @@ export class Participant extends Model<Participant> {
   @Column(DataType.STRING)
   declare status: string;
 
+  // Join form fields from UI designs
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare first_name: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare last_name: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare email: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare phone_number: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare experience_field: string;
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare about: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare country: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare city: string;
+
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  declare terms_agreed: boolean;
+
+  // Associations
   @BelongsTo(() => User)
   declare user: User;
 
