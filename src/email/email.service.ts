@@ -8,13 +8,19 @@ export class EmailService {
   private transporter: nodemailer.Transporter;
 
   constructor(private readonly configService: ConfigService) {
+    const smtpUser = this.configService.get<string>('SMTP_USER');
+    const smtpPass = this.configService.get<string>('SMTP_PASS');
+
+    this.logger.log(`SMTP_USER loaded: ${smtpUser ? smtpUser : 'MISSING'}`);
+    this.logger.log(`SMTP_PASS loaded: ${smtpPass ? '***set***' : 'MISSING'}`);
+
     this.transporter = nodemailer.createTransport({
       host: this.configService.get<string>('SMTP_HOST', 'smtp.gmail.com'),
       port: this.configService.get<number>('SMTP_PORT', 587),
       secure: this.configService.get<number>('SMTP_PORT', 587) === 465,
       auth: {
-        user: this.configService.get<string>('SMTP_USER'),
-        pass: this.configService.get<string>('SMTP_PASS'),
+        user: smtpUser,
+        pass: smtpPass,
       },
     });
   }
