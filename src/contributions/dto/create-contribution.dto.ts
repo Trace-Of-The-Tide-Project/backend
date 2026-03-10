@@ -8,6 +8,7 @@ import {
   MaxLength,
   Equals,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateContributionDto {
@@ -52,6 +53,7 @@ export class CreateContributionDto {
     example: true,
   })
   @IsNotEmpty()
+  @Transform(({ value }) => value === 'true' || value === true)
   @IsBoolean()
   @Equals(true, { message: 'You must give consent to submit a contribution' })
   consent_given!: boolean;
