@@ -5,7 +5,7 @@ import {
     IsDateString,
     IsInt,
     IsArray,
-    IsEnum,
+    IsUUID,
     ValidateNested,
     Min,
 } from 'class-validator';
@@ -64,6 +64,11 @@ export class CreateArticleDto {
     @IsOptional()
     @IsDateString()
     scheduled_at?: string;
+
+    @ApiPropertyOptional({ description: 'Collection UUID to link this article to' })
+    @IsOptional()
+    @IsUUID()
+    collection_id?: string;
 
     @ApiPropertyOptional({ description: 'Array of tag IDs to associate', example: ['uuid1', 'uuid2'] })
     @IsOptional()

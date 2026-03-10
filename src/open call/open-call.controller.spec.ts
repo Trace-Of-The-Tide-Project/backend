@@ -64,25 +64,28 @@ describe('OpenCallsController', () => {
   // ─── Participant actions ───────────────────────────────────
 
   describe('join', () => {
-    it('should call joinOpenCall with id and body', async () => {
+    it('should call joinOpenCall with id, dto, files', async () => {
       const body = {
         user_id: 'user-1',
         first_name: 'Ahmad',
-        experience: 'photography',
-      };
+        experience_field: 'photography',
+      } as any;
+      const files: any[] = [];
+      const req = { user: { sub: 'user-1' } };
       service.joinOpenCall.mockResolvedValue({ message: 'Joined' } as any);
 
-      const result = await controller.join('oc-1', body);
+      const result = await controller.join('oc-1', body, files, req);
 
-      expect(service.joinOpenCall).toHaveBeenCalledWith('oc-1', body);
+      expect(service.joinOpenCall).toHaveBeenCalledWith('oc-1', body, files);
     });
   });
 
   describe('leave', () => {
     it('should call leaveOpenCall', async () => {
       service.leaveOpenCall.mockResolvedValue({ message: 'Withdrawn' } as any);
+      const req = { user: { sub: 'user-1' } };
 
-      await controller.leave('oc-1', 'user-1');
+      await controller.leave('oc-1', req);
 
       expect(service.leaveOpenCall).toHaveBeenCalledWith('oc-1', 'user-1');
     });
@@ -110,12 +113,13 @@ describe('OpenCallsController', () => {
         description: 'Desc',
         category: 'Photography',
         created_by: 'admin-1',
-      };
+      } as any;
+      const req = { user: { sub: 'admin-1' } };
       service.createOpenCall.mockResolvedValue({ id: 'oc-new', ...body } as any);
 
-      const result = await controller.create(body);
+      const result = await controller.create(body, req);
 
-      expect(service.createOpenCall).toHaveBeenCalledWith(body);
+      expect(service.createOpenCall).toHaveBeenCalledWith({ ...body, created_by: 'admin-1' });
       expect(result).toHaveProperty('id');
     });
   });

@@ -11,6 +11,9 @@ import { OpenCall } from './models/open-call.model';
 import { Participant } from './models/participant.model';
 import { User } from '../users/models/user.model';
 import { Contribution } from '../contributions/models/contribution.model';
+import { File } from '../files/models/file.model';
+import { EmailService } from '../email/email.service';
+import { JoinOpenCallDto } from './dto/join-open-call.dto';
 
 @Injectable()
 export class OpenCallsService extends BaseService<OpenCall> {
@@ -39,6 +42,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
     @InjectModel(OpenCall) private readonly openCallModel: typeof OpenCall,
     @InjectModel(Participant)
     private readonly participantModel: typeof Participant,
+    private readonly emailService: EmailService,
   ) {
     super(openCallModel);
   }
@@ -55,10 +59,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     });
   }
 
-  /**
-   * Public listing — only open/active calls, no auth needed.
-   * Used on the public "Open Calls" page for visitors.
-   */
   async findActiveOpenCalls(query: any = {}) {
     const now = new Date();
     return super.findAll(
@@ -66,7 +66,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
       {
         include: this.openCallInclude,
         searchableFields: ['title', 'description', 'category'],
-        order: [['timeline_end', 'ASC']], // soonest deadline first
+        order: [['timeline_end', 'ASC']],
       },
     );
   }
@@ -75,10 +75,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return super.findOne(id, { include: this.openCallInclude });
   }
 
-  /**
-   * Create open call with sensible defaults.
-   * Only admins/editors can create calls.
-   */
   async createOpenCall(data: Partial<OpenCall>) {
     if (!data.title) {
       throw new BadRequestException('Title is required');
@@ -90,17 +86,10 @@ export class OpenCallsService extends BaseService<OpenCall> {
     } as any);
   }
 
-  /**
-   * Update open call. Cannot update closed calls unless reopening.
-   */
   async updateOpenCall(id: string, data: Partial<OpenCall>) {
     return super.update(id, data);
   }
 
-  /**
-   * Close an open call — sets status to 'closed'.
-   * Prevents new participants from joining.
-   */
   async closeOpenCall(id: string) {
     const openCall = await this.openCallModel.findByPk(id);
     if (!openCall) throw new NotFoundException(`Open call ${id} not found`);
@@ -112,9 +101,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return openCall;
   }
 
-  /**
-   * Reopen a closed call.
-   */
   async reopenOpenCall(id: string) {
     const openCall = await this.openCallModel.findByPk(id);
     if (!openCall) throw new NotFoundException(`Open call ${id} not found`);
@@ -134,14 +120,11 @@ export class OpenCallsService extends BaseService<OpenCall> {
   //  PARTICIPANTS — Join / Leave / Manage
   // ═══════════════════════════════════════════════════════════
 
-  /**
-   * Join an open call.
-   * Figma shows: first name, last name, email, phone, experience field,
-   * about, country, city, file uploads, terms agreement.
-   * Core participant data goes in participants table,
-   * any linked contribution goes via contribution_id.
-   */
-  async joinOpenCall(openCallId: string, data: Partial<Participant>) {
+  async joinOpenCall(
+    openCallId: string,
+    dto: JoinOpenCallDto,
+    files: Express.Multer.File[] = [],
+  ) {
     // Validate open call exists and is open
     const openCall = await this.openCallModel.findByPk(openCallId);
     if (!openCall) throw new NotFoundException(`Open call ${openCallId} not found`);
@@ -154,28 +137,65 @@ export class OpenCallsService extends BaseService<OpenCall> {
       throw new BadRequestException('The deadline for this open call has passed');
     }
 
-    // Check user isn't already a participant
-    if (data.user_id) {
+    // Check user isn't already a participant (by user_id or email)
+    if (dto.user_id) {
       const existing = await this.participantModel.findOne({
-        where: { open_call_id: openCallId, user_id: data.user_id },
+        where: { open_call_id: openCallId, user_id: dto.user_id },
       });
       if (existing) {
         throw new ConflictException('You have already joined this open call');
       }
     }
 
-    return this.participantModel.create({
+    const existingByEmail = await this.participantModel.findOne({
+      where: { open_call_id: openCallId, email: dto.email },
+    });
+    if (existingByEmail) {
+      throw new ConflictException('This email has already been used to join this open call');
+    }
+
+    const participant = await this.participantModel.create({
       open_call_id: openCallId,
+      user_id: dto.user_id || null,
+      first_name: dto.first_name,
+      last_name: dto.last_name,
+      email: dto.email,
+      phone_number: dto.phone_number,
+      experience_field: dto.experience_field,
+      about: dto.about,
+      country: dto.country,
+      city: dto.city,
+      terms_agreed: dto.terms_agreed,
       role: 'participant',
       status: 'active',
       join_date: new Date(),
-      ...data,
     } as any);
+
+    // Store uploaded files linked to a contribution (create a placeholder contribution if needed)
+    if (files.length > 0) {
+      for (const file of files) {
+        await File.create({
+          contribution_id: null,
+          file_name: file.originalname,
+          mime_type: file.mimetype,
+          file_size: file.size,
+          path: file.path.replace(/\\/g, '/'),
+          uploaded_by: dto.user_id || null,
+          upload_date: new Date(),
+        } as any);
+      }
+    }
+
+    // Send confirmation email
+    await this.emailService.sendOpenCallConfirmationEmail(
+      dto.email,
+      dto.first_name,
+      openCall.title,
+    );
+
+    return participant;
   }
 
-  /**
-   * Leave / withdraw from an open call.
-   */
   async leaveOpenCall(openCallId: string, userId: string) {
     const openCall = await this.openCallModel.findByPk(openCallId);
     if (!openCall) throw new NotFoundException(`Open call ${openCallId} not found`);
@@ -190,11 +210,8 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return { message: 'Successfully withdrawn from open call' };
   }
 
-  /**
-   * Get participants for a specific open call (admin view).
-   */
   async getParticipants(openCallId: string, query: any = {}) {
-    await this.findOne(openCallId); // validate exists
+    await this.findOne(openCallId);
 
     const page = Number(query.page) || 1;
     const limit = Number(query.limit) || 20;
@@ -227,10 +244,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     };
   }
 
-  /**
-   * Update participant status (approve, reject, promote role).
-   * Used by admin to manage applicants.
-   */
   async updateParticipant(
     openCallId: string,
     participantId: string,
@@ -249,9 +262,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     });
   }
 
-  /**
-   * Remove a participant (admin action).
-   */
   async removeParticipant(openCallId: string, participantId: string) {
     const deleted = await this.participantModel.destroy({
       where: { id: participantId, open_call_id: openCallId },
@@ -263,10 +273,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return { message: 'Participant removed successfully' };
   }
 
-  /**
-   * Link a contribution to a participant's entry.
-   * This connects the content they submitted to their participation.
-   */
   async linkContribution(
     openCallId: string,
     participantId: string,
@@ -279,7 +285,6 @@ export class OpenCallsService extends BaseService<OpenCall> {
       throw new NotFoundException('Participant not found in this open call');
     }
 
-    // Validate contribution exists
     const contribution = await Contribution.findByPk(contributionId);
     if (!contribution) {
       throw new NotFoundException(`Contribution ${contributionId} not found`);

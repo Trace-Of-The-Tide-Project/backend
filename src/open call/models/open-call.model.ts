@@ -41,6 +41,23 @@ export class OpenCall extends Model<OpenCall> {
   @Column({ type: DataType.STRING, defaultValue: 'open' })
   declare status: string;
 
+  // New fields from UI designs
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare edition: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare cover_image: string;
+
+  @Column({ type: DataType.JSON, allowNull: true })
+  declare images: string[];
+
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare body_content: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare author_name: string;
+
+  // Associations
   @BelongsTo(() => User)
   declare creator: User;
 

@@ -24,13 +24,14 @@ describe('ContributionsController', () => {
   });
 
   it('should create a contribution', async () => {
-    const body = { title: 'Story', description: 'desc' };
+    const body = { title: 'Story', description: 'desc' } as any;
+    const files: any[] = [];
     const req = { user: { sub: 'u1' } };
-    service.create.mockResolvedValue({ id: 'c1', ...body, user_id: 'u1' } as any);
+    service.createWithFiles = jest.fn().mockResolvedValue({ id: 'c1', ...body, user_id: 'u1' } as any);
 
-    const result = await controller.create(body, req);
+    const result = await controller.create(body, files, req);
 
-    expect(service.create).toHaveBeenCalledWith({ ...body, user_id: 'u1' });
+    expect(service.createWithFiles).toHaveBeenCalledWith(body, files, 'u1');
     expect(result).toHaveProperty('id');
   });
 

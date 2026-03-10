@@ -90,10 +90,10 @@ describe('LoginDto', () => {
     expect(errors.some((e) => e.property === 'email')).toBe(true);
   });
 
-  it('should fail when password is too short', async () => {
+  it('should accept any non-empty password (length validation is on signup, not login)', async () => {
     const dto = createDto({ password: 'short' });
     const errors = await validate(dto);
-    expect(errors.some((e) => e.property === 'password')).toBe(true);
+    expect(errors.some((e) => e.property === 'password')).toBe(false);
   });
 
   it('should fail when password is empty', async () => {

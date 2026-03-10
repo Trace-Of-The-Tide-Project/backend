@@ -67,14 +67,18 @@ describe('AuthController', () => {
   });
 
   describe('resetPassword', () => {
-    it('should call authService.resetPassword with token and newPassword', async () => {
+    it('should call authService.resetPassword with token, newPassword, and confirmPassword', async () => {
       authService.resetPassword.mockResolvedValue({
         message: 'Password reset successfully',
       });
 
-      const result = await controller.resetPassword({ token: 'reset-tok', newPassword: 'NewPass@123' } as any);
+      const result = await controller.resetPassword({
+        token: 'reset-tok',
+        newPassword: 'NewPass@123',
+        confirmPassword: 'NewPass@123',
+      } as any);
 
-      expect(authService.resetPassword).toHaveBeenCalledWith('reset-tok', 'NewPass@123');
+      expect(authService.resetPassword).toHaveBeenCalledWith('reset-tok', 'NewPass@123', 'NewPass@123');
       expect(result).toEqual({ message: 'Password reset successfully' });
     });
   });

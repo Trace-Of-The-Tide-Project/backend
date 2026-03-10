@@ -12,6 +12,7 @@ import { ArticleContributor } from './models/article-contributor.model';
 import { ArticleTag } from './models/article-tag.model';
 import { User } from '../users/models/user.model';
 import { Tag } from '../tags/models/tag.model';
+import { Collection } from '../collections/models/collection.model';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class ArticlesService extends BaseService<Article> {
       include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
     },
     { model: Tag, through: { attributes: [] } },
+    { model: Collection, attributes: ['id', 'name'], required: false },
   ];
 
   constructor(
@@ -181,7 +183,18 @@ export class ArticlesService extends BaseService<Article> {
       throw new BadRequestException('Add content blocks before publishing');
     }
 
-    await article.update({ status: 'published', published_at: new Date() });
+    // Recalculate reading time on publish
+    const blocks = await this.blockModel.findAll({ where: { article_id: id } });
+    const wordCount = blocks
+      .filter((b) => b.content)
+      .reduce((sum, b) => sum + b.content.split(/\s+/).length, 0);
+    const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+
+    await article.update({
+      status: 'published',
+      published_at: new Date(),
+      reading_time: readingTime,
+    });
     return article;
   }
 
@@ -301,6 +314,66 @@ export class ArticlesService extends BaseService<Article> {
     if (!contributor) throw new NotFoundException('Contributor not found');
     await contributor.destroy();
     return { message: 'Contributor removed' };
+  }
+
+  // ─── RELATED ARTICLES ──────────────────────────────────────
+
+  async getRelatedArticles(id: string) {
+    const article = await this.articleModel.findByPk(id, {
+      include: [{ model: Tag, through: { attributes: [] } }],
+    });
+    if (!article) throw new NotFoundException(`Article ${id} not found`);
+
+    const tagIds = article.tags?.map((t) => t.id) || [];
+
+    // Find articles that share the same category or tags
+    const where: any = {
+      id: { [Op.ne]: id },
+      status: 'published',
+      [Op.or]: [] as any[],
+    };
+
+    if (article.category) {
+      where[Op.or].push({ category: article.category });
+    }
+
+    // If no filters available, just get recent published articles
+    if (where[Op.or].length === 0) {
+      delete where[Op.or];
+    }
+
+    let relatedArticles = await this.articleModel.findAll({
+      where,
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+        { model: Tag, through: { attributes: [] } },
+      ],
+      order: [['published_at', 'DESC']],
+      limit: 4,
+    });
+
+    // If we have tag IDs, boost articles that share tags
+    if (tagIds.length > 0 && relatedArticles.length < 4) {
+      const tagRelated = await this.articleModel.findAll({
+        where: {
+          id: { [Op.ne]: id, [Op.notIn]: relatedArticles.map((a) => a.id) },
+          status: 'published',
+        },
+        include: [
+          { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+          {
+            model: Tag,
+            through: { attributes: [] },
+            where: { id: { [Op.in]: tagIds } },
+            required: true,
+          },
+        ],
+        limit: 4 - relatedArticles.length,
+      });
+      relatedArticles = [...relatedArticles, ...tagRelated];
+    }
+
+    return relatedArticles;
   }
 
   // ─── AUTHOR-SPECIFIC QUERIES ──────────────────────────────

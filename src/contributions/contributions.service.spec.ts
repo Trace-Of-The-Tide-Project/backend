@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ContributionsService } from './contributions.service';
 import { getModelToken } from '@nestjs/sequelize';
 import { Contribution } from './models/contribution.model';
+import { File } from '../files/models/file.model';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ContributionsService', () => {
@@ -37,10 +38,17 @@ describe('ContributionsService', () => {
       destroy: jest.fn(),
     };
 
+    const mockFileModel = {
+      name: 'File',
+      create: jest.fn(),
+      findAll: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ContributionsService,
         { provide: getModelToken(Contribution), useValue: mockModel },
+        { provide: getModelToken(File), useValue: mockFileModel },
       ],
     }).compile();
 

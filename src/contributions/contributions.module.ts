@@ -1,6 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { AuthModule } from 'src/auth/auth.module';
-
 import { SequelizeModule } from '@nestjs/sequelize';
 import { ContributionsService } from './contributions.service';
 import { ContributionsController } from './contributions.controller';

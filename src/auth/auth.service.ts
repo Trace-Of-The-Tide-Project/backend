@@ -4,6 +4,8 @@ import {
   BadRequestException,
   NotFoundException,
   ConflictException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -14,13 +16,18 @@ import { Role } from '../roles/models/role.model';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { TokenService } from './token.service';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
+  // In-memory rate limit map: email -> last request timestamp
+  private resetEmailCooldowns = new Map<string, number>();
+
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private tokenService: TokenService,
+    private emailService: EmailService,
   ) {}
 
   async validateUser(email: string, pass: string): Promise<any> {
@@ -133,24 +140,70 @@ export class AuthService {
     return { message: 'Logged out successfully' };
   }
 
+  /**
+   * Generate a password reset token and send an email with the reset link.
+   * Rate limited to 1 request per 60 seconds per email.
+   */
   async generateResetToken(email: string) {
+    // Rate limiting: max 1 request per 60 seconds per email
+    this.enforceResetCooldown(email, 60);
+
     try {
       const user = await this.usersService.findByEmail(email);
       const payload = { email: user.email, sub: user.id, purpose: 'password-reset' };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-      // In production: send email with reset link containing this token
-      return { resetToken, message: 'Reset token generated' };
+
+      // Send the reset email
+      await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+
+      // Record the cooldown timestamp
+      this.resetEmailCooldowns.set(email.toLowerCase(), Date.now());
+
+      return { message: 'Reset email sent' };
     } catch (error) {
       if (error instanceof NotFoundException) {
-        // Don't reveal whether email exists
-        return { message: 'If the email exists, a reset link has been sent' };
+        // Don't reveal whether email exists — still return success message
+        return { message: 'Reset email sent' };
       }
-      // Re-throw unexpected errors (DB failures, JWT signing errors, etc.)
+      if (error instanceof HttpException) {
+        throw error;
+      }
       throw error;
     }
   }
 
-  async resetPassword(token: string, newPassword: string) {
+  /**
+   * Resend reset password email with 48-second cooldown.
+   */
+  async resendResetEmail(email: string) {
+    this.enforceResetCooldown(email, 48);
+
+    try {
+      const user = await this.usersService.findByEmail(email);
+      const payload = { email: user.email, sub: user.id, purpose: 'password-reset' };
+      const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+
+      await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+      this.resetEmailCooldowns.set(email.toLowerCase(), Date.now());
+
+      return { message: 'Reset email resent', cooldown: 48 };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return { message: 'Reset email resent', cooldown: 48 };
+      }
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw error;
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string, confirmPassword: string) {
+    // Validate passwords match
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
     try {
       const decoded = this.jwtService.verify(token);
 
@@ -228,5 +281,22 @@ export class AuthService {
     await this.tokenService.revokeRefreshToken(userId);
 
     return { message: 'Password changed successfully' };
+  }
+
+  // ─── PRIVATE HELPERS ────────────────────────────────────────
+
+  private enforceResetCooldown(email: string, cooldownSeconds: number) {
+    const key = email.toLowerCase();
+    const lastRequest = this.resetEmailCooldowns.get(key);
+    if (lastRequest) {
+      const elapsed = (Date.now() - lastRequest) / 1000;
+      if (elapsed < cooldownSeconds) {
+        const remaining = Math.ceil(cooldownSeconds - elapsed);
+        throw new HttpException(
+          `Please wait ${remaining} seconds before requesting another reset email`,
+          HttpStatus.TOO_MANY_REQUESTS,
+        );
+      }
+    }
   }
 }

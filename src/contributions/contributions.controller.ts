@@ -9,8 +9,15 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname } from 'path';
 import { ContributionsService } from './contributions.service';
+import { CreateContributionDto } from './dto/create-contribution.dto';
+import { UpdateContributionDto, UpdateContributionStatusDto } from './dto/update-contribution.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -19,7 +26,22 @@ import {
   ApiOperation,
   ApiQuery,
   ApiBearerAuth,
+  ApiConsumes,
+  ApiResponse,
 } from '@nestjs/swagger';
+
+// Allowed MIME types for contribution file uploads
+const ALLOWED_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'application/pdf',
+  'audio/mpeg',
+  'video/mp4',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
+
+const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
 
 @ApiTags('Contributions')
 @Controller('contributions')
@@ -27,11 +49,40 @@ export class ContributionsController {
   constructor(private readonly contributionsService: ContributionsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new contribution' })
-  create(@Body() body: any, @Req() req: any) {
-    return this.contributionsService.create({ ...body, user_id: req.user.sub });
+  @ApiOperation({
+    summary: 'Create a new contribution with optional file uploads',
+    description: 'Works for both authenticated and guest users. If authenticated, user_id is auto-filled from JWT token. Accepts multipart/form-data with files.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Contribution created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads/contributions',
+        filename: (_req, file, cb) => {
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIMES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error(`File type ${file.mimetype} is not allowed. Allowed: JPG, PNG, PDF, MP3, MP4, DOC`) as any, false);
+        }
+      },
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  create(
+    @Body() dto: CreateContributionDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: any,
+  ) {
+    // If authenticated, use token's user_id
+    const userId = req.user?.sub || null;
+    return this.contributionsService.createWithFiles(dto, files || [], userId);
   }
 
   @Get()
@@ -49,7 +100,7 @@ export class ContributionsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single contribution by ID' })
+  @ApiOperation({ summary: 'Get a single contribution by ID with files, type, user, and collections' })
   findOne(@Param('id') id: string) {
     return this.contributionsService.findOne(id);
   }
@@ -58,8 +109,21 @@ export class ContributionsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a contribution' })
-  update(@Param('id') id: string, @Body() body: any) {
-    return this.contributionsService.update(id, body);
+  update(@Param('id') id: string, @Body() dto: UpdateContributionDto) {
+    return this.contributionsService.update(id, dto as any);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update contribution status (admin only)' })
+  @ApiResponse({ status: 200, description: 'Status updated' })
+  updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateContributionStatusDto,
+  ) {
+    return this.contributionsService.update(id, dto as any);
   }
 
   @Delete(':id')

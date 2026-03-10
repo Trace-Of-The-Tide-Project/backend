@@ -13,6 +13,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from '../email/email.service';
 
 jest.mock('bcrypt');
 
@@ -59,12 +60,18 @@ describe('AuthService', () => {
       verifyAndConsumeRefreshToken: jest.fn(),
     };
 
+    const emailService = {
+      sendResetPasswordEmail: jest.fn().mockResolvedValue(true),
+      sendOpenCallConfirmationEmail: jest.fn().mockResolvedValue(true),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
         { provide: TokenService, useValue: tokenService },
+        { provide: EmailService, useValue: emailService },
       ],
     }).compile();
 
@@ -275,12 +282,12 @@ describe('AuthService', () => {
   // ─── generateResetToken ────────────────────────────────────
 
   describe('generateResetToken', () => {
-    it('should generate a reset token for existing user', async () => {
+    it('should send reset email and return success message', async () => {
       usersService.findByEmail.mockResolvedValue(mockUser as any);
 
       const result = await service.generateResetToken('test@trace.ps');
 
-      expect(result).toHaveProperty('resetToken');
+      expect(result).toEqual({ message: 'Reset email sent' });
       expect(jwtService.sign).toHaveBeenCalledWith(
         expect.objectContaining({
           email: 'test@trace.ps',
@@ -299,7 +306,7 @@ describe('AuthService', () => {
       const result = await service.generateResetToken('nonexistent@trace.ps');
 
       expect(result).toEqual({
-        message: 'If the email exists, a reset link has been sent',
+        message: 'Reset email sent',
       });
     });
   });
@@ -316,7 +323,7 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(mockUser as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed');
 
-      const result = await service.resetPassword('valid-token', 'NewPass@123');
+      const result = await service.resetPassword('valid-token', 'NewPass@123', 'NewPass@123');
 
       expect(usersService.update).toHaveBeenCalledWith('user-uuid-1', {
         password: 'new-hashed',
@@ -335,7 +342,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.resetPassword('wrong-purpose-token', 'NewPass@123'),
+        service.resetPassword('wrong-purpose-token', 'NewPass@123', 'NewPass@123'),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -345,7 +352,7 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.resetPassword('expired-token', 'NewPass@123'),
+        service.resetPassword('expired-token', 'NewPass@123', 'NewPass@123'),
       ).rejects.toThrow(BadRequestException);
     });
   });

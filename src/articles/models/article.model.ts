@@ -13,6 +13,7 @@ import { ArticleBlock } from './article-block.model';
 import { ArticleContributor } from './article-contributor.model';
 import { Tag } from '../../tags/models/tag.model';
 import { ArticleTag } from './article-tag.model';
+import { Collection } from '../../collections/models/collection.model';
 
 @Table({ tableName: 'articles' })
 export class Article extends Model<Article> {
@@ -85,8 +86,16 @@ export class Article extends Model<Article> {
   @Column({ type: DataType.UUID, allowNull: false })
   declare author_id: string;
 
+  // Optional collection link
+  @ForeignKey(() => Collection)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare collection_id: string;
+
   @BelongsTo(() => User)
   declare author: User;
+
+  @BelongsTo(() => Collection)
+  declare collection: Collection;
 
   // Block-based content
   @HasMany(() => ArticleBlock)
