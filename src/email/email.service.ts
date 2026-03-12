@@ -43,7 +43,7 @@ export class EmailService {
     email: string,
     token: string,
   ): Promise<boolean> {
-    const resetLink = `${this.frontendUrl}/reset-password?token=${token}`;
+    const resetLink = `${this.frontendUrl}/auth/reset-password?token=${token}`;
 
     try {
       await this.transporter.sendMail({
