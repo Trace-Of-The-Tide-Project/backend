@@ -7,15 +7,18 @@ import {
   Param,
   Body,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CollectivesService } from './collectives.service';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
+import { JoinCollectiveDto } from './dto/join-collective.dto';
 import {
   ApiTags,
   ApiOperation,
   ApiQuery,
+  ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
 
@@ -47,6 +50,25 @@ export class CollectivesController {
   @ApiOperation({ summary: 'List all members of a collective' })
   getMembers(@Param('id') id: string) {
     return this.collectivesService.getMembers(id);
+  }
+
+  @Post(':id/join')
+  @ApiOperation({
+    summary: 'Join a collective (public — guest allowed)',
+    description: 'Submit a join request with personal info, social links, and availability.',
+  })
+  @ApiResponse({ status: 201, description: 'Successfully submitted join request' })
+  @ApiResponse({ status: 404, description: 'Collective not found' })
+  @ApiResponse({ status: 409, description: 'Already a member' })
+  join(
+    @Param('id') id: string,
+    @Body() dto: JoinCollectiveDto,
+    @Req() req: any,
+  ) {
+    if (req.user?.sub) {
+      dto.user_id = req.user.sub;
+    }
+    return this.collectivesService.joinCollective(id, dto);
   }
 
   // ─── Protected endpoints ──────────────────────────────────
