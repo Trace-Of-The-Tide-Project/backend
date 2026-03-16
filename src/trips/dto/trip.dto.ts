@@ -7,6 +7,7 @@ import {
   IsInt,
   Min,
   IsEnum,
+  IsEmail,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -77,6 +78,22 @@ export class CreateTripDto {
   @IsOptional()
   @IsString()
   tags?: string;
+
+  @ApiPropertyOptional({ example: '["English","Arabic"]', description: 'JSON array of languages' })
+  @IsOptional()
+  @IsString()
+  languages?: string;
+
+  @ApiPropertyOptional({ example: '["Visit Al-Aqsa","Local cuisine tasting"]', description: 'JSON array of highlights' })
+  @IsOptional()
+  @IsString()
+  highlights?: string;
+
+  @ApiPropertyOptional({ example: 5, description: 'Minimum participants required for trip to proceed' })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  min_participants?: number;
 }
 
 export class UpdateTripDto extends PartialType(CreateTripDto) {
@@ -142,4 +159,14 @@ export class RegisterParticipantDto {
   @IsOptional()
   @IsString()
   donation_id?: string;
+
+  @ApiPropertyOptional({ example: 'John Doe', description: 'Guest name (for non-logged-in users)' })
+  @IsOptional()
+  @IsString()
+  guest_name?: string;
+
+  @ApiPropertyOptional({ example: 'john@example.com', description: 'Guest email (for non-logged-in users)' })
+  @IsOptional()
+  @IsEmail()
+  guest_email?: string;
 }

@@ -78,6 +78,12 @@ export class ArticlesController {
         return this.articlesService.findBySlug(slug);
     }
 
+    @Get('collection/:collectionId')
+    @ApiOperation({ summary: 'Get articles in a collection with stats (count, total hours)' })
+    getCollectionArticles(@Param('collectionId') collectionId: string) {
+        return this.articlesService.getCollectionArticles(collectionId);
+    }
+
     @Get(':id')
     @ApiOperation({ summary: 'Get article by ID with blocks, contributors, tags, collection' })
     findOne(@Param('id') id: string) {

@@ -41,7 +41,6 @@ export class OpenCall extends Model<OpenCall> {
   @Column({ type: DataType.STRING, defaultValue: 'open' })
   declare status: string;
 
-  // New fields from UI designs
   @Column({ type: DataType.STRING, allowNull: true })
   declare edition: string;
 
@@ -57,7 +56,12 @@ export class OpenCall extends Model<OpenCall> {
   @Column({ type: DataType.STRING, allowNull: true })
   declare author_name: string;
 
-  // Associations
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare type: string;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare date: Date;
+
   @BelongsTo(() => User)
   declare creator: User;
 

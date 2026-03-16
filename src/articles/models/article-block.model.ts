@@ -25,7 +25,7 @@ export class ArticleBlock extends Model<ArticleBlock> {
   @Column({ type: DataType.INTEGER, allowNull: false })
   declare block_order: number;
 
-  // 'paragraph' | 'quote' | 'image' | 'gallery' | 'callout' | 'author_note' | 'divider' | 'caption_text' | 'meta_data'
+  // 'paragraph' | 'quote' | 'image' | 'gallery' | 'callout' | 'author_note' | 'divider' | 'caption_text' | 'meta_data' | 'statistics'
   @Column({ type: DataType.STRING, allowNull: false })
   declare block_type: string;
 

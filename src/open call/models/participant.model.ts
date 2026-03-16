@@ -79,4 +79,7 @@ export class Participant extends Model<Participant> {
 
   @BelongsTo(() => Contribution)
   declare contribution: Contribution;
+
+  @HasMany(() => File)
+  declare files: File[];
 }

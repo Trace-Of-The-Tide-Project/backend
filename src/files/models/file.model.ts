@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { Contribution } from '../../contributions/models/contribution.model';
 import { User } from '../../users/models/user.model';
+import { Participant } from '../../open call/models/participant.model';
 
 @Table({ tableName: 'files' })
 export class File extends Model<File> {
@@ -43,6 +44,10 @@ export class File extends Model<File> {
   @Column(DataType.STRING)
   declare path: string;
 
+  @ForeignKey(() => Participant)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare participant_id: string;
+
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   declare uploaded_by: string;
@@ -55,4 +60,7 @@ export class File extends Model<File> {
 
   @BelongsTo(() => User)
   declare uploader: User;
+
+  @BelongsTo(() => Participant)
+  declare participant: Participant;
 }

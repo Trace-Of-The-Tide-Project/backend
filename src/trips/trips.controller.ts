@@ -160,11 +160,10 @@ export class TripsController {
   }
 
   @Post(':id/register')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Register current user for a trip (auto-waitlist if full)' })
+  @ApiOperation({ summary: 'Register for a trip (authenticated or guest, auto-waitlist if full)' })
   register(@Param('id') id: string, @Req() req: any, @Body() dto: RegisterParticipantDto) {
-    return this.tripsService.registerParticipant(id, req.user.sub, dto);
+    const userId = req.user?.sub || null;
+    return this.tripsService.registerParticipant(id, userId, dto);
   }
 
   @Post(':id/cancel-registration')

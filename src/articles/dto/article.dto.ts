@@ -35,6 +35,22 @@ export class CreateArticleDto {
     @IsString()
     cover_image?: string;
 
+    @ApiPropertyOptional({ example: 'https://cdn.example.com/video.mp4', description: 'Primary media URL for video/audio hero' })
+    @IsOptional()
+    @IsString()
+    media_url?: string;
+
+    @ApiPropertyOptional({ example: 24, description: 'Media duration in minutes (video/audio)' })
+    @IsOptional()
+    @IsInt()
+    @Min(0)
+    media_duration?: number;
+
+    @ApiPropertyOptional({ example: 'Edition 01', description: 'Edition label displayed as badge' })
+    @IsOptional()
+    @IsString()
+    edition?: string;
+
     @ApiPropertyOptional({ example: 'Documentary' })
     @IsOptional()
     @IsString()
@@ -99,7 +115,7 @@ export class CreateArticleBlockDto {
     @Min(1)
     block_order!: number;
 
-    @ApiProperty({ example: 'paragraph', enum: ['paragraph', 'quote', 'image', 'gallery', 'callout', 'author_note', 'divider', 'caption_text', 'meta_data'] })
+    @ApiProperty({ example: 'paragraph', enum: ['paragraph', 'quote', 'image', 'gallery', 'callout', 'author_note', 'divider', 'caption_text', 'meta_data', 'statistics'] })
     @IsNotEmpty()
     @IsString()
     block_type!: string;
