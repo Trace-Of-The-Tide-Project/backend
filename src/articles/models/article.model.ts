@@ -43,6 +43,18 @@ export class Article extends Model<Article> {
   @Column(DataType.STRING)
   declare cover_image: string;
 
+  // Primary media URL for video/audio content types (hero player source)
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare media_url: string;
+
+  // Media duration in minutes (for video/audio content types)
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare media_duration: number;
+
+  // Edition label displayed as badge (e.g. "Edition 01")
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare edition: string;
+
   // 'draft' | 'published' | 'scheduled' | 'archived' | 'flagged'
   @Column({ type: DataType.STRING, defaultValue: 'draft' })
   declare status: string;

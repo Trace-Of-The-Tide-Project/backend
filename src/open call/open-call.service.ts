@@ -36,6 +36,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
     { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
     { model: OpenCall, attributes: ['id', 'title', 'status', 'category'] },
     { model: Contribution, attributes: ['id', 'title', 'status'] },
+    { model: File, attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'] },
   ];
 
   constructor(
@@ -171,11 +172,12 @@ export class OpenCallsService extends BaseService<OpenCall> {
       join_date: new Date(),
     } as any);
 
-    // Store uploaded files linked to a contribution (create a placeholder contribution if needed)
+    // Store uploaded files linked to the participant
     if (files.length > 0) {
       for (const file of files) {
         await File.create({
           contribution_id: null,
+          participant_id: participant.id,
           file_name: file.originalname,
           mime_type: file.mimetype,
           file_size: file.size,
@@ -226,6 +228,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
       include: [
         { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
         { model: Contribution, attributes: ['id', 'title', 'status'] },
+        { model: File, attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'] },
       ],
       limit,
       offset,

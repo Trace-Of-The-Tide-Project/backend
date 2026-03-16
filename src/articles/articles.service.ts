@@ -11,6 +11,7 @@ import { ArticleBlock } from './models/article-block.model';
 import { ArticleContributor } from './models/article-contributor.model';
 import { ArticleTag } from './models/article-tag.model';
 import { User } from '../users/models/user.model';
+import { UserProfile } from '../users/models/user-profile.model';
 import { Tag } from '../tags/models/tag.model';
 import { Collection } from '../collections/models/collection.model';
 import { Op } from 'sequelize';
@@ -18,7 +19,12 @@ import { Op } from 'sequelize';
 @Injectable()
 export class ArticlesService extends BaseService<Article> {
   private readonly defaultInclude = [
-    { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+    {
+      model: User,
+      as: 'author',
+      attributes: ['id', 'username', 'full_name'],
+      include: [{ model: UserProfile, attributes: ['avatar', 'social_links', 'display_name'] }],
+    },
     { model: ArticleBlock, separate: true, order: [['block_order', 'ASC']] as any },
     {
       model: ArticleContributor,
@@ -399,6 +405,29 @@ export class ArticlesService extends BaseService<Article> {
       published,
       drafts,
       total_views: totalViews,
+    };
+  }
+
+  // ─── COLLECTION ARTICLES ────────────────────────────────────
+
+  async getCollectionArticles(collectionId: string) {
+    const articles = await this.articleModel.findAll({
+      where: { collection_id: collectionId, status: 'published' },
+      include: [
+        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+      ],
+      attributes: ['id', 'title', 'slug', 'cover_image', 'content_type', 'reading_time', 'media_duration', 'edition', 'published_at'],
+      order: [['published_at', 'ASC']],
+    });
+
+    const totalMinutes = articles.reduce((sum, a) => {
+      return sum + (a.media_duration || a.reading_time || 0);
+    }, 0);
+
+    return {
+      count: articles.length,
+      total_hours: +(totalMinutes / 60).toFixed(1),
+      articles,
     };
   }
 }

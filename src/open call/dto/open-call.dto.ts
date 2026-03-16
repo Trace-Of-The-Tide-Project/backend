@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsDateString,
   IsUUID,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -52,6 +53,20 @@ export class CreateOpenCallDto {
   @IsOptional()
   @IsString()
   author_name?: string;
+
+  @ApiPropertyOptional({
+    description: 'Content type for filtering',
+    enum: ['article', 'video', 'audio', 'slide'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['article', 'video', 'audio', 'slide'])
+  type?: string;
+
+  @ApiPropertyOptional({ description: 'Publication or event date (ISO string)' })
+  @IsOptional()
+  @IsDateString()
+  date?: string;
 
   @ApiPropertyOptional({ description: 'Creator user UUID' })
   @IsOptional()

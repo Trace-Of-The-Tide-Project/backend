@@ -169,7 +169,7 @@ export class TripsService extends BaseService<Trip> {
     });
   }
 
-  async registerParticipant(tripId: string, userId: string, data: any = {}) {
+  async registerParticipant(tripId: string, userId: string | null, data: any = {}) {
     const trip = await this.tripModel.findByPk(tripId);
     if (!trip) throw new NotFoundException(`Trip ${tripId} not found`);
 
@@ -177,11 +177,25 @@ export class TripsService extends BaseService<Trip> {
       throw new BadRequestException('Can only register for published trips');
     }
 
-    // Check if already registered
-    const existing = await this.tripParticipantModel.findOne({
-      where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
-    });
-    if (existing) throw new ConflictException('Already registered for this trip');
+    // Guest registration requires guest_name and guest_email
+    if (!userId) {
+      if (!data.guest_name || !data.guest_email) {
+        throw new BadRequestException('Guest name and email are required for guest registration');
+      }
+    }
+
+    // Check if already registered (by user_id or guest_email)
+    if (userId) {
+      const existing = await this.tripParticipantModel.findOne({
+        where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
+      });
+      if (existing) throw new ConflictException('Already registered for this trip');
+    } else if (data.guest_email) {
+      const existing = await this.tripParticipantModel.findOne({
+        where: { trip_id: tripId, guest_email: data.guest_email, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
+      });
+      if (existing) throw new ConflictException('This email is already registered for this trip');
+    }
 
     // Check capacity
     let status = 'registered';
@@ -196,7 +210,9 @@ export class TripsService extends BaseService<Trip> {
 
     return this.tripParticipantModel.create({
       trip_id: tripId,
-      user_id: userId,
+      user_id: userId || null,
+      guest_name: data.guest_name || null,
+      guest_email: data.guest_email || null,
       status,
       role: data.role || 'participant',
       notes: data.notes,

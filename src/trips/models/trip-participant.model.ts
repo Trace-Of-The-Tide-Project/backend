@@ -24,8 +24,15 @@ export class TripParticipant extends Model<TripParticipant> {
   declare trip_id: string;
 
   @ForeignKey(() => User)
-  @Column({ type: DataType.UUID, allowNull: false })
+  @Column({ type: DataType.UUID, allowNull: true })
   declare user_id: string;
+
+  // Guest booking fields (for non-logged-in users)
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare guest_name: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare guest_email: string;
 
   // 'registered' | 'confirmed' | 'waitlisted' | 'cancelled'
   @Column({ type: DataType.STRING, defaultValue: 'registered' })

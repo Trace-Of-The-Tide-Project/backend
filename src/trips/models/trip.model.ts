@@ -70,6 +70,18 @@ export class Trip extends Model<Trip> {
   @Column(DataType.TEXT)
   declare tags: string;
 
+  // JSON array of languages e.g. ["English", "Arabic"]
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare languages: string;
+
+  // JSON array of highlights e.g. ["Visit Al-Aqsa", "Local cuisine tasting"]
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare highlights: string;
+
+  // Minimum number of participants required for the trip to proceed
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare min_participants: number;
+
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, allowNull: false })
   declare created_by: string;

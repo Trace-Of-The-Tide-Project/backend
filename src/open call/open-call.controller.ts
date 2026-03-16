@@ -60,6 +60,7 @@ export class OpenCallsController {
   @ApiQuery({ name: 'limit', required: false, example: 10 })
   @ApiQuery({ name: 'search', required: false, description: 'Search in title, description, category' })
   @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'type', required: false, enum: ['article', 'video', 'audio', 'slide'] })
   findActive(@Query() query: any) {
     return this.openCallsService.findActiveOpenCalls(query);
   }
@@ -152,6 +153,7 @@ export class OpenCallsController {
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'status', required: false, enum: ['open', 'closed', 'draft'] })
   @ApiQuery({ name: 'category', required: false })
+  @ApiQuery({ name: 'type', required: false, enum: ['article', 'video', 'audio', 'slide'] })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

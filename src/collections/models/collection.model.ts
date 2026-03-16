@@ -11,6 +11,7 @@ import {
 import { User } from '../../users/models/user.model';
 import { CollectionContribution } from './collection-contribution.model';
 import { Contribution } from '../../contributions/models/contribution.model';
+import { Article } from '../../articles/models/article.model';
 
 @Table({ tableName: 'collections' })
 export class Collection extends Model<Collection> {
@@ -45,4 +46,7 @@ export class Collection extends Model<Collection> {
 
   @HasMany(() => CollectionContribution)
   declare collectionContributions: CollectionContribution[];
+
+  @HasMany(() => Article)
+  declare articles: Article[];
 }
