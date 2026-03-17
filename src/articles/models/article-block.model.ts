@@ -25,7 +25,7 @@ export class ArticleBlock extends Model<ArticleBlock> {
   @Column({ type: DataType.INTEGER, allowNull: false })
   declare block_order: number;
 
-  // 'paragraph' | 'quote' | 'image' | 'gallery' | 'callout' | 'author_note' | 'divider' | 'caption_text' | 'meta_data' | 'statistics'
+  // 'paragraph' | 'quote' | 'image' | 'gallery' | 'callout' | 'author_note' | 'divider' | 'video' | 'audio' | 'caption_text' | 'meta_data' | 'statistics'
   @Column({ type: DataType.STRING, allowNull: false })
   declare block_type: string;
 
@@ -36,6 +36,8 @@ export class ArticleBlock extends Model<ArticleBlock> {
   // JSON metadata specific to block type:
   // - image: { url, alt, caption, width, height }
   // - gallery: { images: [{ url, alt, caption }] }
+  // - video: { url, thumbnail, duration, description }
+  // - audio: { url, duration, description }
   // - meta_data: { camera, medium, date }
   // - quote: { attribution }
   @Column(DataType.TEXT)

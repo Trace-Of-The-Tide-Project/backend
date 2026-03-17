@@ -387,7 +387,10 @@ export class ArticlesService extends BaseService<Article> {
   async findByAuthor(authorId: string, query: any = {}) {
     return this.articleModel.findAndCountAll({
       where: { author_id: authorId, ...(query.status ? { status: query.status } : {}) },
-      include: [{ model: Tag, through: { attributes: [] } }],
+      include: [
+        { model: Tag, through: { attributes: [] } },
+        { model: ArticleContributor, attributes: ['id'] },
+      ],
       order: [['createdAt', 'DESC']],
       limit: query.limit || 20,
       offset: query.offset || 0,
