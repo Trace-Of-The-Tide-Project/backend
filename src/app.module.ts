@@ -38,6 +38,7 @@ import { SystemSettingsModule } from 'src/system-settings/system-settings.module
 import { EngagementsModule } from 'src/engagements/engagements.module';
 import { PersonModule } from 'src/person/person.module';
 import { KnowledgeModule } from 'src/knowledge/knowledge.module';
+import { BoardsModule } from 'src/boards/boards.module';
 import { LogsModule } from './logs/logs.module';
 import { EmailModule } from 'src/email/email.module';
 
@@ -93,6 +94,7 @@ import { EmailModule } from 'src/email/email.module';
     EngagementsModule,
     PersonModule,
     KnowledgeModule,
+    BoardsModule,
   ],
   providers: [
     {

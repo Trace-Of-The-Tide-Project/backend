@@ -60,6 +60,14 @@ import { UserSettings } from 'src/author-dashboard/models/user-settings.model';
 import { Badge } from 'src/system-settings/models/badge.model';
 import { EmailTemplate } from 'src/system-settings/models/email-template.model';
 import { UserBadge } from 'src/engagements/models/user-badge.model';
+import { Board } from 'src/boards/models/board.model';
+import { BoardMember } from 'src/boards/models/board-member.model';
+import { BoardPage } from 'src/boards/models/board-page.model';
+import { BoardElement } from 'src/boards/models/board-element.model';
+import { BoardConnector } from 'src/boards/models/board-connector.model';
+import { BoardChat } from 'src/boards/models/board-chat.model';
+import { BoardComment } from 'src/boards/models/board-comment.model';
+import { BoardTemplate } from 'src/boards/models/board-template.model';
 
 
 @Module({
@@ -137,6 +145,14 @@ import { UserBadge } from 'src/engagements/models/user-badge.model';
           Badge,
           EmailTemplate,
           UserBadge,
+          Board,
+          BoardMember,
+          BoardPage,
+          BoardElement,
+          BoardConnector,
+          BoardChat,
+          BoardComment,
+          BoardTemplate,
         ],
       }),
     }),
