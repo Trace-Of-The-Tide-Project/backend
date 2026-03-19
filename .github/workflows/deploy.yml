@@ -9,20 +9,10 @@ jobs:
     name: CI Checks
     uses: ./.github/workflows/ci.yml
 
-  deploy-staging:
-    name: Deploy Staging
+  deploy:
+    name: Deploy to Render
     needs: ci
-    if: github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Render Deploy (Staging)
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
-
-  deploy-production:
-    name: Deploy Production
-    needs: ci
-    if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger Render Deploy (Production)
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
+      - name: Trigger Render Deploy
+        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK }}"
