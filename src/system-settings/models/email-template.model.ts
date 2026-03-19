@@ -1,9 +1,4 @@
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-} from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 @Table({ tableName: 'email_templates' })
 export class EmailTemplate extends Model<EmailTemplate> {

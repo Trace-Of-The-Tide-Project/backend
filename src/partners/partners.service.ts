@@ -25,5 +25,4 @@ export class PartnersService extends BaseService<Partner> {
   async findOne(id: string) {
     return super.findOne(id, { include: this.defaultInclude });
   }
-
 }

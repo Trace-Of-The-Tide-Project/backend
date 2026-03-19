@@ -10,7 +10,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -40,9 +45,21 @@ export class MessagingController {
   @ApiOperation({ summary: 'List all conversations (admin inbox)' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['open', 'pending', 'resolved', 'archived'] })
-  @ApiQuery({ name: 'category', required: false, enum: ['payment', 'content', 'account', 'technical', 'general'] })
-  @ApiQuery({ name: 'priority', required: false, enum: ['low', 'normal', 'high', 'urgent'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['open', 'pending', 'resolved', 'archived'],
+  })
+  @ApiQuery({
+    name: 'category',
+    required: false,
+    enum: ['payment', 'content', 'account', 'technical', 'general'],
+  })
+  @ApiQuery({
+    name: 'priority',
+    required: false,
+    enum: ['low', 'normal', 'high', 'urgent'],
+  })
   @ApiQuery({ name: 'search', required: false })
   async listConversations(
     @Query('page') page?: number,
@@ -52,7 +69,14 @@ export class MessagingController {
     @Query('priority') priority?: string,
     @Query('search') search?: string,
   ) {
-    return this.messagingService.listConversations({ page, limit, status, category, priority, search });
+    return this.messagingService.listConversations({
+      page,
+      limit,
+      status,
+      category,
+      priority,
+      search,
+    });
   }
 
   @Get('conversations/me')
@@ -94,9 +118,18 @@ export class MessagingController {
   @ApiOperation({ summary: 'Start a new conversation (user)' })
   async createConversation(
     @Req() req: any,
-    @Body() body: { subject: string; message: string; category?: string; priority?: string },
+    @Body()
+    body: {
+      subject: string;
+      message: string;
+      category?: string;
+      priority?: string;
+    },
   ) {
-    return this.messagingService.createConversation(req.user.sub || req.user.id || req.user.userId, body);
+    return this.messagingService.createConversation(
+      req.user.sub || req.user.id || req.user.userId,
+      body,
+    );
   }
 
   @Post('conversations/:id/reply')
@@ -107,14 +140,21 @@ export class MessagingController {
     @Req() req: any,
     @Body() body: { content: string; template_id?: string },
   ) {
-    return this.messagingService.replyToConversation(id, req.user.sub || req.user.id || req.user.userId, body);
+    return this.messagingService.replyToConversation(
+      id,
+      req.user.sub || req.user.id || req.user.userId,
+      body,
+    );
   }
 
   @Patch('conversations/:id/read')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Mark conversation messages as read' })
   async markAsRead(@Param('id') id: string, @Req() req: any) {
-    return this.messagingService.markAsRead(id, req.user.sub || req.user.id || req.user.userId);
+    return this.messagingService.markAsRead(
+      id,
+      req.user.sub || req.user.id || req.user.userId,
+    );
   }
 
   @Patch('conversations/:id/resolve')
@@ -152,7 +192,11 @@ export class MessagingController {
   @ApiOperation({ summary: 'List all broadcasts' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['draft', 'sent', 'scheduled'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['draft', 'sent', 'scheduled'],
+  })
   async listBroadcasts(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -167,7 +211,8 @@ export class MessagingController {
   @ApiOperation({ summary: 'Create broadcast (draft or send immediately)' })
   async createBroadcast(
     @Req() req: any,
-    @Body() body: {
+    @Body()
+    body: {
       subject: string;
       message: string;
       target_audience?: string;
@@ -176,7 +221,10 @@ export class MessagingController {
       send?: boolean;
     },
   ) {
-    return this.messagingService.createBroadcast(req.user.sub || req.user.id || req.user.userId, body);
+    return this.messagingService.createBroadcast(
+      req.user.sub || req.user.id || req.user.userId,
+      body,
+    );
   }
 
   @Patch('broadcasts/:id/send')
@@ -220,9 +268,13 @@ export class MessagingController {
   @ApiOperation({ summary: 'Create a message template' })
   async createTemplate(
     @Req() req: any,
-    @Body() body: { name: string; category?: string; subject?: string; body: string },
+    @Body()
+    body: { name: string; category?: string; subject?: string; body: string },
   ) {
-    return this.messagingService.createTemplate(req.user.sub || req.user.id || req.user.userId, body);
+    return this.messagingService.createTemplate(
+      req.user.sub || req.user.id || req.user.userId,
+      body,
+    );
   }
 
   @Patch('templates/:id')
@@ -231,7 +283,8 @@ export class MessagingController {
   @ApiOperation({ summary: 'Update a template' })
   async updateTemplate(
     @Param('id') id: string,
-    @Body() body: { name?: string; category?: string; subject?: string; body?: string },
+    @Body()
+    body: { name?: string; category?: string; subject?: string; body?: string },
   ) {
     return this.messagingService.updateTemplate(id, body);
   }

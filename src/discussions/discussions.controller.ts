@@ -28,8 +28,16 @@ export class DiscussionsController {
   @ApiOperation({ summary: 'List discussions with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title and description' })
-  @ApiQuery({ name: 'created_by', required: false, description: 'Filter by creator UUID' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title and description',
+  })
+  @ApiQuery({
+    name: 'created_by',
+    required: false,
+    description: 'Filter by creator UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

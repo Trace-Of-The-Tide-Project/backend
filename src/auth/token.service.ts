@@ -12,7 +12,6 @@ export class TokenService {
     private readonly refreshTokenModel: typeof RefreshToken,
   ) {}
 
- 
   async createRefreshToken(userId: string): Promise<string> {
     const token = randomBytes(64).toString('hex');
     const hashed = await bcrypt.hash(token, 10);

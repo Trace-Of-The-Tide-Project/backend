@@ -8,9 +8,7 @@ import { FinanceController } from './finance.controller';
 import { FinanceService } from './finance.service';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([Donation, Payout, Invoice, FraudFlag]),
-  ],
+  imports: [SequelizeModule.forFeature([Donation, Payout, Invoice, FraudFlag])],
   controllers: [FinanceController],
   providers: [FinanceService],
   exports: [FinanceService],

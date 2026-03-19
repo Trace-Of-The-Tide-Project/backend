@@ -33,11 +33,21 @@ export class UsersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'List all users with filters and pagination (admin)' })
+  @ApiOperation({
+    summary: 'List all users with filters and pagination (admin)',
+  })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in username, full_name, email' })
-  @ApiQuery({ name: 'status', required: false, enum: ['active', 'pending', 'suspended', 'inactive'] })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in username, full_name, email',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'pending', 'suspended', 'inactive'],
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
@@ -102,7 +112,8 @@ export class UsersController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update user profile',
-    description: 'Creates profile if it doesn\'t exist, updates if it does. Fields: avatar, display_name, birth_date, gender, location, about, social_links.',
+    description:
+      "Creates profile if it doesn't exist, updates if it does. Fields: avatar, display_name, birth_date, gender, location, about, social_links.",
   })
   updateProfile(@Param('id') id: string, @Body() body: any) {
     return this.usersService.updateProfile(id, body);

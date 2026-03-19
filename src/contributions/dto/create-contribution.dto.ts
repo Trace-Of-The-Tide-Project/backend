@@ -17,18 +17,22 @@ export class CreateContributionDto {
   @IsUUID()
   type_id!: string;
 
-  @ApiProperty({ example: 'My Grandmother\'s Story', maxLength: 255 })
+  @ApiProperty({ example: "My Grandmother's Story", maxLength: 255 })
   @IsNotEmpty()
   @IsString()
   @MaxLength(255)
   title!: string;
 
-  @ApiProperty({ example: 'A personal account of life in Palestine before 1948...' })
+  @ApiProperty({
+    example: 'A personal account of life in Palestine before 1948...',
+  })
   @IsNotEmpty()
   @IsString()
   description!: string;
 
-  @ApiPropertyOptional({ description: 'Collection UUID to add this contribution to' })
+  @ApiPropertyOptional({
+    description: 'Collection UUID to add this contribution to',
+  })
   @IsOptional()
   @IsUUID()
   collection_id?: string;
@@ -58,7 +62,9 @@ export class CreateContributionDto {
   @Equals(true, { message: 'You must give consent to submit a contribution' })
   consent_given!: boolean;
 
-  @ApiPropertyOptional({ description: 'Open Call UUID if this contribution is for an open call' })
+  @ApiPropertyOptional({
+    description: 'Open Call UUID if this contribution is for an open call',
+  })
   @IsOptional()
   @IsUUID()
   open_call_id?: string;

@@ -56,14 +56,19 @@ export class CollectivesService extends BaseService<Collective> {
       { collective_id: collectiveId, email: dto.email },
     ];
     if (dto.user_id) {
-      whereConditions.push({ collective_id: collectiveId, user_id: dto.user_id });
+      whereConditions.push({
+        collective_id: collectiveId,
+        user_id: dto.user_id,
+      });
     }
 
     const existing = await this.memberModel.findOne({
       where: { [Op.or]: whereConditions },
     });
     if (existing) {
-      throw new ConflictException('You have already submitted a request to join this collective');
+      throw new ConflictException(
+        'You have already submitted a request to join this collective',
+      );
     }
 
     return this.memberModel.create({
@@ -108,7 +113,9 @@ export class CollectivesService extends BaseService<Collective> {
       where: { collective_id: collectiveId, user_id: userId },
     });
     if (existing) {
-      throw new ConflictException('User is already a member of this collective');
+      throw new ConflictException(
+        'User is already a member of this collective',
+      );
     }
 
     return this.memberModel.create({

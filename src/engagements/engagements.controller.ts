@@ -10,7 +10,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -29,7 +34,9 @@ export class EngagementsController {
   // ═══════════════════════════════════════════════
 
   @Get('stats')
-  @ApiOperation({ summary: 'Get engagement stats (comments, likes, discussions, badges)' })
+  @ApiOperation({
+    summary: 'Get engagement stats (comments, likes, discussions, badges)',
+  })
   getStats() {
     return this.service.getStats();
   }
@@ -82,7 +89,9 @@ export class EngagementsController {
   // ═══════════════════════════════════════════════
 
   @Get('discussions')
-  @ApiOperation({ summary: 'List trending discussions with comment/participant counts' })
+  @ApiOperation({
+    summary: 'List trending discussions with comment/participant counts',
+  })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   getTrendingDiscussions(
@@ -125,10 +134,13 @@ export class EngagementsController {
   }
 
   @Post('badges/create-and-award')
-  @ApiOperation({ summary: 'Create a new badge and optionally award to a role' })
+  @ApiOperation({
+    summary: 'Create a new badge and optionally award to a role',
+  })
   createAndAwardBadge(
     @Req() req: any,
-    @Body() dto: { name: string; icon?: string; role?: string; reason?: string },
+    @Body()
+    dto: { name: string; icon?: string; role?: string; reason?: string },
   ) {
     const adminId = req.user.sub || req.user.id || req.user.userId;
     return this.service.createAndAwardBadge(adminId, dto);

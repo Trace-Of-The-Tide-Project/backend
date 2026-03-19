@@ -25,7 +25,10 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server!: Server;
 
   // Track online users per board: boardId -> Map<userId, { socketId, username }>
-  private boardPresence = new Map<string, Map<string, { socketId: string; username: string }>>();
+  private boardPresence = new Map<
+    string,
+    Map<string, { socketId: string; username: string }>
+  >();
 
   constructor(
     private readonly jwtService: JwtService,
@@ -96,9 +99,9 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     // Send current online users to the joiner
-    const onlineUsers = Array.from(this.boardPresence.get(data.board_id)!.entries()).map(
-      ([userId, info]) => ({ user_id: userId, username: info.username }),
-    );
+    const onlineUsers = Array.from(
+      this.boardPresence.get(data.board_id)!.entries(),
+    ).map(([userId, info]) => ({ user_id: userId, username: info.username }));
     client.emit('board_users', onlineUsers);
   }
 
@@ -126,12 +129,17 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('element_create')
   async handleElementCreate(
     @ConnectedSocket() client: BoardSocket,
-    @MessageBody() data: { board_id: string; page_id: string; [key: string]: any },
+    @MessageBody()
+    data: { board_id: string; page_id: string; [key: string]: any },
   ) {
     if (!client.userId) return;
 
     const { board_id, page_id, ...elementData } = data;
-    const element = await this.boardsService.createElement(page_id, elementData as any, client.userId);
+    const element = await this.boardsService.createElement(
+      page_id,
+      elementData as any,
+      client.userId,
+    );
 
     this.server.to(`board:${board_id}`).emit('element_created', element);
   }
@@ -139,12 +147,16 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('element_update')
   async handleElementUpdate(
     @ConnectedSocket() client: BoardSocket,
-    @MessageBody() data: { board_id: string; element_id: string; [key: string]: any },
+    @MessageBody()
+    data: { board_id: string; element_id: string; [key: string]: any },
   ) {
     if (!client.userId) return;
 
     const { board_id, element_id, ...updateData } = data;
-    const element = await this.boardsService.updateElement(element_id, updateData as any);
+    const element = await this.boardsService.updateElement(
+      element_id,
+      updateData as any,
+    );
 
     client.to(`board:${board_id}`).emit('element_updated', element);
   }
@@ -152,7 +164,8 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('element_move')
   async handleElementMove(
     @ConnectedSocket() client: BoardSocket,
-    @MessageBody() data: { board_id: string; element_id: string; x: number; y: number },
+    @MessageBody()
+    data: { board_id: string; element_id: string; x: number; y: number },
   ) {
     if (!client.userId) return;
 
@@ -165,7 +178,10 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     // Persist to DB
-    await this.boardsService.updateElement(data.element_id, { x: data.x, y: data.y });
+    await this.boardsService.updateElement(data.element_id, {
+      x: data.x,
+      y: data.y,
+    });
   }
 
   @SubscribeMessage('element_delete')
@@ -191,7 +207,10 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     if (!client.userId) return;
 
     const { board_id, ...connectorData } = data;
-    const connector = await this.boardsService.createConnector(connectorData as any, client.userId);
+    const connector = await this.boardsService.createConnector(
+      connectorData as any,
+      client.userId,
+    );
 
     this.server.to(`board:${board_id}`).emit('connector_created', connector);
   }
@@ -199,12 +218,16 @@ export class BoardsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('connector_update')
   async handleConnectorUpdate(
     @ConnectedSocket() client: BoardSocket,
-    @MessageBody() data: { board_id: string; connector_id: string; [key: string]: any },
+    @MessageBody()
+    data: { board_id: string; connector_id: string; [key: string]: any },
   ) {
     if (!client.userId) return;
 
     const { board_id, connector_id, ...updateData } = data;
-    const connector = await this.boardsService.updateConnector(connector_id, updateData as any);
+    const connector = await this.boardsService.updateConnector(
+      connector_id,
+      updateData as any,
+    );
 
     client.to(`board:${board_id}`).emit('connector_updated', connector);
   }

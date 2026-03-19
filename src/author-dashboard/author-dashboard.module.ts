@@ -11,19 +11,19 @@ import { AuthorDashboardController } from './author-dashboard.controller';
 import { AuthorDashboardService } from './author-dashboard.service';
 
 @Module({
-    imports: [
-        SequelizeModule.forFeature([
-            User,
-            UserProfile,
-            UserSettings,
-            Article,
-            ArticleContributor,
-            Contribution,
-            Donation,
-        ]),
-    ],
-    controllers: [AuthorDashboardController],
-    providers: [AuthorDashboardService],
-    exports: [AuthorDashboardService],
+  imports: [
+    SequelizeModule.forFeature([
+      User,
+      UserProfile,
+      UserSettings,
+      Article,
+      ArticleContributor,
+      Contribution,
+      Donation,
+    ]),
+  ],
+  controllers: [AuthorDashboardController],
+  providers: [AuthorDashboardService],
+  exports: [AuthorDashboardService],
 })
-export class AuthorDashboardModule { }
+export class AuthorDashboardModule {}

@@ -29,7 +29,11 @@ export class TagsController {
   @ApiOperation({ summary: 'List tags with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by tag name' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by tag name',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'name' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

@@ -1,9 +1,4 @@
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-} from 'sequelize-typescript';
+import { Table, Column, Model, DataType } from 'sequelize-typescript';
 
 @Table({ tableName: 'badges' })
 export class Badge extends Model<Badge> {

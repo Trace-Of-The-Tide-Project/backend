@@ -11,12 +11,17 @@ import { MessagingService } from './messaging.service';
 import { MessagingGateway } from './messaging.gateway';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-
 @Module({
   imports: [
-    SequelizeModule.forFeature([Conversation, Message, Broadcast, MessageTemplate, User]),
+    SequelizeModule.forFeature([
+      Conversation,
+      Message,
+      Broadcast,
+      MessageTemplate,
+      User,
+    ]),
     JwtModule.registerAsync({
-     imports: [ConfigModule],
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),

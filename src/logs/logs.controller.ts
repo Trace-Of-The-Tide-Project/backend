@@ -29,10 +29,26 @@ export class LogsController {
   @ApiOperation({ summary: 'List activity logs with filters and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in action and entity_type' })
-  @ApiQuery({ name: 'action', required: false, enum: ['CREATE', 'UPDATE', 'DELETE'] })
-  @ApiQuery({ name: 'entity_type', required: false, description: 'Filter by entity type (User, Contribution, etc.)' })
-  @ApiQuery({ name: 'user_id', required: false, description: 'Filter by user UUID' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in action and entity_type',
+  })
+  @ApiQuery({
+    name: 'action',
+    required: false,
+    enum: ['CREATE', 'UPDATE', 'DELETE'],
+  })
+  @ApiQuery({
+    name: 'entity_type',
+    required: false,
+    description: 'Filter by entity type (User, Contribution, etc.)',
+  })
+  @ApiQuery({
+    name: 'user_id',
+    required: false,
+    description: 'Filter by user UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

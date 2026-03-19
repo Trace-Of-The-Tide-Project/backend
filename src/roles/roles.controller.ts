@@ -33,7 +33,11 @@ export class RolesController {
   @ApiOperation({ summary: 'List all roles' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by role name' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by role name',
+  })
   findAll(@Query() query: any) {
     return this.rolesService.findAll(query);
   }
@@ -79,10 +83,7 @@ export class RolesController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Assign a role to a user (admin only)' })
-  assignRole(
-    @Param('userId') userId: string,
-    @Body('role') roleName: string,
-  ) {
+  assignRole(@Param('userId') userId: string, @Body('role') roleName: string) {
     return this.rolesService.assignRole(userId, roleName);
   }
 
@@ -91,10 +92,7 @@ export class RolesController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Revoke a role from a user (admin only)' })
-  revokeRole(
-    @Param('userId') userId: string,
-    @Body('role') roleName: string,
-  ) {
+  revokeRole(@Param('userId') userId: string, @Body('role') roleName: string) {
     return this.rolesService.revokeRole(userId, roleName);
   }
 }

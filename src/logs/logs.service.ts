@@ -25,5 +25,4 @@ export class LogsService extends BaseService<Log> {
   async findOne(id: string) {
     return super.findOne(id, { include: this.defaultInclude });
   }
-
 }

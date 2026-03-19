@@ -30,7 +30,11 @@ export class PersonController {
   @ApiOperation({ summary: 'List person profiles with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in full_name and biography' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in full_name and biography',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'full_name' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
@@ -38,7 +42,10 @@ export class PersonController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a person profile with biographical cards, life events, and timeline' })
+  @ApiOperation({
+    summary:
+      'Get a person profile with biographical cards, life events, and timeline',
+  })
   findOne(@Param('id') id: string) {
     return this.personService.findOne(id);
   }

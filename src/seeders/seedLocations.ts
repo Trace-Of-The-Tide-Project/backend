@@ -5,7 +5,9 @@ export async function seedLocations() {
   console.log('📍 Starting Locations seeding...');
 
   // Get the admin user who owns the seed data
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) {
     console.error('❌ No admin user found. Please seed users first.');
     return [];
@@ -16,7 +18,8 @@ export async function seedLocations() {
     [
       {
         name: 'Acre',
-        description: 'Ancient coastal city in northern Palestine, known for its rich history and resistance.',
+        description:
+          'Ancient coastal city in northern Palestine, known for its rich history and resistance.',
         latitude: 32.9234,
         longitude: 35.0826,
         address: 'Acre, Palestine',
@@ -24,7 +27,8 @@ export async function seedLocations() {
       },
       {
         name: 'Gaza City',
-        description: 'One of the oldest cities in the world, and a major center of Palestinian heritage.',
+        description:
+          'One of the oldest cities in the world, and a major center of Palestinian heritage.',
         latitude: 31.5,
         longitude: 34.4667,
         address: 'Gaza, Palestine',
@@ -32,7 +36,8 @@ export async function seedLocations() {
       },
       {
         name: 'Jerusalem',
-        description: 'Historic and spiritual capital of Palestine, rich with religious and cultural landmarks.',
+        description:
+          'Historic and spiritual capital of Palestine, rich with religious and cultural landmarks.',
         latitude: 31.7683,
         longitude: 35.2137,
         address: 'Jerusalem, Palestine',
@@ -40,7 +45,8 @@ export async function seedLocations() {
       },
       {
         name: 'Beirut',
-        description: 'City in Lebanon with historical ties to Palestinian diaspora and cultural movements.',
+        description:
+          'City in Lebanon with historical ties to Palestinian diaspora and cultural movements.',
         latitude: 33.8938,
         longitude: 35.5018,
         address: 'Beirut, Lebanon',
@@ -48,14 +54,15 @@ export async function seedLocations() {
       },
       {
         name: 'Haifa',
-        description: 'Port city known for its diverse communities and role in Palestinian urban life before 1948.',
+        description:
+          'Port city known for its diverse communities and role in Palestinian urban life before 1948.',
         latitude: 32.794,
         longitude: 34.9896,
         address: 'Haifa, Palestine',
         created_by: adminUser.id,
       },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   console.log(`✅ ${locations.length} Locations seeded successfully`);

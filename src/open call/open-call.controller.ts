@@ -54,13 +54,21 @@ export class OpenCallsController {
   @Get('active')
   @ApiOperation({
     summary: 'List active/open calls (public)',
-    description: 'Returns only open calls that haven\'t passed their deadline.',
+    description: "Returns only open calls that haven't passed their deadline.",
   })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title, description, category' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title, description, category',
+  })
   @ApiQuery({ name: 'category', required: false })
-  @ApiQuery({ name: 'type', required: false, enum: ['article', 'video', 'audio', 'slide'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['article', 'video', 'audio', 'slide'],
+  })
   findActive(@Query() query: any) {
     return this.openCallsService.findActiveOpenCalls(query);
   }
@@ -81,18 +89,23 @@ export class OpenCallsController {
   @Post(':id/join')
   @ApiOperation({
     summary: 'Join an open call (public — guest allowed)',
-    description: 'Submit participation with personal info and optional file uploads. Sends confirmation email.',
+    description:
+      'Submit participation with personal info and optional file uploads. Sends confirmation email.',
   })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 201, description: 'Successfully joined' })
-  @ApiResponse({ status: 400, description: 'Call is closed or deadline passed' })
+  @ApiResponse({
+    status: 400,
+    description: 'Call is closed or deadline passed',
+  })
   @ApiResponse({ status: 409, description: 'Already a participant' })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: diskStorage({
         destination: './uploads/open-calls',
         filename: (_req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, uniqueSuffix + extname(file.originalname));
         },
       }),
@@ -100,7 +113,10 @@ export class OpenCallsController {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new Error(`File type ${file.mimetype} is not allowed`) as any, false);
+          cb(
+            new Error(`File type ${file.mimetype} is not allowed`) as any,
+            false,
+          );
         }
       },
       limits: { fileSize: MAX_FILE_SIZE },
@@ -146,14 +162,23 @@ export class OpenCallsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'List all open calls (admin)',
-    description: 'Returns all calls regardless of status — for admin dashboard.',
+    description:
+      'Returns all calls regardless of status — for admin dashboard.',
   })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
   @ApiQuery({ name: 'search', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['open', 'closed', 'draft'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['open', 'closed', 'draft'],
+  })
   @ApiQuery({ name: 'category', required: false })
-  @ApiQuery({ name: 'type', required: false, enum: ['article', 'video', 'audio', 'slide'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['article', 'video', 'audio', 'slide'],
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
@@ -219,8 +244,16 @@ export class OpenCallsController {
   @ApiOperation({ summary: 'List participants for an open call' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'status', required: false, enum: ['active', 'approved', 'rejected', 'withdrawn'] })
-  @ApiQuery({ name: 'role', required: false, enum: ['participant', 'contributor', 'reviewer'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['active', 'approved', 'rejected', 'withdrawn'],
+  })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['participant', 'contributor', 'reviewer'],
+  })
   getParticipants(@Param('id') id: string, @Query() query: any) {
     return this.openCallsService.getParticipants(id, query);
   }

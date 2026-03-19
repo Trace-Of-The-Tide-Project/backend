@@ -37,9 +37,17 @@ export class DonationsController {
   @ApiOperation({ summary: 'List donations with filters and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'completed', 'failed'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'completed', 'failed'],
+  })
   @ApiQuery({ name: 'type', required: false, enum: ['one-time', 'monthly'] })
-  @ApiQuery({ name: 'user_id', required: false, description: 'Filter by donor UUID' })
+  @ApiQuery({
+    name: 'user_id',
+    required: false,
+    description: 'Filter by donor UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'date' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

@@ -16,9 +16,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,       // Strip properties not in DTO
+      whitelist: true, // Strip properties not in DTO
       forbidNonWhitelisted: true, // Throw error on unknown properties
-      transform: true,       // Auto-transform payloads to DTO instances
+      transform: true, // Auto-transform payloads to DTO instances
     }),
   );
 
@@ -26,7 +26,7 @@ async function bootstrap() {
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ,
+    origin: process.env.CORS_ORIGIN,
     credentials: true,
   });
 

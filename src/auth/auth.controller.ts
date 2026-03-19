@@ -45,10 +45,17 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Request a password reset email',
-    description: 'Sends a reset link to the provided email. Rate limited to 1 request per 60 seconds.',
+    description:
+      'Sends a reset link to the provided email. Rate limited to 1 request per 60 seconds.',
   })
-  @ApiResponse({ status: 200, description: 'Reset email sent (even if email not found, for security)' })
-  @ApiResponse({ status: 429, description: 'Too many requests — cooldown active' })
+  @ApiResponse({
+    status: 200,
+    description: 'Reset email sent (even if email not found, for security)',
+  })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many requests — cooldown active',
+  })
   async forgotPassword(@Body() dto: ForgotPasswordDto) {
     return this.authService.generateResetToken(dto.email);
   }
@@ -57,10 +64,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Resend password reset email',
-    description: 'Resends the reset email with a 48-second cooldown between requests.',
+    description:
+      'Resends the reset email with a 48-second cooldown between requests.',
   })
   @ApiResponse({ status: 200, description: 'Reset email resent' })
-  @ApiResponse({ status: 429, description: 'Too many requests — cooldown active' })
+  @ApiResponse({
+    status: 429,
+    description: 'Too many requests — cooldown active',
+  })
   async resendResetEmail(@Body() dto: ForgotPasswordDto) {
     return this.authService.resendResetEmail(dto.email);
   }
@@ -69,10 +80,14 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'Reset password using token from email',
-    description: 'Validates the token, checks passwords match, updates password, and invalidates token.',
+    description:
+      'Validates the token, checks passwords match, updates password, and invalidates token.',
   })
   @ApiResponse({ status: 200, description: 'Password reset successfully' })
-  @ApiResponse({ status: 400, description: 'Invalid/expired token or passwords do not match' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid/expired token or passwords do not match',
+  })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(
       dto.token,
@@ -116,7 +131,8 @@ export class AuthController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Change password (authenticated user)',
-    description: 'Requires current password. Revokes all sessions after change.',
+    description:
+      'Requires current password. Revokes all sessions after change.',
   })
   async changePassword(@Req() req, @Body() dto: ChangePasswordDto) {
     return this.authService.changePassword(

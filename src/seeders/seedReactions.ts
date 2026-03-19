@@ -5,7 +5,9 @@ import { User } from '../users/models/user.model';
 export async function seedReactions() {
   console.log('🚀 Starting Reactions seeding...');
 
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) {
     console.error('❌ No admin user found. Please seed users first.');
     return;
@@ -38,9 +40,8 @@ export async function seedReactions() {
         created_at: new Date(),
       },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   console.log('✅ Reactions seeded successfully');
-
 }

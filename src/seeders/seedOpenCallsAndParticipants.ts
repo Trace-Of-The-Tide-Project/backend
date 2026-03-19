@@ -6,7 +6,9 @@ import { User } from '../users/models/user.model';
 export async function seedOpenCallsAndParticipants() {
   console.log('🚀 Starting Open Calls seeding...');
 
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
 
   if (!adminUser) {
     console.error('❌ No admin user found. Please seed users first.');
@@ -34,7 +36,7 @@ export async function seedOpenCallsAndParticipants() {
         status: 'open',
       },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   // Re-fetch to get actual IDs (bulkCreate with ignoreDuplicates may not return them)
@@ -67,7 +69,7 @@ export async function seedOpenCallsAndParticipants() {
         status: 'joined',
       },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   console.log('✅ Open Calls and Participants seeded successfully');

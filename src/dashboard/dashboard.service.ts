@@ -22,7 +22,7 @@ import { Log } from 'src/logs/models/log.model';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly sequelize: Sequelize) { }
+  constructor(private readonly sequelize: Sequelize) {}
 
   // ============================================================
   // HELPER: Date range calculations
@@ -148,7 +148,7 @@ export class DashboardService {
       where: { status: 'pending' },
     });
 
-    const pendingEditorApps = (await UserRole.count({
+    const pendingEditorApps = await UserRole.count({
       include: [
         {
           model: Role,
@@ -159,7 +159,7 @@ export class DashboardService {
       where: {
         assigned_at: { [Op.is]: null as any },
       },
-    })) as number;
+    });
 
     const unreadNotifications = await Notification.count({
       where: { status: 'unread' },
@@ -173,34 +173,33 @@ export class DashboardService {
       items: [
         ...(flaggedContent > 0
           ? [
-            {
-              type: 'flagged',
-              severity: 'critical',
-              message: `${flaggedContent} content items flagged`,
-              description:
-                'Requires immediate review for policy violations',
-            },
-          ]
+              {
+                type: 'flagged',
+                severity: 'critical',
+                message: `${flaggedContent} content items flagged`,
+                description: 'Requires immediate review for policy violations',
+              },
+            ]
           : []),
         ...(pendingEditorApps > 0
           ? [
-            {
-              type: 'editor_application',
-              severity: 'info',
-              message: `${pendingEditorApps} pending editor applications`,
-              description: `Awaiting review for more than 16 hours`,
-            },
-          ]
+              {
+                type: 'editor_application',
+                severity: 'info',
+                message: `${pendingEditorApps} pending editor applications`,
+                description: `Awaiting review for more than 16 hours`,
+              },
+            ]
           : []),
         ...(pendingReviews > 0
           ? [
-            {
-              type: 'pending_review',
-              severity: 'warning',
-              message: `${pendingReviews} contributions awaiting review`,
-              description: 'Content pending moderation approval',
-            },
-          ]
+              {
+                type: 'pending_review',
+                severity: 'warning',
+                message: `${pendingReviews} contributions awaiting review`,
+                description: 'Content pending moderation approval',
+              },
+            ]
           : []),
       ],
     };
@@ -372,7 +371,8 @@ export class DashboardService {
     });
 
     const platformFeeRate = 0.1;
-    const platformFees = Math.round(monthlyRevenue * platformFeeRate * 100) / 100;
+    const platformFees =
+      Math.round(monthlyRevenue * platformFeeRate * 100) / 100;
 
     return {
       todayDonations: {
@@ -438,9 +438,9 @@ export class DashboardService {
         entityId: log.entity_id,
         user: log.user
           ? {
-            id: log.user.id,
-            name: log.user.full_name || log.user.username,
-          }
+              id: log.user.id,
+              name: log.user.full_name || log.user.username,
+            }
           : null,
         timestamp: log.createdAt,
         details: log.details ? this.safeJsonParse(log.details) : null,
@@ -453,9 +453,9 @@ export class DashboardService {
         entityId: mod.contribution_id,
         user: mod.reviewer
           ? {
-            id: mod.reviewer.id,
-            name: mod.reviewer.full_name || mod.reviewer.username,
-          }
+              id: mod.reviewer.id,
+              name: mod.reviewer.full_name || mod.reviewer.username,
+            }
           : null,
         timestamp: mod.created_at,
         details: {
@@ -551,7 +551,8 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
+      page:
+        filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
@@ -603,7 +604,8 @@ export class DashboardService {
     return {
       data: rows,
       total: count,
-      page: filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
+      page:
+        filters.limit > 0 ? Math.floor(filters.offset / filters.limit) + 1 : 1,
       limit: filters.limit,
     };
   }
@@ -782,7 +784,10 @@ export class DashboardService {
         category: oc.category,
         participantCount: oc.participants?.length || 0,
         creator: oc.creator
-          ? { id: oc.creator.id, name: oc.creator.full_name || oc.creator.username }
+          ? {
+              id: oc.creator.id,
+              name: oc.creator.full_name || oc.creator.username,
+            }
           : null,
         timelineStart: oc.timeline_start,
         timelineEnd: oc.timeline_end,
@@ -862,10 +867,7 @@ export class DashboardService {
     });
 
     const topContributors = await Contribution.findAll({
-      attributes: [
-        'user_id',
-        [fn('COUNT', col('Contribution.id')), 'count'],
-      ],
+      attributes: ['user_id', [fn('COUNT', col('Contribution.id')), 'count']],
       where: {
         submission_date: { [Op.gte]: start },
         status: 'published',

@@ -47,9 +47,15 @@ export class BoardComment extends Model<BoardComment> {
   @BelongsTo(() => User)
   declare user: User;
 
-  @BelongsTo(() => BoardComment, { foreignKey: 'parent_comment_id', as: 'parent' })
+  @BelongsTo(() => BoardComment, {
+    foreignKey: 'parent_comment_id',
+    as: 'parent',
+  })
   declare parent: BoardComment;
 
-  @HasMany(() => BoardComment, { foreignKey: 'parent_comment_id', as: 'replies' })
+  @HasMany(() => BoardComment, {
+    foreignKey: 'parent_comment_id',
+    as: 'replies',
+  })
   declare replies: BoardComment[];
 }

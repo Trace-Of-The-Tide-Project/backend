@@ -9,7 +9,9 @@ export async function seedMessaging() {
 
   const admin = await User.findOne({ where: { email: 'admin@example.com' } });
   const author = await User.findOne({ where: { email: 'author@example.com' } });
-  const editor = await User.findOne({ where: { email: 'editor1@example.com' } });
+  const editor = await User.findOne({
+    where: { email: 'editor1@example.com' },
+  });
 
   if (!admin || !author) {
     console.log('⚠️  Skipping messaging seeder: required users not found');
@@ -29,7 +31,7 @@ export async function seedMessaging() {
       name: 'Payment Confirmation',
       category: 'payment',
       subject: 'Payment Confirmation',
-      body: 'Hello {{name}},\n\nThis is to confirm that your payment has been processed successfully on {{date}}.\n\nIf you have any questions about this transaction, please don\'t hesitate to reach out.\n\nBest regards,\nThe Trace of the Tide Team',
+      body: "Hello {{name}},\n\nThis is to confirm that your payment has been processed successfully on {{date}}.\n\nIf you have any questions about this transaction, please don't hesitate to reach out.\n\nBest regards,\nThe Trace of the Tide Team",
     },
     {
       name: 'Content Approved',
@@ -47,7 +49,7 @@ export async function seedMessaging() {
       name: 'Feature Announcement',
       category: 'broadcast',
       subject: 'New Feature Available',
-      body: 'Hello {{name}},\n\nWe are excited to announce a new feature on Trace of the Tide!\n\nAs a {{role}}, you now have access to enhanced tools for storytelling and heritage preservation.\n\nLog in to explore what\'s new.\n\nBest regards,\nThe Trace of the Tide Team',
+      body: "Hello {{name}},\n\nWe are excited to announce a new feature on Trace of the Tide!\n\nAs a {{role}}, you now have access to enhanced tools for storytelling and heritage preservation.\n\nLog in to explore what's new.\n\nBest regards,\nThe Trace of the Tide Team",
     },
   ];
 
@@ -81,7 +83,8 @@ export async function seedMessaging() {
     {
       conversation_id: conversation1.id,
       sender_id: author.id,
-      content: 'Hi, I\'m having trouble receiving my latest payout. The status shows pending...',
+      content:
+        "Hi, I'm having trouble receiving my latest payout. The status shows pending...",
       message_type: 'text',
       is_read: true,
       createdAt: new Date('2024-03-15T10:30:00'),
@@ -89,7 +92,8 @@ export async function seedMessaging() {
     {
       conversation_id: conversation1.id,
       sender_id: admin.id,
-      content: 'Thank you for reaching out. I see that your latest payout is currently marked as pending. Payouts sometimes take a little time to process depending on banking or payment provider schedules.\nCould you please allow 24-48 hours for the status to update? If it\'s still pending after that, let us know, and we\'ll investigate it further to ensure you receive your payment promptly.\nWe appreciate your patience!',
+      content:
+        "Thank you for reaching out. I see that your latest payout is currently marked as pending. Payouts sometimes take a little time to process depending on banking or payment provider schedules.\nCould you please allow 24-48 hours for the status to update? If it's still pending after that, let us know, and we'll investigate it further to ensure you receive your payment promptly.\nWe appreciate your patience!",
       message_type: 'text',
       is_read: true,
       createdAt: new Date('2024-03-15T14:15:00'),
@@ -141,7 +145,8 @@ export async function seedMessaging() {
     where: { subject: 'Welcome to the new platform update!' },
     defaults: {
       subject: 'Welcome to the new platform update!',
-      message: 'We are excited to announce several new features on Trace of the Tide. Check out the new Trips feature and enhanced content management tools.',
+      message:
+        'We are excited to announce several new features on Trace of the Tide. Check out the new Trips feature and enhanced content management tools.',
       target_audience: 'all_users',
       priority: 'normal',
       status: 'sent',

@@ -76,7 +76,11 @@ export class BoardsController {
     @Body() body: { title?: string },
     @Req() req: any,
   ) {
-    return this.boardsService.createBoardFromTemplate(templateId, req.user.sub, body.title);
+    return this.boardsService.createBoardFromTemplate(
+      templateId,
+      req.user.sub,
+      body.title,
+    );
   }
 
   // ─── Board CRUD ─────────────────────────────────────────
@@ -93,7 +97,9 @@ export class BoardsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new board (auto-creates Page 1 and owner member)' })
+  @ApiOperation({
+    summary: 'Create a new board (auto-creates Page 1 and owner member)',
+  })
   create(@Body() dto: CreateBoardDto, @Req() req: any) {
     return this.boardsService.createBoard(dto, req.user.sub);
   }
@@ -110,7 +116,11 @@ export class BoardsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a board (editor+ only)' })
-  update(@Param('id') id: string, @Body() dto: UpdateBoardDto, @Req() req: any) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateBoardDto,
+    @Req() req: any,
+  ) {
     return this.boardsService.updateBoard(id, dto, req.user.sub);
   }
 
@@ -233,7 +243,10 @@ export class BoardsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update an element' })
-  updateElement(@Param('elementId') elementId: string, @Body() dto: UpdateBoardElementDto) {
+  updateElement(
+    @Param('elementId') elementId: string,
+    @Body() dto: UpdateBoardElementDto,
+  ) {
     return this.boardsService.updateElement(elementId, dto);
   }
 
@@ -306,7 +319,11 @@ export class BoardsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Send a chat message' })
-  sendChatMessage(@Param('id') id: string, @Body() dto: CreateBoardChatDto, @Req() req: any) {
+  sendChatMessage(
+    @Param('id') id: string,
+    @Body() dto: CreateBoardChatDto,
+    @Req() req: any,
+  ) {
     return this.boardsService.sendChatMessage(id, req.user.sub, dto);
   }
 
@@ -332,7 +349,10 @@ export class BoardsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update or resolve a comment' })
-  updateComment(@Param('commentId') commentId: string, @Body() dto: UpdateBoardCommentDto) {
+  updateComment(
+    @Param('commentId') commentId: string,
+    @Body() dto: UpdateBoardCommentDto,
+  ) {
     return this.boardsService.updateComment(commentId, dto);
   }
 
@@ -343,5 +363,4 @@ export class BoardsController {
   removeComment(@Param('commentId') commentId: string) {
     return this.boardsService.removeComment(commentId);
   }
-
 }

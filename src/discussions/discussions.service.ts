@@ -15,9 +15,7 @@ export class DiscussionsService extends BaseService<Discussion> {
     { model: Collection, attributes: ['id', 'name'] },
     {
       model: Comment,
-      include: [
-        { model: User, attributes: ['id', 'username', 'full_name'] },
-      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
     },
   ];
 
@@ -39,5 +37,4 @@ export class DiscussionsService extends BaseService<Discussion> {
   async findOne(id: string) {
     return super.findOne(id, { include: this.defaultInclude });
   }
-
 }

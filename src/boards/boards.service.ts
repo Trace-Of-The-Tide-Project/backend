@@ -40,7 +40,9 @@ export class BoardsService extends BaseService<Board> {
     { model: BoardPage, order: [['page_order', 'ASC']] },
     {
       model: BoardMember,
-      include: [{ model: User, attributes: ['id', 'username', 'full_name', 'email'] }],
+      include: [
+        { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
+      ],
     },
     { model: User, as: 'owner', attributes: ['id', 'username', 'full_name'] },
   ];
@@ -49,11 +51,15 @@ export class BoardsService extends BaseService<Board> {
     @InjectModel(Board) private readonly boardModel: typeof Board,
     @InjectModel(BoardMember) private readonly memberModel: typeof BoardMember,
     @InjectModel(BoardPage) private readonly pageModel: typeof BoardPage,
-    @InjectModel(BoardElement) private readonly elementModel: typeof BoardElement,
-    @InjectModel(BoardConnector) private readonly connectorModel: typeof BoardConnector,
+    @InjectModel(BoardElement)
+    private readonly elementModel: typeof BoardElement,
+    @InjectModel(BoardConnector)
+    private readonly connectorModel: typeof BoardConnector,
     @InjectModel(BoardChat) private readonly chatModel: typeof BoardChat,
-    @InjectModel(BoardComment) private readonly commentModel: typeof BoardComment,
-    @InjectModel(BoardTemplate) private readonly templateModel: typeof BoardTemplate,
+    @InjectModel(BoardComment)
+    private readonly commentModel: typeof BoardComment,
+    @InjectModel(BoardTemplate)
+    private readonly templateModel: typeof BoardTemplate,
   ) {
     super(boardModel);
   }
@@ -102,7 +108,11 @@ export class BoardsService extends BaseService<Board> {
 
   // ─── Access Control ─────────────────────────────────────
 
-  async verifyBoardAccess(boardId: string, userId: string, requiredRole: string) {
+  async verifyBoardAccess(
+    boardId: string,
+    userId: string,
+    requiredRole: string,
+  ) {
     const member = await this.memberModel.findOne({
       where: { board_id: boardId, user_id: userId },
     });
@@ -126,7 +136,9 @@ export class BoardsService extends BaseService<Board> {
   async getMembers(boardId: string) {
     return this.memberModel.findAll({
       where: { board_id: boardId },
-      include: [{ model: User, attributes: ['id', 'username', 'full_name', 'email'] }],
+      include: [
+        { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
+      ],
       order: [['joined_at', 'ASC']],
     });
   }
@@ -148,7 +160,11 @@ export class BoardsService extends BaseService<Board> {
     } as any);
   }
 
-  async updateMember(boardId: string, memberId: string, dto: UpdateBoardMemberDto) {
+  async updateMember(
+    boardId: string,
+    memberId: string,
+    dto: UpdateBoardMemberDto,
+  ) {
     const [affected] = await this.memberModel.update(
       { role: dto.role },
       { where: { id: memberId, board_id: boardId } },
@@ -181,9 +197,10 @@ export class BoardsService extends BaseService<Board> {
   async addPage(boardId: string, dto: CreateBoardPageDto) {
     await this.findOne(boardId);
 
-    const maxOrder = await this.pageModel.max('page_order', {
-      where: { board_id: boardId },
-    }) as number || 0;
+    const maxOrder =
+      ((await this.pageModel.max('page_order', {
+        where: { board_id: boardId },
+      })) as number) || 0;
 
     return this.pageModel.create({
       board_id: boardId,
@@ -218,12 +235,22 @@ export class BoardsService extends BaseService<Board> {
   async getPageElements(pageId: string) {
     return this.elementModel.findAll({
       where: { page_id: pageId },
-      include: [{ model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] }],
+      include: [
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
+      ],
       order: [['z_index', 'ASC']],
     });
   }
 
-  async createElement(pageId: string, dto: CreateBoardElementDto, userId: string) {
+  async createElement(
+    pageId: string,
+    dto: CreateBoardElementDto,
+    userId: string,
+  ) {
     return this.elementModel.create({
       page_id: pageId,
       created_by: userId,
@@ -249,7 +276,9 @@ export class BoardsService extends BaseService<Board> {
         ],
       },
     });
-    const deleted = await this.elementModel.destroy({ where: { id: elementId } });
+    const deleted = await this.elementModel.destroy({
+      where: { id: elementId },
+    });
     if (!deleted) throw new NotFoundException('Element not found');
     return { message: 'Element deleted successfully' };
   }
@@ -290,8 +319,16 @@ export class BoardsService extends BaseService<Board> {
     return this.connectorModel.findAll({
       where: { page_id: pageId },
       include: [
-        { model: BoardElement, as: 'source', attributes: ['id', 'element_type', 'x', 'y'] },
-        { model: BoardElement, as: 'target', attributes: ['id', 'element_type', 'x', 'y'] },
+        {
+          model: BoardElement,
+          as: 'source',
+          attributes: ['id', 'element_type', 'x', 'y'],
+        },
+        {
+          model: BoardElement,
+          as: 'target',
+          attributes: ['id', 'element_type', 'x', 'y'],
+        },
       ],
     });
   }
@@ -312,7 +349,9 @@ export class BoardsService extends BaseService<Board> {
   }
 
   async removeConnector(connectorId: string) {
-    const deleted = await this.connectorModel.destroy({ where: { id: connectorId } });
+    const deleted = await this.connectorModel.destroy({
+      where: { id: connectorId },
+    });
     if (!deleted) throw new NotFoundException('Connector not found');
     return { message: 'Connector deleted successfully' };
   }
@@ -326,7 +365,13 @@ export class BoardsService extends BaseService<Board> {
 
     const { rows, count } = await this.chatModel.findAndCountAll({
       where: { board_id: boardId },
-      include: [{ model: User, as: 'sender', attributes: ['id', 'username', 'full_name'] }],
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'username', 'full_name'],
+        },
+      ],
       order: [['createdAt', 'ASC']],
       limit,
       offset,
@@ -338,7 +383,11 @@ export class BoardsService extends BaseService<Board> {
     };
   }
 
-  async sendChatMessage(boardId: string, userId: string, dto: CreateBoardChatDto) {
+  async sendChatMessage(
+    boardId: string,
+    userId: string,
+    dto: CreateBoardChatDto,
+  ) {
     const message = await this.chatModel.create({
       board_id: boardId,
       sender_id: userId,
@@ -346,7 +395,13 @@ export class BoardsService extends BaseService<Board> {
     } as any);
 
     return this.chatModel.findByPk(message.id, {
-      include: [{ model: User, as: 'sender', attributes: ['id', 'username', 'full_name'] }],
+      include: [
+        {
+          model: User,
+          as: 'sender',
+          attributes: ['id', 'username', 'full_name'],
+        },
+      ],
     });
   }
 
@@ -360,7 +415,9 @@ export class BoardsService extends BaseService<Board> {
         {
           model: BoardComment,
           as: 'replies',
-          include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
+          include: [
+            { model: User, attributes: ['id', 'username', 'full_name'] },
+          ],
         },
       ],
       order: [['createdAt', 'ASC']],
@@ -395,7 +452,9 @@ export class BoardsService extends BaseService<Board> {
   }
 
   async removeComment(commentId: string) {
-    const deleted = await this.commentModel.destroy({ where: { id: commentId } });
+    const deleted = await this.commentModel.destroy({
+      where: { id: commentId },
+    });
     if (!deleted) throw new NotFoundException('Comment not found');
     return { message: 'Comment deleted successfully' };
   }
@@ -436,7 +495,11 @@ export class BoardsService extends BaseService<Board> {
     } as any);
   }
 
-  async createBoardFromTemplate(templateId: string, userId: string, title?: string) {
+  async createBoardFromTemplate(
+    templateId: string,
+    userId: string,
+    title?: string,
+  ) {
     const template = await this.getTemplate(templateId);
     const templateData = JSON.parse(template.template_data);
 
@@ -444,7 +507,9 @@ export class BoardsService extends BaseService<Board> {
       title: title || `${template.name} Board`,
       owner_id: userId,
       template_id: templateId,
-      settings: templateData.settings ? JSON.stringify(templateData.settings) : null,
+      settings: templateData.settings
+        ? JSON.stringify(templateData.settings)
+        : null,
     } as any);
 
     // Add owner as member

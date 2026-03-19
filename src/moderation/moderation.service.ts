@@ -11,9 +11,7 @@ export class ModerationService extends BaseService<ModerationLog> {
     {
       model: Contribution,
       attributes: ['id', 'title', 'status', 'user_id'],
-      include: [
-        { model: User, attributes: ['id', 'username', 'full_name'] },
-      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
     },
     {
       model: User,

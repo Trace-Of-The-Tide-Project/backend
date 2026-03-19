@@ -150,7 +150,11 @@ export class AuthService {
 
     try {
       const user = await this.usersService.findByEmail(email);
-      const payload = { email: user.email, sub: user.id, purpose: 'password-reset' };
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        purpose: 'password-reset',
+      };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
 
       // Send the reset email
@@ -180,7 +184,11 @@ export class AuthService {
 
     try {
       const user = await this.usersService.findByEmail(email);
-      const payload = { email: user.email, sub: user.id, purpose: 'password-reset' };
+      const payload = {
+        email: user.email,
+        sub: user.id,
+        purpose: 'password-reset',
+      };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
 
       await this.emailService.sendResetPasswordEmail(user.email, resetToken);
@@ -198,7 +206,11 @@ export class AuthService {
     }
   }
 
-  async resetPassword(token: string, newPassword: string, confirmPassword: string) {
+  async resetPassword(
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) {
     // Validate passwords match
     if (newPassword !== confirmPassword) {
       throw new BadRequestException('Passwords do not match');

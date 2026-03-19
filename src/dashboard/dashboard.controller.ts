@@ -9,7 +9,12 @@ import {
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
-import { ApiTags, ApiOperation, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @ApiTags('Dashboard')
 @ApiBearerAuth()
@@ -24,7 +29,11 @@ export class DashboardController {
 
   @Get()
   @ApiOperation({ summary: 'Get full dashboard summary (Command Center)' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async getFullDashboard() {
     return this.dashboardService.getFullDashboard();
   }
@@ -35,7 +44,11 @@ export class DashboardController {
 
   @Get('stats')
   @ApiOperation({ summary: 'Get top-level stat cards with percentage changes' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async getStats(@Query('period') period?: string) {
     return this.dashboardService.getStats(period);
   }
@@ -45,7 +58,9 @@ export class DashboardController {
   // ============================================================
 
   @Get('alerts')
-  @ApiOperation({ summary: 'Get alerts: flagged content, pending reviews, editor apps' })
+  @ApiOperation({
+    summary: 'Get alerts: flagged content, pending reviews, editor apps',
+  })
   async getAlerts() {
     return this.dashboardService.getAlerts();
   }
@@ -70,7 +85,9 @@ export class DashboardController {
   // ============================================================
 
   @Get('content-overview')
-  @ApiOperation({ summary: 'Content breakdown by category (published, drafts, flagged)' })
+  @ApiOperation({
+    summary: 'Content breakdown by category (published, drafts, flagged)',
+  })
   async getContentOverview() {
     return this.dashboardService.getContentOverview();
   }
@@ -119,8 +136,16 @@ export class DashboardController {
 
   @Get('content-library')
   @ApiOperation({ summary: 'Browse all contributions with filters' })
-  @ApiQuery({ name: 'type', required: false, description: 'Contribution type name' })
-  @ApiQuery({ name: 'status', required: false, enum: ['published', 'draft', 'pending', 'flagged'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: 'Contribution type name',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['published', 'draft', 'pending', 'flagged'],
+  })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -146,14 +171,20 @@ export class DashboardController {
   // ============================================================
 
   @Get('finance/snapshot')
-  @ApiOperation({ summary: 'Finance overview: donations, revenue, payouts, fees' })
+  @ApiOperation({
+    summary: 'Finance overview: donations, revenue, payouts, fees',
+  })
   async getFinanceSnapshot() {
     return this.dashboardService.getFinanceSnapshot();
   }
 
   @Get('finance/donations')
   @ApiOperation({ summary: 'List all donations with filters' })
-  @ApiQuery({ name: 'status', required: false, enum: ['completed', 'pending', 'failed'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['completed', 'pending', 'failed'],
+  })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   async getFinanceDonations(
@@ -168,7 +199,6 @@ export class DashboardController {
       offset,
     });
   }
-
 
   // ============================================================
   // RECENT ACTIVITY
@@ -195,7 +225,11 @@ export class DashboardController {
 
   @Get('moderation/reports')
   @ApiOperation({ summary: 'List moderation reports' })
-  @ApiQuery({ name: 'status', required: false, enum: ['flagged', 'approved', 'rejected'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['flagged', 'approved', 'rejected'],
+  })
   @ApiQuery({ name: 'search', required: false })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
@@ -252,14 +286,22 @@ export class DashboardController {
 
   @Get('analytics/platform-growth')
   @ApiOperation({ summary: 'User registration trends over time' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async getAnalyticsPlatformGrowth(@Query('period') period?: string) {
     return this.dashboardService.getAnalyticsPlatformGrowth(period);
   }
 
   @Get('analytics/content-performance')
   @ApiOperation({ summary: 'Content publishing trends and top contributors' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async getAnalyticsContentPerformance(@Query('period') period?: string) {
     return this.dashboardService.getAnalyticsContentPerformance(period);
   }

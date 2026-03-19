@@ -11,25 +11,28 @@ export async function seedTagsAndReferences() {
       { name: 'women', description: 'Women and gender narratives' },
       { name: 'audio', description: 'Sound and oral testimonies' },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   // Re-fetch tags to get actual IDs (bulkCreate with ignoreDuplicates may not return them)
-  const tags = await Tag.findAll({ where: { name: ['heritage', 'history', 'women', 'audio'] } });
+  const tags = await Tag.findAll({
+    where: { name: ['heritage', 'history', 'women', 'audio'] },
+  });
   if (tags.length === 0) return console.warn('⚠️ No tags found after seeding.');
 
   const contributions = await Contribution.findAll({ limit: 2 });
-  if (contributions.length < 2) return console.warn('⚠️ Not enough contributions found.');
+  if (contributions.length < 2)
+    return console.warn('⚠️ Not enough contributions found.');
 
-  const heritageTag = tags.find(t => t.name === 'heritage');
-  const historyTag = tags.find(t => t.name === 'history');
+  const heritageTag = tags.find((t) => t.name === 'heritage');
+  const historyTag = tags.find((t) => t.name === 'history');
 
   await ContributionTag.bulkCreate(
     [
       { contribution_id: contributions[0].id, tag_id: heritageTag!.id },
       { contribution_id: contributions[1].id, tag_id: historyTag!.id },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   await Reference.bulkCreate(
@@ -49,7 +52,7 @@ export async function seedTagsAndReferences() {
         description: 'Academic study on Palestinian traditional music.',
       },
     ] as any[],
-    { ignoreDuplicates: true }
+    { ignoreDuplicates: true },
   );
 
   console.log('✅ Tags, ContributionTags, and References seeded successfully');

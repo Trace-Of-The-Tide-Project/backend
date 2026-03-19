@@ -28,8 +28,16 @@ describe('AuthController', () => {
 
   describe('signup', () => {
     it('should call authService.signup with dto', async () => {
-      const dto = { username: 'test', email: 'test@trace.ps', password: 'Test@1234' };
-      const expected = { message: 'User registered', accessToken: 'tok', user: { id: '1' } };
+      const dto = {
+        username: 'test',
+        email: 'test@trace.ps',
+        password: 'Test@1234',
+      };
+      const expected = {
+        message: 'User registered',
+        accessToken: 'tok',
+        user: { id: '1' },
+      };
       authService.signup.mockResolvedValue(expected as any);
 
       const result = await controller.signup(dto as any);
@@ -59,9 +67,13 @@ describe('AuthController', () => {
         message: 'Reset token generated',
       });
 
-      const result = await controller.forgotPassword({ email: 'test@trace.ps' } as any);
+      const result = await controller.forgotPassword({
+        email: 'test@trace.ps',
+      } as any);
 
-      expect(authService.generateResetToken).toHaveBeenCalledWith('test@trace.ps');
+      expect(authService.generateResetToken).toHaveBeenCalledWith(
+        'test@trace.ps',
+      );
       expect(result).toHaveProperty('resetToken');
     });
   });
@@ -78,7 +90,11 @@ describe('AuthController', () => {
         confirmPassword: 'NewPass@123',
       } as any);
 
-      expect(authService.resetPassword).toHaveBeenCalledWith('reset-tok', 'NewPass@123', 'NewPass@123');
+      expect(authService.resetPassword).toHaveBeenCalledWith(
+        'reset-tok',
+        'NewPass@123',
+        'NewPass@123',
+      );
       expect(result).toEqual({ message: 'Password reset successfully' });
     });
   });
@@ -86,21 +102,30 @@ describe('AuthController', () => {
   describe('logout', () => {
     it('should call authService.logout with user sub from request', async () => {
       const req = { user: { sub: 'user-uuid-1' } };
-      authService.logout.mockResolvedValue({ message: 'Logged out successfully' });
+      authService.logout.mockResolvedValue({
+        message: 'Logged out successfully',
+      });
 
       const result = await controller.logout(req, 'refresh-tok');
 
-      expect(authService.logout).toHaveBeenCalledWith('user-uuid-1', 'refresh-tok');
+      expect(authService.logout).toHaveBeenCalledWith(
+        'user-uuid-1',
+        'refresh-tok',
+      );
     });
   });
 
   describe('refreshToken', () => {
     it('should return new access token', async () => {
-      authService.refreshAccessToken.mockResolvedValue({ accessToken: 'new-tok' });
+      authService.refreshAccessToken.mockResolvedValue({
+        accessToken: 'new-tok',
+      });
 
       const result = await controller.refreshToken('old-refresh-tok');
 
-      expect(authService.refreshAccessToken).toHaveBeenCalledWith('old-refresh-tok');
+      expect(authService.refreshAccessToken).toHaveBeenCalledWith(
+        'old-refresh-tok',
+      );
       expect(result).toEqual({ accessToken: 'new-tok' });
     });
   });
@@ -128,7 +153,10 @@ describe('AuthController', () => {
         message: 'Password changed successfully',
       });
 
-      const result = await controller.changePassword(req, { currentPassword: 'oldPass', newPassword: 'newPass@123' } as any);
+      const result = await controller.changePassword(req, {
+        currentPassword: 'oldPass',
+        newPassword: 'newPass@123',
+      } as any);
 
       expect(authService.changePassword).toHaveBeenCalledWith(
         'user-uuid-1',

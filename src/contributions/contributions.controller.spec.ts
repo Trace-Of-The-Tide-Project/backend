@@ -27,7 +27,9 @@ describe('ContributionsController', () => {
     const body = { title: 'Story', description: 'desc' } as any;
     const files: any[] = [];
     const req = { user: { sub: 'u1' } };
-    service.createWithFiles = jest.fn().mockResolvedValue({ id: 'c1', ...body, user_id: 'u1' } as any);
+    service.createWithFiles = jest
+      .fn()
+      .mockResolvedValue({ id: 'c1', ...body, user_id: 'u1' });
 
     const result = await controller.create(body, files, req);
 
@@ -43,7 +45,10 @@ describe('ContributionsController', () => {
 
     const result = await controller.findAll({ page: '1', status: 'draft' });
 
-    expect(service.findAll).toHaveBeenCalledWith({ page: '1', status: 'draft' });
+    expect(service.findAll).toHaveBeenCalledWith({
+      page: '1',
+      status: 'draft',
+    });
     expect(result).toHaveProperty('rows');
     expect(result).toHaveProperty('meta');
   });

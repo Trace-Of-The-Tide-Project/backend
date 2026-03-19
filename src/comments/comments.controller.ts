@@ -29,9 +29,21 @@ export class CommentsController {
   @ApiOperation({ summary: 'List comments with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in comment content' })
-  @ApiQuery({ name: 'discussion_id', required: false, description: 'Filter by discussion' })
-  @ApiQuery({ name: 'user_id', required: false, description: 'Filter by author' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in comment content',
+  })
+  @ApiQuery({
+    name: 'discussion_id',
+    required: false,
+    description: 'Filter by discussion',
+  })
+  @ApiQuery({
+    name: 'user_id',
+    required: false,
+    description: 'Filter by author',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

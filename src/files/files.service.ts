@@ -9,7 +9,11 @@ import { User } from '../users/models/user.model';
 export class FilesService extends BaseService<File> {
   private readonly defaultInclude = [
     { model: Contribution, attributes: ['id', 'title', 'status'] },
-    { model: User, as: 'uploader', attributes: ['id', 'username', 'full_name'] },
+    {
+      model: User,
+      as: 'uploader',
+      attributes: ['id', 'username', 'full_name'],
+    },
   ];
 
   constructor(@InjectModel(File) private readonly fileModel: typeof File) {

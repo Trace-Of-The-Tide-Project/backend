@@ -323,7 +323,11 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue(mockUser as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed');
 
-      const result = await service.resetPassword('valid-token', 'NewPass@123', 'NewPass@123');
+      const result = await service.resetPassword(
+        'valid-token',
+        'NewPass@123',
+        'NewPass@123',
+      );
 
       expect(usersService.update).toHaveBeenCalledWith('user-uuid-1', {
         password: 'new-hashed',
@@ -342,7 +346,11 @@ describe('AuthService', () => {
       });
 
       await expect(
-        service.resetPassword('wrong-purpose-token', 'NewPass@123', 'NewPass@123'),
+        service.resetPassword(
+          'wrong-purpose-token',
+          'NewPass@123',
+          'NewPass@123',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -376,9 +384,9 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException for invalid refresh token', async () => {
       tokenService.verifyAndConsumeRefreshToken.mockResolvedValue(null);
 
-      await expect(
-        service.refreshAccessToken('invalid-token'),
-      ).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshAccessToken('invalid-token')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw BadRequestException when no refresh token provided', async () => {

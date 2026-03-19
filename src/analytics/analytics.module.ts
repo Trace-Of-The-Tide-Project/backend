@@ -21,27 +21,27 @@ import { Reaction } from '../reactions/models/reaction.model';
 import { Collection } from '../collections/models/collection.model';
 
 @Module({
-    imports: [
-        forwardRef(() => AuthModule),
-        SequelizeModule.forFeature([
-            User,
-            UserRole,
-            Role,
-            Article,
-            Contribution,
-            Donation,
-            Trip,
-            TripParticipant,
-            OpenCall,
-            Participant,
-            Discussion,
-            Comment,
-            Reaction,
-            Collection,
-        ]),
-    ],
-    providers: [AnalyticsService],
-    controllers: [AnalyticsController],
-    exports: [AnalyticsService],
+  imports: [
+    forwardRef(() => AuthModule),
+    SequelizeModule.forFeature([
+      User,
+      UserRole,
+      Role,
+      Article,
+      Contribution,
+      Donation,
+      Trip,
+      TripParticipant,
+      OpenCall,
+      Participant,
+      Discussion,
+      Comment,
+      Reaction,
+      Collection,
+    ]),
+  ],
+  providers: [AnalyticsService],
+  controllers: [AnalyticsController],
+  exports: [AnalyticsService],
 })
-export class AnalyticsModule { }
+export class AnalyticsModule {}

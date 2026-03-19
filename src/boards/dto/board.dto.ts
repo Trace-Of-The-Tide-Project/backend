@@ -38,7 +38,9 @@ export class CreateBoardDto {
   @IsIn(['private', 'team', 'public'])
   visibility?: string;
 
-  @ApiPropertyOptional({ description: 'JSON string: { grid, minimap, background_color }' })
+  @ApiPropertyOptional({
+    description: 'JSON string: { grid, minimap, background_color }',
+  })
   @IsOptional()
   @IsString()
   settings?: string;
@@ -89,7 +91,10 @@ export class AddBoardMemberDto {
   @IsUUID()
   user_id!: string;
 
-  @ApiPropertyOptional({ enum: ['editor', 'commenter', 'viewer'], default: 'viewer' })
+  @ApiPropertyOptional({
+    enum: ['editor', 'commenter', 'viewer'],
+    default: 'viewer',
+  })
   @IsOptional()
   @IsIn(['editor', 'commenter', 'viewer'])
   role?: string;
@@ -126,9 +131,31 @@ export class UpdateBoardPageDto {
 // ─── Element ──────────────────────────────────────────────
 
 export class CreateBoardElementDto {
-  @ApiProperty({ enum: ['sticky_note', 'rectangle', 'circle', 'triangle', 'diamond', 'text', 'image', 'article_block', 'layout_grid'] })
+  @ApiProperty({
+    enum: [
+      'sticky_note',
+      'rectangle',
+      'circle',
+      'triangle',
+      'diamond',
+      'text',
+      'image',
+      'article_block',
+      'layout_grid',
+    ],
+  })
   @IsNotEmpty()
-  @IsIn(['sticky_note', 'rectangle', 'circle', 'triangle', 'diamond', 'text', 'image', 'article_block', 'layout_grid'])
+  @IsIn([
+    'sticky_note',
+    'rectangle',
+    'circle',
+    'triangle',
+    'diamond',
+    'text',
+    'image',
+    'article_block',
+    'layout_grid',
+  ])
   element_type!: string;
 
   @ApiProperty()
@@ -166,7 +193,9 @@ export class CreateBoardElementDto {
   @IsString()
   content?: string;
 
-  @ApiPropertyOptional({ description: 'JSON string of type-specific properties' })
+  @ApiPropertyOptional({
+    description: 'JSON string of type-specific properties',
+  })
   @IsOptional()
   @IsString()
   properties?: string;
@@ -243,7 +272,10 @@ export class CreateBoardConnectorDto {
   @IsUUID()
   target_element_id!: string;
 
-  @ApiPropertyOptional({ enum: ['straight', 'curved', 'elbow'], default: 'straight' })
+  @ApiPropertyOptional({
+    enum: ['straight', 'curved', 'elbow'],
+    default: 'straight',
+  })
   @IsOptional()
   @IsIn(['straight', 'curved', 'elbow'])
   connector_type?: string;
@@ -258,7 +290,9 @@ export class CreateBoardConnectorDto {
   @IsBoolean()
   end_arrow?: boolean;
 
-  @ApiPropertyOptional({ description: 'JSON string: { stroke_color, stroke_width, label }' })
+  @ApiPropertyOptional({
+    description: 'JSON string: { stroke_color, stroke_width, label }',
+  })
   @IsOptional()
   @IsString()
   properties?: string;
@@ -344,7 +378,9 @@ export class CreateBoardTemplateDto {
   @IsString()
   thumbnail?: string;
 
-  @ApiPropertyOptional({ enum: ['editorial', 'planning', 'analysis', 'general'] })
+  @ApiPropertyOptional({
+    enum: ['editorial', 'planning', 'analysis', 'general'],
+  })
   @IsOptional()
   @IsIn(['editorial', 'planning', 'analysis', 'general'])
   category?: string;

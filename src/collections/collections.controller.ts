@@ -29,7 +29,11 @@ export class CollectionsController {
   @ApiOperation({ summary: 'List collections with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in name and description' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in name and description',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'created_date' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

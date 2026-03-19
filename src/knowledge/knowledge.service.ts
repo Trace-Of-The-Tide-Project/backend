@@ -59,7 +59,11 @@ export class KnowledgeService {
   async findAllArticles(query: any = {}) {
     return this.articleBase.findAll(query, {
       include: [
-        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       searchableFields: ['title', 'content'],
       order: [['createdAt', 'DESC']],
@@ -69,7 +73,11 @@ export class KnowledgeService {
   async findArticleById(id: string) {
     return this.articleBase.findOne(id, {
       include: [
-        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
     });
   }
