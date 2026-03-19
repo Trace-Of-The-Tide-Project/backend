@@ -17,7 +17,9 @@ export class CreateTripDto {
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ example: 'A cultural walking tour through the old city...' })
+  @ApiPropertyOptional({
+    example: 'A cultural walking tour through the old city...',
+  })
   @IsOptional()
   @IsString()
   description?: string;
@@ -27,7 +29,10 @@ export class CreateTripDto {
   @IsString()
   cover_image?: string;
 
-  @ApiPropertyOptional({ example: 'cultural', enum: ['cultural', 'historical', 'educational', 'heritage'] })
+  @ApiPropertyOptional({
+    example: 'cultural',
+    enum: ['cultural', 'historical', 'educational', 'heritage'],
+  })
   @IsOptional()
   @IsString()
   category?: string;
@@ -64,7 +69,10 @@ export class CreateTripDto {
   @Min(1)
   max_participants?: number;
 
-  @ApiPropertyOptional({ example: 'easy', enum: ['easy', 'moderate', 'challenging'] })
+  @ApiPropertyOptional({
+    example: 'easy',
+    enum: ['easy', 'moderate', 'challenging'],
+  })
   @IsOptional()
   @IsString()
   difficulty?: string;
@@ -79,17 +87,26 @@ export class CreateTripDto {
   @IsString()
   tags?: string;
 
-  @ApiPropertyOptional({ example: '["English","Arabic"]', description: 'JSON array of languages' })
+  @ApiPropertyOptional({
+    example: '["English","Arabic"]',
+    description: 'JSON array of languages',
+  })
   @IsOptional()
   @IsString()
   languages?: string;
 
-  @ApiPropertyOptional({ example: '["Visit Al-Aqsa","Local cuisine tasting"]', description: 'JSON array of highlights' })
+  @ApiPropertyOptional({
+    example: '["Visit Al-Aqsa","Local cuisine tasting"]',
+    description: 'JSON array of highlights',
+  })
   @IsOptional()
   @IsString()
   highlights?: string;
 
-  @ApiPropertyOptional({ example: 5, description: 'Minimum participants required for trip to proceed' })
+  @ApiPropertyOptional({
+    example: 5,
+    description: 'Minimum participants required for trip to proceed',
+  })
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -97,7 +114,9 @@ export class CreateTripDto {
 }
 
 export class UpdateTripDto extends PartialType(CreateTripDto) {
-  @ApiPropertyOptional({ enum: ['draft', 'published', 'ongoing', 'completed', 'cancelled'] })
+  @ApiPropertyOptional({
+    enum: ['draft', 'published', 'ongoing', 'completed', 'cancelled'],
+  })
   @IsOptional()
   @IsString()
   status?: string;
@@ -109,7 +128,10 @@ export class CreateTripStopDto {
   @IsString()
   location_id?: string;
 
-  @ApiProperty({ example: 1, description: 'Order of this stop in the trip route' })
+  @ApiProperty({
+    example: 1,
+    description: 'Order of this stop in the trip route',
+  })
   @IsNotEmpty()
   @IsInt()
   @Min(1)
@@ -120,7 +142,9 @@ export class CreateTripStopDto {
   @IsString()
   title!: string;
 
-  @ApiPropertyOptional({ example: 'Guided tour of the mosque and surrounding area' })
+  @ApiPropertyOptional({
+    example: 'Guided tour of the mosque and surrounding area',
+  })
   @IsOptional()
   @IsString()
   description?: string;
@@ -145,7 +169,10 @@ export class CreateTripStopDto {
 export class UpdateTripStopDto extends PartialType(CreateTripStopDto) {}
 
 export class RegisterParticipantDto {
-  @ApiPropertyOptional({ example: 'participant', enum: ['participant', 'guide', 'organizer'] })
+  @ApiPropertyOptional({
+    example: 'participant',
+    enum: ['participant', 'guide', 'organizer'],
+  })
   @IsOptional()
   @IsString()
   role?: string;
@@ -155,17 +182,25 @@ export class RegisterParticipantDto {
   @IsString()
   notes?: string;
 
-  @ApiPropertyOptional({ description: 'Donation UUID if trip requires payment' })
+  @ApiPropertyOptional({
+    description: 'Donation UUID if trip requires payment',
+  })
   @IsOptional()
   @IsString()
   donation_id?: string;
 
-  @ApiPropertyOptional({ example: 'John Doe', description: 'Guest name (for non-logged-in users)' })
+  @ApiPropertyOptional({
+    example: 'John Doe',
+    description: 'Guest name (for non-logged-in users)',
+  })
   @IsOptional()
   @IsString()
   guest_name?: string;
 
-  @ApiPropertyOptional({ example: 'john@example.com', description: 'Guest email (for non-logged-in users)' })
+  @ApiPropertyOptional({
+    example: 'john@example.com',
+    description: 'Guest email (for non-logged-in users)',
+  })
   @IsOptional()
   @IsEmail()
   guest_email?: string;

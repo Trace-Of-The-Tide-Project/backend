@@ -9,7 +9,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -40,7 +45,11 @@ export class FinanceController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   @ApiQuery({ name: 'status', required: false })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async listDonations(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -54,7 +63,11 @@ export class FinanceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Donation chart data' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async getDonationChart(@Query('period') period?: string) {
     return this.financeService.getDonationChart(period);
   }
@@ -75,7 +88,11 @@ export class FinanceController {
   @ApiOperation({ summary: 'List all payouts' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['pending', 'under_review', 'approved', 'rejected', 'completed'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['pending', 'under_review', 'approved', 'rejected', 'completed'],
+  })
   async listPayouts(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -89,7 +106,13 @@ export class FinanceController {
   @ApiOperation({ summary: 'Request a payout (creator)' })
   async requestPayout(
     @Req() req: any,
-    @Body() body: { amount: number; currency?: string; payment_method: string; payment_details?: string },
+    @Body()
+    body: {
+      amount: number;
+      currency?: string;
+      payment_method: string;
+      payment_details?: string;
+    },
   ) {
     return this.financeService.requestPayout(req.user.id, body);
   }
@@ -137,15 +160,28 @@ export class FinanceController {
   @ApiOperation({ summary: 'List suspicious activity flags' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'status', required: false, enum: ['open', 'investigating', 'resolved', 'blocked'] })
-  @ApiQuery({ name: 'severity', required: false, enum: ['low', 'medium', 'high', 'critical'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['open', 'investigating', 'resolved', 'blocked'],
+  })
+  @ApiQuery({
+    name: 'severity',
+    required: false,
+    enum: ['low', 'medium', 'high', 'critical'],
+  })
   async listFraudFlags(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('status') status?: string,
     @Query('severity') severity?: string,
   ) {
-    return this.financeService.listFraudFlags({ page, limit, status, severity });
+    return this.financeService.listFraudFlags({
+      page,
+      limit,
+      status,
+      severity,
+    });
   }
 
   @Patch('fraud-flags/:id/investigate')
@@ -184,8 +220,16 @@ export class FinanceController {
   @ApiOperation({ summary: 'List all invoices' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'type', required: false, enum: ['donation', 'payout', 'platform_fee'] })
-  @ApiQuery({ name: 'status', required: false, enum: ['draft', 'issued', 'paid', 'cancelled'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['donation', 'payout', 'platform_fee'],
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['draft', 'issued', 'paid', 'cancelled'],
+  })
   async listInvoices(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -209,7 +253,11 @@ export class FinanceController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiOperation({ summary: 'Export finance report (JSON)' })
-  @ApiQuery({ name: 'period', required: false, enum: ['7d', '30d', '90d', '1y'] })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['7d', '30d', '90d', '1y'],
+  })
   async exportReport(@Query('period') period?: string) {
     return this.financeService.exportReport(period);
   }

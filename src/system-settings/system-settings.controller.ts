@@ -44,7 +44,9 @@ export class SystemSettingsController {
 
   @Post('categories')
   @ApiOperation({ summary: 'Create a new content category' })
-  createCategory(@Body() dto: { name: string; slug?: string; description?: string }) {
+  createCategory(
+    @Body() dto: { name: string; slug?: string; description?: string },
+  ) {
     return this.service.createCategory(dto);
   }
 
@@ -150,7 +152,9 @@ export class SystemSettingsController {
   }
 
   @Get('email-templates/:id')
-  @ApiOperation({ summary: 'Get a single email template with available variables' })
+  @ApiOperation({
+    summary: 'Get a single email template with available variables',
+  })
   getEmailTemplate(@Param('id') id: string) {
     return this.service.getEmailTemplate(id);
   }
@@ -158,7 +162,13 @@ export class SystemSettingsController {
   @Post('email-templates')
   @ApiOperation({ summary: 'Create a new email template' })
   createEmailTemplate(
-    @Body() dto: { name: string; category?: string; subject: string; body: string },
+    @Body()
+    dto: {
+      name: string;
+      category?: string;
+      subject: string;
+      body: string;
+    },
   ) {
     return this.service.createEmailTemplate(dto);
   }
@@ -214,7 +224,9 @@ export class SystemSettingsController {
   // ═══════════════════════════════════════════════
 
   @Get('guidelines')
-  @ApiOperation({ summary: 'Get platform community guidelines and content policy' })
+  @ApiOperation({
+    summary: 'Get platform community guidelines and content policy',
+  })
   getGuidelines() {
     return this.service.getGuidelines();
   }

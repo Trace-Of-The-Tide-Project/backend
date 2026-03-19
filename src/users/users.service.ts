@@ -63,9 +63,7 @@ export class UsersService extends BaseService<User> {
       where: { user_id: userId },
       include: [{ model: Role, as: 'role', attributes: ['id', 'name'] }],
     });
-    return userRoles
-      .map((ur) => (ur.toJSON() as any).role?.name)
-      .filter(Boolean);
+    return userRoles.map((ur) => ur.toJSON().role?.name).filter(Boolean);
   }
 
   async getUserProfile(userId: string) {

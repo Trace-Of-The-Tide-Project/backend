@@ -21,7 +21,8 @@ export class AuthorDashboardService {
     @InjectModel(UserProfile) private profileModel: typeof UserProfile,
     @InjectModel(UserSettings) private settingsModel: typeof UserSettings,
     @InjectModel(Article) private articleModel: typeof Article,
-    @InjectModel(ArticleContributor) private contributorModel: typeof ArticleContributor,
+    @InjectModel(ArticleContributor)
+    private contributorModel: typeof ArticleContributor,
     @InjectModel(Contribution) private contributionModel: typeof Contribution,
     @InjectModel(Donation) private donationModel: typeof Donation,
   ) {}
@@ -36,8 +37,20 @@ export class AuthorDashboardService {
 
   async getDashboard(userId: string) {
     const user = await this.userModel.findByPk(userId, {
-      attributes: ['id', 'username', 'full_name', 'email', 'status', 'createdAt'],
-      include: [{ model: UserProfile, attributes: ['avatar', 'location', 'about', 'social_links'] }],
+      attributes: [
+        'id',
+        'username',
+        'full_name',
+        'email',
+        'status',
+        'createdAt',
+      ],
+      include: [
+        {
+          model: UserProfile,
+          attributes: ['avatar', 'location', 'about', 'social_links'],
+        },
+      ],
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -113,9 +126,9 @@ export class AuthorDashboardService {
     // Get contributor counts per article
     const articlesWithStats = await Promise.all(
       topArticles.map(async (article) => {
-        const contributorCount = await this.contributorModel.count({
+        const contributorCount = (await this.contributorModel.count({
           where: { article_id: article.id } as any,
-        }) as unknown as number;
+        })) as unknown as number;
 
         // Calculate growth (compare last 7 days vs previous 7 days)
         // Simplified: just return the data, frontend can calculate
@@ -246,17 +259,20 @@ export class AuthorDashboardService {
     // Update profile table fields
     const profileUpdates: any = {};
     if (data.avatar !== undefined) profileUpdates.avatar = data.avatar;
-    if (data.display_name !== undefined) profileUpdates.display_name = data.display_name;
+    if (data.display_name !== undefined)
+      profileUpdates.display_name = data.display_name;
     if (data.location !== undefined) profileUpdates.location = data.location;
     if (data.about !== undefined) profileUpdates.about = data.about;
-    if (data.social_links !== undefined) profileUpdates.social_links = data.social_links;
-    if (data.birth_date !== undefined) profileUpdates.birth_date = data.birth_date;
+    if (data.social_links !== undefined)
+      profileUpdates.social_links = data.social_links;
+    if (data.birth_date !== undefined)
+      profileUpdates.birth_date = data.birth_date;
     if (data.gender !== undefined) profileUpdates.gender = data.gender;
 
     if (Object.keys(profileUpdates).length > 0) {
       const [profile] = await this.profileModel.findOrCreate({
         where: { user_id: userId },
-        defaults: { user_id: userId, ...profileUpdates } as any,
+        defaults: { user_id: userId, ...profileUpdates },
       });
       if (profile) {
         await profile.update(profileUpdates);
@@ -305,12 +321,17 @@ export class AuthorDashboardService {
     });
 
     const updates: any = {};
-    if (data.article_updates !== undefined) updates.notify_article_updates = data.article_updates;
-    if (data.new_followers !== undefined) updates.notify_new_followers = data.new_followers;
-    if (data.new_contributors !== undefined) updates.notify_new_contributors = data.new_contributors;
+    if (data.article_updates !== undefined)
+      updates.notify_article_updates = data.article_updates;
+    if (data.new_followers !== undefined)
+      updates.notify_new_followers = data.new_followers;
+    if (data.new_contributors !== undefined)
+      updates.notify_new_contributors = data.new_contributors;
     if (data.comments !== undefined) updates.notify_comments = data.comments;
-    if (data.weekly_digest !== undefined) updates.notify_weekly_digest = data.weekly_digest;
-    if (data.push_browser !== undefined) updates.notify_push_browser = data.push_browser;
+    if (data.weekly_digest !== undefined)
+      updates.notify_weekly_digest = data.weekly_digest;
+    if (data.push_browser !== undefined)
+      updates.notify_push_browser = data.push_browser;
 
     await settings.update(updates);
 

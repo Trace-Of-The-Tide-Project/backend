@@ -23,11 +23,7 @@ export class ResponseInterceptor implements NestInterceptor {
         }
 
         // Paginated responses from BaseService.findAll
-        if (
-          typeof data === 'object' &&
-          'rows' in data &&
-          'meta' in data
-        ) {
+        if (typeof data === 'object' && 'rows' in data && 'meta' in data) {
           return {
             status,
             results: data.rows.length,

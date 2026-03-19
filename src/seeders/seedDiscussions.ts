@@ -2,11 +2,15 @@ import { Discussion } from '../discussions/models/discussion.model';
 import { User } from '../users/models/user.model';
 import { Contribution } from '../contributions/models/contribution.model';
 
-export async function seedDiscussions(adminUser: User, contributions: Contribution[]) {
+export async function seedDiscussions(
+  adminUser: User,
+  contributions: Contribution[],
+) {
   const discussionsData = [
     {
       title: 'Impact of 1948 on Family Stories',
-      description: 'Discussing collective memories and narratives after the 1948 displacement.',
+      description:
+        'Discussing collective memories and narratives after the 1948 displacement.',
       created_by: adminUser.id,
       related_contribution_id: contributions[0]?.id,
       status: 'open',

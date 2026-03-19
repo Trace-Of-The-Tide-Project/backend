@@ -20,11 +20,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('CMS')
 @Controller('cms')
@@ -42,7 +38,9 @@ export class CmsController {
   }
 
   @Get('pages/slug/:slug')
-  @ApiOperation({ summary: 'Get page by slug (public — for frontend rendering)' })
+  @ApiOperation({
+    summary: 'Get page by slug (public — for frontend rendering)',
+  })
   findBySlug(@Param('slug') slug: string) {
     return this.cmsService.findPageBySlug(slug);
   }
@@ -67,7 +65,11 @@ export class CmsController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update page content (admin)' })
-  updatePage(@Param('id') id: string, @Body() dto: UpdatePageDto, @Req() req: any) {
+  updatePage(
+    @Param('id') id: string,
+    @Body() dto: UpdatePageDto,
+    @Req() req: any,
+  ) {
     return this.cmsService.updatePage(id, dto, req.user.sub);
   }
 
@@ -113,7 +115,10 @@ export class CmsController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Reorder sections (drag-and-drop)' })
-  reorderSections(@Param('id') id: string, @Body('sectionIds') sectionIds: string[]) {
+  reorderSections(
+    @Param('id') id: string,
+    @Body('sectionIds') sectionIds: string[],
+  ) {
     return this.cmsService.reorderSections(id, sectionIds);
   }
 
@@ -135,7 +140,10 @@ export class CmsController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Toggle section visibility (eye icon in Figma)' })
-  toggleVisibility(@Param('id') id: string, @Param('sectionId') sectionId: string) {
+  toggleVisibility(
+    @Param('id') id: string,
+    @Param('sectionId') sectionId: string,
+  ) {
     return this.cmsService.toggleSectionVisibility(id, sectionId);
   }
 
@@ -144,7 +152,10 @@ export class CmsController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Remove a section' })
-  removeSection(@Param('id') id: string, @Param('sectionId') sectionId: string) {
+  removeSection(
+    @Param('id') id: string,
+    @Param('sectionId') sectionId: string,
+  ) {
     return this.cmsService.removeSection(id, sectionId);
   }
 
@@ -153,7 +164,9 @@ export class CmsController {
   // ═══════════════════════════════════════════════════════════
 
   @Get('settings')
-  @ApiOperation({ summary: 'Get all site settings (navigation, footer, branding)' })
+  @ApiOperation({
+    summary: 'Get all site settings (navigation, footer, branding)',
+  })
   getAllSettings() {
     return this.cmsService.getAllSettings();
   }

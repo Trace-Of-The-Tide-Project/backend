@@ -2,7 +2,10 @@ import { Contribution } from '../contributions/models/contribution.model';
 import { ContributionType } from '../contributions/models/contribution-type.model';
 import { User } from '../users/models/user.model';
 
-export async function seedContributions(adminUser: User, contributionTypes: ContributionType[]) {
+export async function seedContributions(
+  adminUser: User,
+  contributionTypes: ContributionType[],
+) {
   const storyType = contributionTypes.find((t) => t.name === 'personal_story');
   const audioType = contributionTypes.find((t) => t.name === 'audio');
 

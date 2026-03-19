@@ -14,7 +14,8 @@ export class CmsService {
   constructor(
     @InjectModel(Page) private readonly pageModel: typeof Page,
     @InjectModel(PageSection) private readonly sectionModel: typeof PageSection,
-    @InjectModel(SiteSettings) private readonly settingsModel: typeof SiteSettings,
+    @InjectModel(SiteSettings)
+    private readonly settingsModel: typeof SiteSettings,
   ) {}
 
   // ═══════════════════════════════════════════════════════════
@@ -24,8 +25,16 @@ export class CmsService {
   async findAllPages() {
     return this.pageModel.findAll({
       include: [
-        { model: PageSection, separate: true, order: [['section_order', 'ASC']] as any },
-        { model: User, as: 'editor', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: PageSection,
+          separate: true,
+          order: [['section_order', 'ASC']] as any,
+        },
+        {
+          model: User,
+          as: 'editor',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       order: [['createdAt', 'ASC']],
     });
@@ -35,7 +44,11 @@ export class CmsService {
     const page = await this.pageModel.findOne({
       where: { slug },
       include: [
-        { model: PageSection, separate: true, order: [['section_order', 'ASC']] as any },
+        {
+          model: PageSection,
+          separate: true,
+          order: [['section_order', 'ASC']] as any,
+        },
       ],
     });
     if (!page) throw new NotFoundException(`Page "${slug}" not found`);
@@ -45,7 +58,11 @@ export class CmsService {
   async findPageById(id: string) {
     const page = await this.pageModel.findByPk(id, {
       include: [
-        { model: PageSection, separate: true, order: [['section_order', 'ASC']] as any },
+        {
+          model: PageSection,
+          separate: true,
+          order: [['section_order', 'ASC']] as any,
+        },
       ],
     });
     if (!page) throw new NotFoundException(`Page ${id} not found`);
@@ -54,9 +71,12 @@ export class CmsService {
 
   async createPage(data: any, userId: string) {
     // Check slug uniqueness
-    const existing = await this.pageModel.findOne({ where: { slug: data.slug } });
-    if (existing) throw new BadRequestException(`Slug "${data.slug}" already exists`);
-    return this.pageModel.create({ ...data, updated_by: userId } as any);
+    const existing = await this.pageModel.findOne({
+      where: { slug: data.slug },
+    });
+    if (existing)
+      throw new BadRequestException(`Slug "${data.slug}" already exists`);
+    return this.pageModel.create({ ...data, updated_by: userId });
   }
 
   async updatePage(id: string, data: any, userId: string) {
@@ -99,7 +119,7 @@ export class CmsService {
   async addSection(pageId: string, data: any) {
     const page = await this.pageModel.findByPk(pageId);
     if (!page) throw new NotFoundException(`Page ${pageId} not found`);
-    return this.sectionModel.create({ ...data, page_id: pageId } as any);
+    return this.sectionModel.create({ ...data, page_id: pageId });
   }
 
   async updateSection(pageId: string, sectionId: string, data: any) {

@@ -13,9 +13,7 @@ export class CommentsService extends BaseService<Comment> {
     {
       model: Comment,
       as: 'replies',
-      include: [
-        { model: User, attributes: ['id', 'username', 'full_name'] },
-      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
     },
   ];
 
@@ -38,7 +36,6 @@ export class CommentsService extends BaseService<Comment> {
     return super.findOne(id, { include: this.defaultInclude });
   }
 
-
   async create(data: Partial<Comment>) {
     const createData: any = { ...data };
 
@@ -48,8 +45,7 @@ export class CommentsService extends BaseService<Comment> {
       );
       if (parent) {
         createData.depth = (parent.depth || 0) + 1;
-        createData.thread_root_id =
-          parent.thread_root_id || parent.id;
+        createData.thread_root_id = parent.thread_root_id || parent.id;
       }
     } else {
       createData.depth = 0;

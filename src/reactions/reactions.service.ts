@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../common/base.service';
 import { Reaction } from './models/reaction.model';
@@ -85,9 +82,7 @@ export class ReactionsService extends BaseService<Reaction> {
   async getCommentReactions(commentId: string) {
     const reactions = await this.reactionModel.findAll({
       where: { comment_id: commentId },
-      include: [
-        { model: User, attributes: ['id', 'username', 'full_name'] },
-      ],
+      include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
     });
 
     // Group by type

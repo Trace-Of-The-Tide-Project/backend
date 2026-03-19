@@ -31,10 +31,26 @@ export class ModerationController {
   @ApiOperation({ summary: 'List moderation logs with filters and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in action and reason' })
-  @ApiQuery({ name: 'action', required: false, enum: ['approved', 'rejected', 'flagged'] })
-  @ApiQuery({ name: 'reviewer_id', required: false, description: 'Filter by reviewer UUID' })
-  @ApiQuery({ name: 'contribution_id', required: false, description: 'Filter by contribution UUID' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in action and reason',
+  })
+  @ApiQuery({
+    name: 'action',
+    required: false,
+    enum: ['approved', 'rejected', 'flagged'],
+  })
+  @ApiQuery({
+    name: 'reviewer_id',
+    required: false,
+    description: 'Filter by reviewer UUID',
+  })
+  @ApiQuery({
+    name: 'contribution_id',
+    required: false,
+    description: 'Filter by contribution UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'created_at' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
@@ -48,7 +64,9 @@ export class ModerationController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a moderation log entry (flag, approve, reject)' })
+  @ApiOperation({
+    summary: 'Create a moderation log entry (flag, approve, reject)',
+  })
   create(@Body() body: any) {
     return this.moderationService.create(body);
   }

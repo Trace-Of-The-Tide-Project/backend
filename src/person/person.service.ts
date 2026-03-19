@@ -16,13 +16,21 @@ export class PersonService extends BaseService<PersonProfile> {
     {
       model: BiographicalCard,
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
     },
     {
       model: LifeEvent,
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
         Location,
       ],
       order: [['event_date', 'ASC']],
@@ -30,7 +38,11 @@ export class PersonService extends BaseService<PersonProfile> {
     {
       model: TimelineEvent,
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
         { model: Contribution, attributes: ['id', 'title', 'status'] },
       ],
       order: [['event_date', 'ASC']],
@@ -78,7 +90,11 @@ export class PersonService extends BaseService<PersonProfile> {
     return this.cardModel.findAll({
       where: { person_profile_id: profileId },
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
     });
   }
@@ -108,7 +124,11 @@ export class PersonService extends BaseService<PersonProfile> {
     return this.lifeEventModel.findAll({
       where: { person_profile_id: profileId },
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
         Location,
       ],
       order: [['event_date', 'ASC']],
@@ -140,7 +160,11 @@ export class PersonService extends BaseService<PersonProfile> {
     return this.timelineModel.findAll({
       where: { related_person_id: profileId },
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
         { model: Contribution, attributes: ['id', 'title', 'status'] },
       ],
       order: [['event_date', 'ASC']],

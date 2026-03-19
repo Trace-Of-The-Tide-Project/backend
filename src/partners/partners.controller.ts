@@ -29,7 +29,11 @@ export class PartnersController {
   @ApiOperation({ summary: 'List partners with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in name, email, phone' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in name, email, phone',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

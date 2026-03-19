@@ -22,7 +22,10 @@ export class CreatePageDto {
   @IsString()
   slug!: string;
 
-  @ApiPropertyOptional({ example: 'static', enum: ['homepage', 'static', 'custom'] })
+  @ApiPropertyOptional({
+    example: 'static',
+    enum: ['homepage', 'static', 'custom'],
+  })
   @IsOptional()
   @IsString()
   page_type?: string;
@@ -53,7 +56,17 @@ export class UpdatePageDto extends PartialType(CreatePageDto) {
 // ─── PAGE SECTIONS ──────────────────────────────────────────
 
 export class CreatePageSectionDto {
-  @ApiProperty({ example: 'hero', enum: ['hero', 'featured', 'categories', 'top_creators', 'call_to_action', 'custom'] })
+  @ApiProperty({
+    example: 'hero',
+    enum: [
+      'hero',
+      'featured',
+      'categories',
+      'top_creators',
+      'call_to_action',
+      'custom',
+    ],
+  })
   @IsNotEmpty()
   @IsString()
   section_type!: string;
@@ -75,7 +88,8 @@ export class CreatePageSectionDto {
   is_visible?: boolean;
 
   @ApiPropertyOptional({
-    example: '{"headline":"Discover. Create. Inspire.","subheadline":"Join a community...","primary_cta":"Contribute now","background_image":"hero.jpg"}',
+    example:
+      '{"headline":"Discover. Create. Inspire.","subheadline":"Join a community...","primary_cta":"Contribute now","background_image":"hero.jpg"}',
     description: 'JSON config specific to section type',
   })
   @IsOptional()
@@ -94,7 +108,8 @@ export class UpdateSiteSettingsDto {
   key!: string;
 
   @ApiProperty({
-    example: '{"links":[{"label":"Home","url":"/","order":1,"is_visible":true}]}',
+    example:
+      '{"links":[{"label":"Home","url":"/","order":1,"is_visible":true}]}',
     description: 'JSON value for the setting',
   })
   @IsNotEmpty()

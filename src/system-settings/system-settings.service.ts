@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { ContributionType } from '../contributions/models/contribution-type.model';
 import { Tag } from '../tags/models/tag.model';
@@ -11,13 +15,16 @@ import { ContributionTag } from '../tags/models/contribution-tag.model';
 @Injectable()
 export class SystemSettingsService {
   constructor(
-    @InjectModel(ContributionType) private contributionTypeModel: typeof ContributionType,
+    @InjectModel(ContributionType)
+    private contributionTypeModel: typeof ContributionType,
     @InjectModel(Tag) private tagModel: typeof Tag,
     @InjectModel(Badge) private badgeModel: typeof Badge,
-    @InjectModel(EmailTemplate) private emailTemplateModel: typeof EmailTemplate,
+    @InjectModel(EmailTemplate)
+    private emailTemplateModel: typeof EmailTemplate,
     @InjectModel(SiteSettings) private siteSettingsModel: typeof SiteSettings,
     @InjectModel(Contribution) private contributionModel: typeof Contribution,
-    @InjectModel(ContributionTag) private contributionTagModel: typeof ContributionTag,
+    @InjectModel(ContributionTag)
+    private contributionTagModel: typeof ContributionTag,
   ) {}
 
   // ═══════════════════════════════════════════════
@@ -51,7 +58,11 @@ export class SystemSettingsService {
     return { categories: result, total: result.length };
   }
 
-  async createCategory(dto: { name: string; slug?: string; description?: string }) {
+  async createCategory(dto: {
+    name: string;
+    slug?: string;
+    description?: string;
+  }) {
     const existing = await this.contributionTypeModel.findOne({
       where: { name: dto.name },
     });
@@ -74,7 +85,10 @@ export class SystemSettingsService {
     };
   }
 
-  async updateCategory(id: string, dto: { name?: string; slug?: string; description?: string }) {
+  async updateCategory(
+    id: string,
+    dto: { name?: string; slug?: string; description?: string },
+  ) {
     const category = await this.contributionTypeModel.findByPk(id);
     if (!category) throw new NotFoundException('Category not found');
 
@@ -431,7 +445,11 @@ export class SystemSettingsService {
   // ═══════════════════════════════════════════════
 
   async getGuidelines() {
-    const keys = ['community_guidelines', 'content_policy', 'enable_multi_language_guidelines'];
+    const keys = [
+      'community_guidelines',
+      'content_policy',
+      'enable_multi_language_guidelines',
+    ];
 
     const settings: Record<string, any> = {};
 
@@ -461,7 +479,10 @@ export class SystemSettingsService {
     const updates: { key: string; value: string }[] = [];
 
     if (dto.community_guidelines !== undefined) {
-      updates.push({ key: 'community_guidelines', value: dto.community_guidelines });
+      updates.push({
+        key: 'community_guidelines',
+        value: dto.community_guidelines,
+      });
     }
     if (dto.content_policy !== undefined) {
       updates.push({ key: 'content_policy', value: dto.content_policy });

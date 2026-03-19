@@ -36,29 +36,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = resObj.message || message;
         error = resObj.error || error;
       }
-
     } else if (exception instanceof UniqueConstraintError) {
       status = HttpStatus.CONFLICT;
       error = 'Conflict';
       const fields = exception.errors.map((e) => `${e.path} already exists`);
       message = fields.length === 1 ? fields[0] : fields;
-
     } else if (exception instanceof ForeignKeyConstraintError) {
       status = HttpStatus.BAD_REQUEST;
       error = 'Bad Request';
       message = 'Referenced record does not exist';
-
     } else if (exception instanceof ValidationError) {
       status = HttpStatus.BAD_REQUEST;
       error = 'Validation Error';
       message = exception.errors.map((e) => e.message);
-
     } else if (exception instanceof DatabaseError) {
       status = HttpStatus.BAD_REQUEST;
       error = 'Database Error';
       message = 'Invalid query or data format';
 
-    // --- Generic errors ---
+      // --- Generic errors ---
     } else if (exception instanceof Error) {
       message = exception.message;
       error = exception.name;

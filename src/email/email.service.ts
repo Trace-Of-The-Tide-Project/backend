@@ -39,10 +39,7 @@ export class EmailService {
     );
   }
 
-  async sendResetPasswordEmail(
-    email: string,
-    token: string,
-  ): Promise<boolean> {
+  async sendResetPasswordEmail(email: string, token: string): Promise<boolean> {
     const resetLink = `${this.frontendUrl}/auth/reset-password?token=${token}`;
 
     try {
@@ -109,7 +106,10 @@ export class EmailService {
       this.logger.log(`Open call confirmation sent to ${email}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to send open call confirmation to ${email}`, error);
+      this.logger.error(
+        `Failed to send open call confirmation to ${email}`,
+        error,
+      );
       return false;
     }
   }

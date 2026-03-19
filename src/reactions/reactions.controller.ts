@@ -28,7 +28,8 @@ export class ReactionsController {
   @Get('comment/:commentId')
   @ApiOperation({
     summary: 'Get reaction summary for a comment',
-    description: 'Returns total count and breakdown by type (like, love, wow, etc.) with user info.',
+    description:
+      'Returns total count and breakdown by type (like, love, wow, etc.) with user info.',
   })
   getCommentReactions(@Param('commentId') commentId: string) {
     return this.reactionsService.getCommentReactions(commentId);
@@ -38,9 +39,21 @@ export class ReactionsController {
   @ApiOperation({ summary: 'List all reactions with filters and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'type', required: false, enum: ['like', 'love', 'wow', 'sad', 'angry'] })
-  @ApiQuery({ name: 'comment_id', required: false, description: 'Filter by comment UUID' })
-  @ApiQuery({ name: 'user_id', required: false, description: 'Filter by user UUID' })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['like', 'love', 'wow', 'sad', 'angry'],
+  })
+  @ApiQuery({
+    name: 'comment_id',
+    required: false,
+    description: 'Filter by comment UUID',
+  })
+  @ApiQuery({
+    name: 'user_id',
+    required: false,
+    description: 'Filter by user UUID',
+  })
   findAll(@Query() query: any) {
     return this.reactionsService.findAll(query);
   }
@@ -58,7 +71,8 @@ export class ReactionsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Toggle a reaction on a comment',
-    description: 'Same type twice = removes reaction (unlike). Different type = switches. New = creates. Body: { user_id, comment_id, type }',
+    description:
+      'Same type twice = removes reaction (unlike). Different type = switches. New = creates. Body: { user_id, comment_id, type }',
   })
   toggle(@Body() body: { user_id: string; comment_id: string; type: string }) {
     return this.reactionsService.toggleReaction(

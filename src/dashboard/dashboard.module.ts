@@ -48,4 +48,4 @@ import { Log } from 'src/logs/models/log.model';
   providers: [DashboardService],
   exports: [DashboardService],
 })
-export class DashboardModule { }
+export class DashboardModule {}

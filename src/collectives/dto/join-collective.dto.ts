@@ -28,7 +28,10 @@ export class JoinCollectiveDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ example: '+970599123456', description: 'Phone number with country code' })
+  @ApiProperty({
+    example: '+970599123456',
+    description: 'Phone number with country code',
+  })
   @IsNotEmpty()
   @IsString()
   phone_number!: string;
@@ -38,12 +41,17 @@ export class JoinCollectiveDto {
   @IsString()
   experience_field!: string;
 
-  @ApiPropertyOptional({ example: ['Project A', 'Project B'], description: 'Selected TTT projects' })
+  @ApiPropertyOptional({
+    example: ['Project A', 'Project B'],
+    description: 'Selected TTT projects',
+  })
   @IsOptional()
   @IsArray()
   traces?: string[];
 
-  @ApiProperty({ example: 'I am a Palestinian photographer with 10 years of experience...' })
+  @ApiProperty({
+    example: 'I am a Palestinian photographer with 10 years of experience...',
+  })
   @IsNotEmpty()
   @IsString()
   about!: string;
@@ -69,24 +77,36 @@ export class JoinCollectiveDto {
   @IsString()
   linkedin?: string;
 
-  @ApiPropertyOptional({ example: ['https://myportfolio.com'], description: 'Custom links' })
+  @ApiPropertyOptional({
+    example: ['https://myportfolio.com'],
+    description: 'Custom links',
+  })
   @IsOptional()
   @IsArray()
   custom_links?: string[];
 
-  @ApiProperty({ description: 'Must be true — agree to terms and privacy policy', example: true })
+  @ApiProperty({
+    description: 'Must be true — agree to terms and privacy policy',
+    example: true,
+  })
   @IsNotEmpty()
   @IsBoolean()
   @Equals(true, { message: 'You must agree to the terms and privacy policy' })
   terms_agreed!: boolean;
 
   // Availability fields
-  @ApiPropertyOptional({ example: 'frequently', enum: ['frequently', 'one_time'] })
+  @ApiPropertyOptional({
+    example: 'frequently',
+    enum: ['frequently', 'one_time'],
+  })
   @IsOptional()
   @IsIn(['frequently', 'one_time'])
   availability_type?: string;
 
-  @ApiPropertyOptional({ example: ['saturday', 'sunday'], description: 'Selected days of the week' })
+  @ApiPropertyOptional({
+    example: ['saturday', 'sunday'],
+    description: 'Selected days of the week',
+  })
   @IsOptional()
   @IsArray()
   availability_days?: string[];
@@ -99,7 +119,10 @@ export class JoinCollectiveDto {
   @IsObject()
   availability_slots?: Record<string, { start: string; end: string }[]>;
 
-  @ApiPropertyOptional({ example: '2025-12-30', description: 'Specific date for one-time availability' })
+  @ApiPropertyOptional({
+    example: '2025-12-30',
+    description: 'Specific date for one-time availability',
+  })
   @IsOptional()
   @IsString()
   availability_date?: string;

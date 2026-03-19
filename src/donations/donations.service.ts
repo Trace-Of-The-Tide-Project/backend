@@ -38,5 +38,4 @@ export class DonationsService extends BaseService<Donation> {
       ...data,
     } as any);
   }
-
 }

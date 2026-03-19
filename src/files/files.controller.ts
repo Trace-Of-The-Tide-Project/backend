@@ -29,9 +29,21 @@ export class FilesController {
   @ApiOperation({ summary: 'List files with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in file_name and mime_type' })
-  @ApiQuery({ name: 'mime_type', required: false, description: 'Filter by MIME type' })
-  @ApiQuery({ name: 'contribution_id', required: false, description: 'Filter by contribution UUID' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in file_name and mime_type',
+  })
+  @ApiQuery({
+    name: 'mime_type',
+    required: false,
+    description: 'Filter by MIME type',
+  })
+  @ApiQuery({
+    name: 'contribution_id',
+    required: false,
+    description: 'Filter by contribution UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'upload_date' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

@@ -9,7 +9,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { AuthorDashboardService } from './author-dashboard.service';
 
@@ -27,7 +32,9 @@ export class AuthorDashboardController {
   // ─── MAIN DASHBOARD ──────────────────────────────
 
   @Get('dashboard')
-  @ApiOperation({ summary: 'Author main dashboard (profile + stats + recent items)' })
+  @ApiOperation({
+    summary: 'Author main dashboard (profile + stats + recent items)',
+  })
   async getDashboard(@Req() req: any) {
     return this.service.getDashboard(this.getUserId(req));
   }
@@ -46,14 +53,22 @@ export class AuthorDashboardController {
   @ApiOperation({ summary: 'List supporters/donors' })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'type', required: false, enum: ['all', 'one-time', 'recurring'] })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    enum: ['all', 'one-time', 'recurring'],
+  })
   async getSupporters(
     @Req() req: any,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('type') type?: string,
   ) {
-    return this.service.getSupporters(this.getUserId(req), { page, limit, type });
+    return this.service.getSupporters(this.getUserId(req), {
+      page,
+      limit,
+      type,
+    });
   }
 
   @Post('supporters/:donationId/thank')
@@ -180,11 +195,10 @@ export class AuthorDashboardController {
   // ─── SETTINGS: ACCOUNT ───────────────────────────
 
   @Post('settings/account/deactivate')
-  @ApiOperation({ summary: 'Deactivate account (requires password confirmation)' })
-  async deactivateAccount(
-    @Req() req: any,
-    @Body() body: { password: string },
-  ) {
+  @ApiOperation({
+    summary: 'Deactivate account (requires password confirmation)',
+  })
+  async deactivateAccount(@Req() req: any, @Body() body: { password: string }) {
     return this.service.deactivateAccount(this.getUserId(req), body.password);
   }
 

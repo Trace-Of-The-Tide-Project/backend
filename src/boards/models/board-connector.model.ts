@@ -52,10 +52,16 @@ export class BoardConnector extends Model<BoardConnector> {
   @BelongsTo(() => BoardPage)
   declare page: BoardPage;
 
-  @BelongsTo(() => BoardElement, { foreignKey: 'source_element_id', as: 'source' })
+  @BelongsTo(() => BoardElement, {
+    foreignKey: 'source_element_id',
+    as: 'source',
+  })
   declare source: BoardElement;
 
-  @BelongsTo(() => BoardElement, { foreignKey: 'target_element_id', as: 'target' })
+  @BelongsTo(() => BoardElement, {
+    foreignKey: 'target_element_id',
+    as: 'target',
+  })
   declare target: BoardElement;
 
   @BelongsTo(() => User, 'created_by')

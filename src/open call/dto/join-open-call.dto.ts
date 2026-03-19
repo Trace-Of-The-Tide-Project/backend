@@ -25,7 +25,10 @@ export class JoinOpenCallDto {
   @IsEmail()
   email!: string;
 
-  @ApiProperty({ example: '+970599123456', description: 'Phone number with country code' })
+  @ApiProperty({
+    example: '+970599123456',
+    description: 'Phone number with country code',
+  })
   @IsNotEmpty()
   @IsString()
   phone_number!: string;
@@ -35,7 +38,9 @@ export class JoinOpenCallDto {
   @IsString()
   experience_field!: string;
 
-  @ApiProperty({ example: 'I am a Palestinian photographer with 10 years of experience...' })
+  @ApiProperty({
+    example: 'I am a Palestinian photographer with 10 years of experience...',
+  })
   @IsNotEmpty()
   @IsString()
   about!: string;
@@ -50,7 +55,10 @@ export class JoinOpenCallDto {
   @IsString()
   city!: string;
 
-  @ApiProperty({ description: 'Must be true — agree to terms and privacy policy', example: true })
+  @ApiProperty({
+    description: 'Must be true — agree to terms and privacy policy',
+    example: true,
+  })
   @IsNotEmpty()
   @IsBoolean()
   @Equals(true, { message: 'You must agree to the terms and privacy policy' })

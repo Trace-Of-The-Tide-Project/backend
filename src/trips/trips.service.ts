@@ -32,7 +32,8 @@ export class TripsService extends BaseService<Trip> {
   constructor(
     @InjectModel(Trip) private readonly tripModel: typeof Trip,
     @InjectModel(TripStop) private readonly tripStopModel: typeof TripStop,
-    @InjectModel(TripParticipant) private readonly tripParticipantModel: typeof TripParticipant,
+    @InjectModel(TripParticipant)
+    private readonly tripParticipantModel: typeof TripParticipant,
   ) {
     super(tripModel);
   }
@@ -76,7 +77,9 @@ export class TripsService extends BaseService<Trip> {
     }
 
     // Must have at least one stop
-    const stopCount = await this.tripStopModel.count({ where: { trip_id: id } });
+    const stopCount = await this.tripStopModel.count({
+      where: { trip_id: id },
+    });
     if (stopCount === 0) {
       throw new BadRequestException('Add at least one stop before publishing');
     }
@@ -95,7 +98,12 @@ export class TripsService extends BaseService<Trip> {
     // Cancel all registered participants
     await this.tripParticipantModel.update(
       { status: 'cancelled' },
-      { where: { trip_id: id, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } } },
+      {
+        where: {
+          trip_id: id,
+          status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] },
+        },
+      },
     );
 
     await trip.update({ status: 'cancelled' });
@@ -120,17 +128,19 @@ export class TripsService extends BaseService<Trip> {
     // Validate location if provided
     if (data.location_id) {
       const location = await Location.findByPk(data.location_id);
-      if (!location) throw new NotFoundException(`Location ${data.location_id} not found`);
+      if (!location)
+        throw new NotFoundException(`Location ${data.location_id} not found`);
     }
 
-    return this.tripStopModel.create({ ...data, trip_id: tripId } as any);
+    return this.tripStopModel.create({ ...data, trip_id: tripId });
   }
 
   async updateStop(tripId: string, stopId: string, data: any) {
     const stop = await this.tripStopModel.findOne({
       where: { id: stopId, trip_id: tripId },
     });
-    if (!stop) throw new NotFoundException(`Stop ${stopId} not found in trip ${tripId}`);
+    if (!stop)
+      throw new NotFoundException(`Stop ${stopId} not found in trip ${tripId}`);
     await stop.update(data);
     return stop;
   }
@@ -139,7 +149,8 @@ export class TripsService extends BaseService<Trip> {
     const stop = await this.tripStopModel.findOne({
       where: { id: stopId, trip_id: tripId },
     });
-    if (!stop) throw new NotFoundException(`Stop ${stopId} not found in trip ${tripId}`);
+    if (!stop)
+      throw new NotFoundException(`Stop ${stopId} not found in trip ${tripId}`);
     await stop.destroy();
     return { message: 'Stop removed' };
   }
@@ -169,7 +180,11 @@ export class TripsService extends BaseService<Trip> {
     });
   }
 
-  async registerParticipant(tripId: string, userId: string | null, data: any = {}) {
+  async registerParticipant(
+    tripId: string,
+    userId: string | null,
+    data: any = {},
+  ) {
     const trip = await this.tripModel.findByPk(tripId);
     if (!trip) throw new NotFoundException(`Trip ${tripId} not found`);
 
@@ -180,28 +195,45 @@ export class TripsService extends BaseService<Trip> {
     // Guest registration requires guest_name and guest_email
     if (!userId) {
       if (!data.guest_name || !data.guest_email) {
-        throw new BadRequestException('Guest name and email are required for guest registration');
+        throw new BadRequestException(
+          'Guest name and email are required for guest registration',
+        );
       }
     }
 
     // Check if already registered (by user_id or guest_email)
     if (userId) {
       const existing = await this.tripParticipantModel.findOne({
-        where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
+        where: {
+          trip_id: tripId,
+          user_id: userId,
+          status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] },
+        },
       });
-      if (existing) throw new ConflictException('Already registered for this trip');
+      if (existing)
+        throw new ConflictException('Already registered for this trip');
     } else if (data.guest_email) {
       const existing = await this.tripParticipantModel.findOne({
-        where: { trip_id: tripId, guest_email: data.guest_email, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
+        where: {
+          trip_id: tripId,
+          guest_email: data.guest_email,
+          status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] },
+        },
       });
-      if (existing) throw new ConflictException('This email is already registered for this trip');
+      if (existing)
+        throw new ConflictException(
+          'This email is already registered for this trip',
+        );
     }
 
     // Check capacity
     let status = 'registered';
     if (trip.max_participants) {
       const activeCount = await this.tripParticipantModel.count({
-        where: { trip_id: tripId, status: { [Op.in]: ['registered', 'confirmed'] } },
+        where: {
+          trip_id: tripId,
+          status: { [Op.in]: ['registered', 'confirmed'] },
+        },
       });
       if (activeCount >= trip.max_participants) {
         status = 'waitlisted';
@@ -223,7 +255,11 @@ export class TripsService extends BaseService<Trip> {
 
   async cancelRegistration(tripId: string, userId: string) {
     const participant = await this.tripParticipantModel.findOne({
-      where: { trip_id: tripId, user_id: userId, status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] } },
+      where: {
+        trip_id: tripId,
+        user_id: userId,
+        status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] },
+      },
     });
     if (!participant) throw new NotFoundException('Registration not found');
 
@@ -247,7 +283,11 @@ export class TripsService extends BaseService<Trip> {
     return { message: 'Registration cancelled' };
   }
 
-  async updateParticipantStatus(tripId: string, participantId: string, status: string) {
+  async updateParticipantStatus(
+    tripId: string,
+    participantId: string,
+    status: string,
+  ) {
     const participant = await this.tripParticipantModel.findOne({
       where: { id: participantId, trip_id: tripId },
     });
@@ -279,7 +319,12 @@ export class TripsService extends BaseService<Trip> {
       trip_id: tripId,
       status: trip.status,
       stops: stopCount,
-      participants: { registered, confirmed, waitlisted, total: registered + confirmed },
+      participants: {
+        registered,
+        confirmed,
+        waitlisted,
+        total: registered + confirmed,
+      },
       spots_remaining: trip.max_participants
         ? Math.max(0, trip.max_participants - registered - confirmed)
         : null,

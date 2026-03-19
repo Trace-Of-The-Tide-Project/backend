@@ -7,7 +7,7 @@ export async function seedComments(adminUser: User, discussions: Discussion[]) {
     {
       discussion_id: discussions[0].id,
       user_id: adminUser.id,
-      content: 'This story deeply resonates with my family\'s experience too.',
+      content: "This story deeply resonates with my family's experience too.",
       depth: 0,
     },
     {

@@ -70,7 +70,9 @@ describe('UsersService', () => {
     it('should throw NotFoundException for non-existent user', async () => {
       mockUserModel.findByPk.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -97,7 +99,9 @@ describe('UsersService', () => {
     });
 
     it('should throw BadRequestException when email is empty', async () => {
-      await expect(service.findByEmail('')).rejects.toThrow(BadRequestException);
+      await expect(service.findByEmail('')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -110,7 +114,11 @@ describe('UsersService', () => {
         count: 1,
       });
 
-      const result = await service.findAll({ page: '1', limit: '10', search: 'test' });
+      const result = await service.findAll({
+        page: '1',
+        limit: '10',
+        search: 'test',
+      });
 
       expect(result.rows).toHaveLength(1);
       expect(result.meta).toHaveProperty('total', 1);
@@ -122,10 +130,12 @@ describe('UsersService', () => {
   describe('getUserRoles', () => {
     it('should return array of role names for user', async () => {
       mockUserModel.findByPk.mockResolvedValue(mockUser);
-      jest.spyOn(UserRole, 'findAll').mockResolvedValue([
-        { toJSON: () => ({ role: { name: 'user' } }) } as any,
-        { toJSON: () => ({ role: { name: 'editor' } }) } as any,
-      ]);
+      jest
+        .spyOn(UserRole, 'findAll')
+        .mockResolvedValue([
+          { toJSON: () => ({ role: { name: 'user' } }) } as any,
+          { toJSON: () => ({ role: { name: 'editor' } }) } as any,
+        ]);
 
       const result = await service.getUserRoles('user-uuid-1');
 
@@ -181,9 +191,13 @@ describe('UsersService', () => {
     it('should create profile if none exists', async () => {
       mockUserModel.findByPk.mockResolvedValue(mockUser);
       jest.spyOn(UserProfile, 'findOne').mockResolvedValue(null);
-      jest.spyOn(UserProfile, 'create').mockResolvedValue({ bio: 'New' } as any);
+      jest
+        .spyOn(UserProfile, 'create')
+        .mockResolvedValue({ bio: 'New' } as any);
 
-      const result = await service.updateProfile('user-uuid-1', { bio: 'New' } as any);
+      const result = await service.updateProfile('user-uuid-1', {
+        bio: 'New',
+      } as any);
 
       expect(UserProfile.create).toHaveBeenCalledWith(
         expect.objectContaining({

@@ -2,7 +2,10 @@ import { File } from '../files/models/file.model';
 import { Contribution } from '../contributions/models/contribution.model';
 import { User } from '../users/models/user.model';
 
-export async function seedFiles(adminUser: User, contributions: Contribution[]) {
+export async function seedFiles(
+  adminUser: User,
+  contributions: Contribution[],
+) {
   const filesData = [
     {
       contribution_id: contributions[0].id,
@@ -27,7 +30,10 @@ export async function seedFiles(adminUser: User, contributions: Contribution[]) 
 
   for (const data of filesData) {
     await File.findOrCreate({
-      where: { contribution_id: data.contribution_id, file_name: data.file_name },
+      where: {
+        contribution_id: data.contribution_id,
+        file_name: data.file_name,
+      },
       defaults: data as any,
     });
   }

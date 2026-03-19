@@ -14,7 +14,10 @@ export class CreateOpenCallDto {
   @IsString()
   title!: string;
 
-  @ApiProperty({ example: 'We are collecting photographs documenting daily life in Palestine...' })
+  @ApiProperty({
+    example:
+      'We are collecting photographs documenting daily life in Palestine...',
+  })
   @IsNotEmpty()
   @IsString()
   description!: string;
@@ -63,7 +66,9 @@ export class CreateOpenCallDto {
   @IsIn(['article', 'video', 'audio', 'slide'])
   type?: string;
 
-  @ApiPropertyOptional({ description: 'Publication or event date (ISO string)' })
+  @ApiPropertyOptional({
+    description: 'Publication or event date (ISO string)',
+  })
   @IsOptional()
   @IsDateString()
   date?: string;

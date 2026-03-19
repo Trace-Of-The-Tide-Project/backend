@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, fn, col } from 'sequelize';
 import { Conversation } from './models/conversation.model';
@@ -25,23 +29,25 @@ export class MessagingService {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
 
-    const [unread, highPriority, pending, resolvedThisWeek] = await Promise.all([
-      this.conversationModel.count({
-        where: { status: 'open', unread_count: { [Op.gt]: 0 } },
-      } as any),
-      this.conversationModel.count({
-        where: { priority: 'high', status: { [Op.in]: ['open', 'pending'] } },
-      } as any),
-      this.conversationModel.count({
-        where: { status: 'pending' },
-      } as any),
-      this.conversationModel.count({
-        where: {
-          status: 'resolved',
-          resolved_at: { [Op.gte]: weekAgo },
-        },
-      } as any),
-    ]);
+    const [unread, highPriority, pending, resolvedThisWeek] = await Promise.all(
+      [
+        this.conversationModel.count({
+          where: { status: 'open', unread_count: { [Op.gt]: 0 } },
+        } as any),
+        this.conversationModel.count({
+          where: { priority: 'high', status: { [Op.in]: ['open', 'pending'] } },
+        } as any),
+        this.conversationModel.count({
+          where: { status: 'pending' },
+        } as any),
+        this.conversationModel.count({
+          where: {
+            status: 'resolved',
+            resolved_at: { [Op.gte]: weekAgo },
+          },
+        } as any),
+      ],
+    );
 
     return {
       unread_messages: unread as unknown as number,
@@ -75,8 +81,16 @@ export class MessagingService {
     const { rows, count } = await this.conversationModel.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'assignee', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       order: [
         ['priority', 'DESC'],
@@ -97,12 +111,24 @@ export class MessagingService {
   async getConversation(id: string) {
     const conversation = await this.conversationModel.findByPk(id, {
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'assignee', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'assignee',
+          attributes: ['id', 'username', 'full_name'],
+        },
         {
           model: Message,
           include: [
-            { model: User, as: 'sender', attributes: ['id', 'username', 'full_name'] },
+            {
+              model: User,
+              as: 'sender',
+              attributes: ['id', 'username', 'full_name'],
+            },
           ],
           separate: true,
           order: [['createdAt', 'ASC']],
@@ -114,12 +140,15 @@ export class MessagingService {
   }
 
   // User starts a conversation
-  async createConversation(userId: string, data: {
-    subject: string;
-    message: string;
-    category?: string;
-    priority?: string;
-  }) {
+  async createConversation(
+    userId: string,
+    data: {
+      subject: string;
+      message: string;
+      category?: string;
+      priority?: string;
+    },
+  ) {
     const conversation = await this.conversationModel.create({
       subject: data.subject,
       category: data.category || 'general',
@@ -141,10 +170,14 @@ export class MessagingService {
   }
 
   // Reply to a conversation (user or admin)
-  async replyToConversation(conversationId: string, senderId: string, data: {
-    content: string;
-    template_id?: string;
-  }) {
+  async replyToConversation(
+    conversationId: string,
+    senderId: string,
+    data: {
+      content: string;
+      template_id?: string;
+    },
+  ) {
     const conversation = await this.conversationModel.findByPk(conversationId);
     if (!conversation) throw new NotFoundException('Conversation not found');
 
@@ -241,7 +274,11 @@ export class MessagingService {
     const { rows, count } = await this.conversationModel.findAndCountAll({
       where: { status: 'archived' },
       include: [
-        { model: User, as: 'user', attributes: ['id', 'username', 'full_name', 'email'] },
+        {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
       ],
       order: [['updatedAt', 'DESC']],
       limit,
@@ -257,7 +294,10 @@ export class MessagingService {
   }
 
   // User's own conversations
-  async getMyConversations(userId: string, query: { page?: number; limit?: number }) {
+  async getMyConversations(
+    userId: string,
+    query: { page?: number; limit?: number },
+  ) {
     const page = query.page || 1;
     const limit = query.limit || 20;
 
@@ -278,7 +318,11 @@ export class MessagingService {
 
   // ─── TAB 2: BROADCAST ────────────────────────────
 
-  async listBroadcasts(query: { page?: number; limit?: number; status?: string }) {
+  async listBroadcasts(query: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }) {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const where: any = {};
@@ -288,7 +332,11 @@ export class MessagingService {
     const { rows, count } = await this.broadcastModel.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       order: [['createdAt', 'DESC']],
       limit,
@@ -303,14 +351,17 @@ export class MessagingService {
     };
   }
 
-  async createBroadcast(adminId: string, data: {
-    subject: string;
-    message: string;
-    target_audience?: string;
-    priority?: string;
-    template_id?: string;
-    send?: boolean; // true = send immediately, false = save as draft
-  }) {
+  async createBroadcast(
+    adminId: string,
+    data: {
+      subject: string;
+      message: string;
+      target_audience?: string;
+      priority?: string;
+      template_id?: string;
+      send?: boolean; // true = send immediately, false = save as draft
+    },
+  ) {
     // If template provided, get template content
     let message = data.message;
     if (data.template_id) {
@@ -334,7 +385,9 @@ export class MessagingService {
 
     // If sending, count recipients
     if (data.send) {
-      const recipientCount = await this.countRecipients(data.target_audience || 'all_users');
+      const recipientCount = await this.countRecipients(
+        data.target_audience || 'all_users',
+      );
       await broadcast.update({ recipients_count: recipientCount });
     }
 
@@ -348,7 +401,9 @@ export class MessagingService {
       throw new BadRequestException('Broadcast already sent');
     }
 
-    const recipientCount = await this.countRecipients(broadcast.target_audience);
+    const recipientCount = await this.countRecipients(
+      broadcast.target_audience,
+    );
 
     await broadcast.update({
       status: 'sent',
@@ -372,7 +427,9 @@ export class MessagingService {
 
   private async countRecipients(targetAudience: string): Promise<number> {
     if (targetAudience === 'all_users') {
-      return this.userModel.count({ where: { status: 'active' } } as any) as unknown as number;
+      return this.userModel.count({
+        where: { status: 'active' },
+      } as any) as unknown as number;
     }
 
     // Map audience to role names
@@ -391,9 +448,7 @@ export class MessagingService {
         {
           model: UserRole,
           required: true,
-          include: [
-            { model: Role, where: { name: roleName }, required: true },
-          ],
+          include: [{ model: Role, where: { name: roleName }, required: true }],
         },
       ],
     } as any);
@@ -419,12 +474,15 @@ export class MessagingService {
     return template;
   }
 
-  async createTemplate(adminId: string, data: {
-    name: string;
-    category?: string;
-    subject?: string;
-    body: string;
-  }) {
+  async createTemplate(
+    adminId: string,
+    data: {
+      name: string;
+      category?: string;
+      subject?: string;
+      body: string;
+    },
+  ) {
     return this.templateModel.create({
       name: data.name,
       category: data.category || 'general',
@@ -434,12 +492,15 @@ export class MessagingService {
     } as any);
   }
 
-  async updateTemplate(id: string, data: {
-    name?: string;
-    category?: string;
-    subject?: string;
-    body?: string;
-  }) {
+  async updateTemplate(
+    id: string,
+    data: {
+      name?: string;
+      category?: string;
+      subject?: string;
+      body?: string;
+    },
+  ) {
     const template = await this.templateModel.findByPk(id);
     if (!template) throw new NotFoundException('Template not found');
 
@@ -474,7 +535,10 @@ export class MessagingService {
 
     let resolved = body;
     for (const [key, value] of Object.entries(variables)) {
-      resolved = resolved.replace(new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'), value);
+      resolved = resolved.replace(
+        new RegExp(key.replace(/[{}]/g, '\\$&'), 'g'),
+        value,
+      );
     }
 
     return resolved;

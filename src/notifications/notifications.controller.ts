@@ -28,12 +28,22 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  @ApiOperation({ summary: 'List all notifications with filters and pagination' })
+  @ApiOperation({
+    summary: 'List all notifications with filters and pagination',
+  })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in message and type' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in message and type',
+  })
   @ApiQuery({ name: 'status', required: false, enum: ['unread', 'read'] })
-  @ApiQuery({ name: 'type', required: false, description: 'Filter by type (system, review, update)' })
+  @ApiQuery({
+    name: 'type',
+    required: false,
+    description: 'Filter by type (system, review, update)',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'created_at' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {

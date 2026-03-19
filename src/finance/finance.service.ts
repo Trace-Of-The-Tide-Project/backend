@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Op, fn, col, literal } from 'sequelize';
 import { Donation } from '../donations/models/donation.model';
@@ -50,7 +54,11 @@ export class FinanceService {
     // Calculate growth vs previous period
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const prevMonthStart = new Date(
+      today.getFullYear(),
+      today.getMonth() - 1,
+      1,
+    );
 
     const [yesterdayDonations, prevMonthRevenue] = await Promise.all([
       this.donationModel.sum('amount', {
@@ -66,11 +74,16 @@ export class FinanceService {
     ]);
 
     const donationGrowth = yesterdayDonations
-      ? Math.round(((todayDonations || 0) - yesterdayDonations) / yesterdayDonations * 100)
+      ? Math.round(
+          (((todayDonations || 0) - yesterdayDonations) / yesterdayDonations) *
+            100,
+        )
       : 0;
 
     const revenueGrowth = prevMonthRevenue
-      ? Math.round(((monthlyRevenue || 0) - prevMonthRevenue) / prevMonthRevenue * 100)
+      ? Math.round(
+          (((monthlyRevenue || 0) - prevMonthRevenue) / prevMonthRevenue) * 100,
+        )
       : 0;
 
     const pendingTotal = pendingPayouts.rows.reduce(
@@ -103,7 +116,10 @@ export class FinanceService {
     if (query.period) {
       const now = new Date();
       const periodMap: Record<string, number> = {
-        '7d': 7, '30d': 30, '90d': 90, '1y': 365,
+        '7d': 7,
+        '30d': 30,
+        '90d': 90,
+        '1y': 365,
       };
       const days = periodMap[query.period];
       if (days) {
@@ -144,7 +160,10 @@ export class FinanceService {
   // Donation chart data for the donations tab
   async getDonationChart(period: string = '30d') {
     const periodMap: Record<string, number> = {
-      '7d': 7, '30d': 30, '90d': 90, '1y': 365,
+      '7d': 7,
+      '30d': 30,
+      '90d': 90,
+      '1y': 365,
     };
     const days = periodMap[period] || 30;
     const start = new Date();
@@ -167,11 +186,7 @@ export class FinanceService {
 
   // ─── TAB 2: PAYOUTS ──────────────────────────────
 
-  async listPayouts(query: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }) {
+  async listPayouts(query: { page?: number; limit?: number; status?: string }) {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const where: any = {};
@@ -181,8 +196,16 @@ export class FinanceService {
     const { rows, count } = await this.payoutModel.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'creator', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'reviewer', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'creator',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'reviewer',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       order: [['createdAt', 'DESC']],
       limit,
@@ -197,30 +220,36 @@ export class FinanceService {
     };
   }
 
-  async requestPayout(creatorId: string, data: {
-    amount: number;
-    currency?: string;
-    payment_method: string;
-    payment_details?: string;
-  }) {
+  async requestPayout(
+    creatorId: string,
+    data: {
+      amount: number;
+      currency?: string;
+      payment_method: string;
+      payment_details?: string;
+    },
+  ) {
     // Check if creator has enough balance (total donations received - already paid out)
-    const totalReceived = (await this.donationModel.sum('amount', {
-      where: { user_id: creatorId, status: 'completed' } as any,
-    })) || 0;
+    const totalReceived =
+      (await this.donationModel.sum('amount', {
+        where: { user_id: creatorId, status: 'completed' } as any,
+      })) || 0;
 
-    const totalPaidOut = (await this.payoutModel.sum('amount', {
-      where: {
-        creator_id: creatorId,
-        status: { [Op.in]: ['approved', 'completed'] },
-      },
-    })) || 0;
+    const totalPaidOut =
+      (await this.payoutModel.sum('amount', {
+        where: {
+          creator_id: creatorId,
+          status: { [Op.in]: ['approved', 'completed'] },
+        },
+      })) || 0;
 
-    const pendingPayouts = (await this.payoutModel.sum('amount', {
-      where: {
-        creator_id: creatorId,
-        status: { [Op.in]: ['pending', 'under_review'] },
-      },
-    })) || 0;
+    const pendingPayouts =
+      (await this.payoutModel.sum('amount', {
+        where: {
+          creator_id: creatorId,
+          status: { [Op.in]: ['pending', 'under_review'] },
+        },
+      })) || 0;
 
     const availableBalance = totalReceived - totalPaidOut - pendingPayouts;
 
@@ -244,7 +273,9 @@ export class FinanceService {
     const payout = await this.payoutModel.findByPk(payoutId);
     if (!payout) throw new NotFoundException('Payout not found');
     if (payout.status !== 'pending' && payout.status !== 'under_review') {
-      throw new BadRequestException(`Cannot approve payout with status: ${payout.status}`);
+      throw new BadRequestException(
+        `Cannot approve payout with status: ${payout.status}`,
+      );
     }
 
     await payout.update({
@@ -269,7 +300,9 @@ export class FinanceService {
     const payout = await this.payoutModel.findByPk(payoutId);
     if (!payout) throw new NotFoundException('Payout not found');
     if (payout.status !== 'pending' && payout.status !== 'under_review') {
-      throw new BadRequestException(`Cannot reject payout with status: ${payout.status}`);
+      throw new BadRequestException(
+        `Cannot reject payout with status: ${payout.status}`,
+      );
     }
 
     await payout.update({
@@ -286,7 +319,9 @@ export class FinanceService {
     const payout = await this.payoutModel.findByPk(payoutId);
     if (!payout) throw new NotFoundException('Payout not found');
     if (payout.status !== 'approved') {
-      throw new BadRequestException('Payout must be approved before completing');
+      throw new BadRequestException(
+        'Payout must be approved before completing',
+      );
     }
 
     await payout.update({
@@ -321,7 +356,8 @@ export class FinanceService {
       total_received: totalReceived || 0,
       total_paid_out: totalPaidOut || 0,
       pending_payouts: pendingPayouts || 0,
-      available_balance: (totalReceived || 0) - (totalPaidOut || 0) - (pendingPayouts || 0),
+      available_balance:
+        (totalReceived || 0) - (totalPaidOut || 0) - (pendingPayouts || 0),
     };
   }
 
@@ -343,8 +379,16 @@ export class FinanceService {
     const { rows, count } = await this.fraudFlagModel.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'suspect', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'resolver', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'suspect',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'resolver',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
       order: [['createdAt', 'DESC']],
       limit,
@@ -404,17 +448,21 @@ export class FinanceService {
 
   // Auto-detect suspicious activity (called after each donation)
   async checkForFraud(donationId: string, userId: string, amount: number) {
-    const flags: Array<{ type: string; description: string; severity: string }> = [];
+    const flags: Array<{
+      type: string;
+      description: string;
+      severity: string;
+    }> = [];
 
     // Rule 1: Multiple failed payments in last hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    const recentFailed = await this.donationModel.count({
+    const recentFailed = (await this.donationModel.count({
       where: {
         user_id: userId,
         status: 'failed',
         createdAt: { [Op.gte]: oneHourAgo },
       } as any,
-    }) as unknown as number;
+    })) as unknown as number;
     if (recentFailed >= 3) {
       flags.push({
         type: 'multiple_failed_payments',
@@ -434,12 +482,12 @@ export class FinanceService {
 
     // Rule 3: Rapid transactions (> 5 in last 10 minutes)
     const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000);
-    const rapidCount = await this.donationModel.count({
+    const rapidCount = (await this.donationModel.count({
       where: {
         user_id: userId,
         createdAt: { [Op.gte]: tenMinAgo },
       } as any,
-    }) as unknown as number;
+    })) as unknown as number;
     if (rapidCount > 5) {
       flags.push({
         type: 'rapid_transactions',
@@ -483,8 +531,16 @@ export class FinanceService {
     const { rows, count } = await this.invoiceModel.findAndCountAll({
       where,
       include: [
-        { model: User, as: 'payer', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'payee', attributes: ['id', 'username', 'full_name', 'email'] },
+        {
+          model: User,
+          as: 'payer',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'payee',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
       ],
       order: [['createdAt', 'DESC']],
       limit,
@@ -503,8 +559,16 @@ export class FinanceService {
     const invoice = await this.invoiceModel.findByPk(id, {
       include: [
         { model: Donation },
-        { model: User, as: 'payer', attributes: ['id', 'username', 'full_name', 'email'] },
-        { model: User, as: 'payee', attributes: ['id', 'username', 'full_name', 'email'] },
+        {
+          model: User,
+          as: 'payer',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
+        {
+          model: User,
+          as: 'payee',
+          attributes: ['id', 'username', 'full_name', 'email'],
+        },
       ],
     });
     if (!invoice) throw new NotFoundException('Invoice not found');
@@ -553,7 +617,10 @@ export class FinanceService {
 
   async exportReport(period: string = '30d') {
     const periodMap: Record<string, number> = {
-      '7d': 7, '30d': 30, '90d': 90, '1y': 365,
+      '7d': 7,
+      '30d': 30,
+      '90d': 90,
+      '1y': 365,
     };
     const days = periodMap[period] || 30;
     const start = new Date();
@@ -562,9 +629,7 @@ export class FinanceService {
     const [donations, payouts, invoices, flags] = await Promise.all([
       this.donationModel.findAll({
         where: { createdAt: { [Op.gte]: start } },
-        include: [
-          { model: User, attributes: ['username', 'full_name'] },
-        ],
+        include: [{ model: User, attributes: ['username', 'full_name'] }],
         order: [['createdAt', 'DESC']],
         raw: true,
         nest: true,

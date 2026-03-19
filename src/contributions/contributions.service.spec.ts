@@ -119,7 +119,9 @@ describe('ContributionsService', () => {
     it('should throw NotFoundException for non-existent contribution', async () => {
       mockModel.findByPk.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -204,7 +206,9 @@ describe('ContributionsService', () => {
     it('should throw NotFoundException for non-existent contribution', async () => {
       mockModel.destroy.mockResolvedValue(0);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

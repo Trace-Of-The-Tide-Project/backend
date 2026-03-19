@@ -17,7 +17,10 @@ import { diskStorage } from 'multer';
 import { extname } from 'path';
 import { ContributionsService } from './contributions.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
-import { UpdateContributionDto, UpdateContributionStatusDto } from './dto/update-contribution.dto';
+import {
+  UpdateContributionDto,
+  UpdateContributionStatusDto,
+} from './dto/update-contribution.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -51,17 +54,22 @@ export class ContributionsController {
   @Post()
   @ApiOperation({
     summary: 'Create a new contribution with optional file uploads',
-    description: 'Works for both authenticated and guest users. If authenticated, user_id is auto-filled from JWT token. Accepts multipart/form-data with files.',
+    description:
+      'Works for both authenticated and guest users. If authenticated, user_id is auto-filled from JWT token. Accepts multipart/form-data with files.',
   })
   @ApiConsumes('multipart/form-data')
-  @ApiResponse({ status: 201, description: 'Contribution created successfully' })
+  @ApiResponse({
+    status: 201,
+    description: 'Contribution created successfully',
+  })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
       storage: diskStorage({
         destination: './uploads/contributions',
         filename: (_req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
           cb(null, uniqueSuffix + extname(file.originalname));
         },
       }),
@@ -69,7 +77,12 @@ export class ContributionsController {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);
         } else {
-          cb(new Error(`File type ${file.mimetype} is not allowed. Allowed: JPG, PNG, PDF, MP3, MP4, DOC`) as any, false);
+          cb(
+            new Error(
+              `File type ${file.mimetype} is not allowed. Allowed: JPG, PNG, PDF, MP3, MP4, DOC`,
+            ) as any,
+            false,
+          );
         }
       },
       limits: { fileSize: MAX_FILE_SIZE },
@@ -86,13 +99,31 @@ export class ContributionsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List contributions with filtering, search, and pagination' })
+  @ApiOperation({
+    summary: 'List contributions with filtering, search, and pagination',
+  })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title and description' })
-  @ApiQuery({ name: 'status', required: false, enum: ['draft', 'pending', 'published', 'flagged'] })
-  @ApiQuery({ name: 'type_id', required: false, description: 'Filter by contribution type UUID' })
-  @ApiQuery({ name: 'user_id', required: false, description: 'Filter by author UUID' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title and description',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['draft', 'pending', 'published', 'flagged'],
+  })
+  @ApiQuery({
+    name: 'type_id',
+    required: false,
+    description: 'Filter by contribution type UUID',
+  })
+  @ApiQuery({
+    name: 'user_id',
+    required: false,
+    description: 'Filter by author UUID',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAll(@Query() query: any) {
@@ -100,7 +131,10 @@ export class ContributionsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single contribution by ID with files, type, user, and collections' })
+  @ApiOperation({
+    summary:
+      'Get a single contribution by ID with files, type, user, and collections',
+  })
   findOne(@Param('id') id: string) {
     return this.contributionsService.findOne(id);
   }

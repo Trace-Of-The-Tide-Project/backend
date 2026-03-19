@@ -115,11 +115,17 @@ describe('OpenCallsController', () => {
         created_by: 'admin-1',
       } as any;
       const req = { user: { sub: 'admin-1' } };
-      service.createOpenCall.mockResolvedValue({ id: 'oc-new', ...body } as any);
+      service.createOpenCall.mockResolvedValue({
+        id: 'oc-new',
+        ...body,
+      });
 
       const result = await controller.create(body, req);
 
-      expect(service.createOpenCall).toHaveBeenCalledWith({ ...body, created_by: 'admin-1' });
+      expect(service.createOpenCall).toHaveBeenCalledWith({
+        ...body,
+        created_by: 'admin-1',
+      });
       expect(result).toHaveProperty('id');
     });
   });
@@ -171,7 +177,9 @@ describe('OpenCallsController', () => {
 
   describe('updateParticipant', () => {
     it('should update participant status', async () => {
-      service.updateParticipant.mockResolvedValue({ status: 'approved' } as any);
+      service.updateParticipant.mockResolvedValue({
+        status: 'approved',
+      } as any);
 
       await controller.updateParticipant('oc-1', 'p-1', { status: 'approved' });
 
@@ -187,13 +195,19 @@ describe('OpenCallsController', () => {
 
       await controller.linkContribution('oc-1', 'p-1', 'contrib-1');
 
-      expect(service.linkContribution).toHaveBeenCalledWith('oc-1', 'p-1', 'contrib-1');
+      expect(service.linkContribution).toHaveBeenCalledWith(
+        'oc-1',
+        'p-1',
+        'contrib-1',
+      );
     });
   });
 
   describe('removeParticipant', () => {
     it('should remove a participant', async () => {
-      service.removeParticipant.mockResolvedValue({ message: 'Removed' } as any);
+      service.removeParticipant.mockResolvedValue({
+        message: 'Removed',
+      } as any);
 
       await controller.removeParticipant('oc-1', 'p-1');
 

@@ -196,11 +196,11 @@ export class EngagementsService {
 
     return {
       comments,
-      total: count as number,
+      total: count,
       flagged_count: flaggedCommentIds.length,
       page,
       limit,
-      total_pages: Math.ceil((count as number) / limit),
+      total_pages: Math.ceil(count / limit),
     };
   }
 
@@ -254,10 +254,7 @@ export class EngagementsService {
   // For now, we provide the endpoints but they won't persist status.
   // ═══════════════════════════════════════════════
 
-  async getTrendingDiscussions(filters: {
-    page?: number;
-    limit?: number;
-  }) {
+  async getTrendingDiscussions(filters: { page?: number; limit?: number }) {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const offset = (page - 1) * limit;
@@ -269,9 +266,7 @@ export class EngagementsService {
           model: User,
           as: 'creator',
           attributes: ['id', 'username', 'full_name'],
-          include: [
-            { model: UserProfile, attributes: ['avatar'] },
-          ],
+          include: [{ model: UserProfile, attributes: ['avatar'] }],
         },
       ],
       order: [['createdAt', 'DESC']],
@@ -314,10 +309,10 @@ export class EngagementsService {
 
     return {
       discussions,
-      total: count as number,
+      total: count,
       page,
       limit,
-      total_pages: Math.ceil((count as number) / limit),
+      total_pages: Math.ceil(count / limit),
     };
   }
 
@@ -328,9 +323,7 @@ export class EngagementsService {
           model: User,
           as: 'creator',
           attributes: ['id', 'username', 'full_name'],
-          include: [
-            { model: UserProfile, attributes: ['avatar'] },
-          ],
+          include: [{ model: UserProfile, attributes: ['avatar'] }],
         },
       ],
     });
@@ -343,9 +336,7 @@ export class EngagementsService {
         {
           model: User,
           attributes: ['id', 'username', 'full_name'],
-          include: [
-            { model: UserProfile, attributes: ['avatar'] },
-          ],
+          include: [{ model: UserProfile, attributes: ['avatar'] }],
         },
       ],
       order: [['createdAt', 'ASC']],
@@ -582,9 +573,7 @@ export class EngagementsService {
           model: User,
           as: 'user',
           attributes: ['id', 'username', 'full_name', 'email'],
-          include: [
-            { model: UserProfile, attributes: ['avatar'] },
-          ],
+          include: [{ model: UserProfile, attributes: ['avatar'] }],
         },
       ],
       order: [['createdAt', 'DESC']],
@@ -612,10 +601,10 @@ export class EngagementsService {
         reason: ub.reason,
         awarded_at: ub.createdAt,
       })),
-      total: count as number,
+      total: count,
       page,
       limit,
-      total_pages: Math.ceil((count as number) / limit),
+      total_pages: Math.ceil(count / limit),
     };
   }
 }

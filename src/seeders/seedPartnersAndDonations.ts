@@ -3,7 +3,9 @@ import { Donation } from '../donations/models/donation.model';
 import { User } from '../users/models/user.model';
 
 export async function seedPartnersAndDonations() {
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) {
     console.error('❌ No admin user found for seeding donations.');
     return;
@@ -25,24 +27,22 @@ export async function seedPartnersAndDonations() {
     { ignoreDuplicates: true },
   );
 
-  await Donation.bulkCreate(
-    [
-      {
-        user_id: adminUser.id,
-        partner_id: partners[0].id,
-        amount: 500.0,
-        type: 'one-time',
-        status: 'completed',
-      },
-      {
-        user_id: adminUser.id,
-        partner_id: partners[1].id,
-        amount: 100.0,
-        type: 'monthly',
-        status: 'pending',
-      },
-    ] as any[],
-  );
+  await Donation.bulkCreate([
+    {
+      user_id: adminUser.id,
+      partner_id: partners[0].id,
+      amount: 500.0,
+      type: 'one-time',
+      status: 'completed',
+    },
+    {
+      user_id: adminUser.id,
+      partner_id: partners[1].id,
+      amount: 100.0,
+      type: 'monthly',
+      status: 'pending',
+    },
+  ] as any[]);
 
   console.log('✅ Partners and Donations seeded successfully');
 }

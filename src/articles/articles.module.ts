@@ -9,12 +9,17 @@ import { ArticlesController } from './articles.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [
-        forwardRef(() => AuthModule),
-        SequelizeModule.forFeature([Article, ArticleBlock, ArticleContributor, ArticleTag]),
-    ],
-    providers: [ArticlesService],
-    controllers: [ArticlesController],
-    exports: [ArticlesService],
+  imports: [
+    forwardRef(() => AuthModule),
+    SequelizeModule.forFeature([
+      Article,
+      ArticleBlock,
+      ArticleContributor,
+      ArticleTag,
+    ]),
+  ],
+  providers: [ArticlesService],
+  controllers: [ArticlesController],
+  exports: [ArticlesService],
 })
-export class ArticlesModule { }
+export class ArticlesModule {}

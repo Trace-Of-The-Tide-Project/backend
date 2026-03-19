@@ -69,7 +69,6 @@ import { BoardChat } from 'src/boards/models/board-chat.model';
 import { BoardComment } from 'src/boards/models/board-comment.model';
 import { BoardTemplate } from 'src/boards/models/board-template.model';
 
-
 @Module({
   imports: [
     ConfigModule.forFeature(databaseConfig),
@@ -159,4 +158,4 @@ import { BoardTemplate } from 'src/boards/models/board-template.model';
   ],
   exports: [SequelizeModule],
 })
-export class DatabaseModule { }
+export class DatabaseModule {}

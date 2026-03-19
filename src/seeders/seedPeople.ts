@@ -7,7 +7,9 @@ import { Contribution } from '../contributions/models/contribution.model';
 import { Location } from '../knowledge/models/location.model';
 
 export async function seedPeople(locations: Location[] = []) {
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) {
     console.error('❌ No admin user found. Please seed users first.');
     return;
@@ -26,7 +28,8 @@ export async function seedPeople(locations: Location[] = []) {
       full_name: 'Ghassan Kanafani',
       birth_date: new Date('1936-04-09'),
       death_date: new Date('1972-07-08'),
-      biography: 'Palestinian writer, political activist, and leading member of the PFLP.',
+      biography:
+        'Palestinian writer, political activist, and leading member of the PFLP.',
       created_by: adminUser.id,
     } as any,
   });
@@ -74,7 +77,10 @@ export async function seedPeople(locations: Location[] = []) {
 
   // Create timeline event
   await TimelineEvent.findOrCreate({
-    where: { title: 'Publication of "Men in the Sun"', related_person_id: profile.id },
+    where: {
+      title: 'Publication of "Men in the Sun"',
+      related_person_id: profile.id,
+    },
     defaults: {
       title: 'Publication of "Men in the Sun"',
       description: 'Published his iconic novel in 1963.',
@@ -85,5 +91,7 @@ export async function seedPeople(locations: Location[] = []) {
     } as any,
   });
 
-  console.log('✅ People, Biographical Cards, Life Events, and Timeline Events seeded');
+  console.log(
+    '✅ People, Biographical Cards, Life Events, and Timeline Events seeded',
+  );
 }

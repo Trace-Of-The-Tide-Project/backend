@@ -2,9 +2,14 @@ import { CollectionContribution } from '../collections/models/collection-contrib
 import { Collection } from '../collections/models/collection.model';
 import { Contribution } from '../contributions/models/contribution.model';
 
-export async function seedCollectionContributions(collections: Collection[], contributions: Contribution[]) {
+export async function seedCollectionContributions(
+  collections: Collection[],
+  contributions: Contribution[],
+) {
   if (!collections.length || !contributions.length) {
-    console.log('⚠️ Skipping collection-contributions — no collections or contributions found');
+    console.log(
+      '⚠️ Skipping collection-contributions — no collections or contributions found',
+    );
     return;
   }
 

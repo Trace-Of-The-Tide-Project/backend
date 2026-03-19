@@ -84,7 +84,12 @@ describe('TokenService', () => {
 
   describe('verifyAndConsumeRefreshToken', () => {
     it('should return matching token record', async () => {
-      const candidate = { id: 'tok-1', token: 'hashed', user_id: 'user-1', destroy: jest.fn() };
+      const candidate = {
+        id: 'tok-1',
+        token: 'hashed',
+        user_id: 'user-1',
+        destroy: jest.fn(),
+      };
       mockRefreshTokenModel.findAll.mockResolvedValue([candidate]);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 

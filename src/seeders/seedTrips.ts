@@ -5,7 +5,9 @@ import { User } from '../users/models/user.model';
 import { Location } from '../knowledge/models/location.model';
 
 export async function seedTrips() {
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) return console.error('❌ No admin user found.');
 
   const locations = await Location.findAll();
@@ -18,10 +20,12 @@ export async function seedTrips() {
     where: { title: 'Heritage Walk: Old Jerusalem' },
     defaults: {
       title: 'Heritage Walk: Old Jerusalem',
-      description: 'A guided cultural walk through the four quarters of the Old City, exploring centuries of Palestinian heritage and architecture.',
+      description:
+        'A guided cultural walk through the four quarters of the Old City, exploring centuries of Palestinian heritage and architecture.',
       cover_image: 'jerusalem_walk.jpg',
       category: 'cultural',
-      route_summary: 'Jaffa Gate → Christian Quarter → Armenian Quarter → Jewish Quarter → Muslim Quarter',
+      route_summary:
+        'Jaffa Gate → Christian Quarter → Armenian Quarter → Jewish Quarter → Muslim Quarter',
       start_date: new Date('2026-04-15T08:00:00Z'),
       end_date: new Date('2026-04-15T16:00:00Z'),
       price: 25.0,
@@ -30,7 +34,12 @@ export async function seedTrips() {
       status: 'published',
       difficulty: 'moderate',
       duration_hours: 8,
-      tags: JSON.stringify(['heritage', 'walking', 'architecture', 'photography']),
+      tags: JSON.stringify([
+        'heritage',
+        'walking',
+        'architecture',
+        'photography',
+      ]),
       created_by: adminUser.id,
     } as any,
   });
@@ -40,7 +49,8 @@ export async function seedTrips() {
     where: { title: 'Northern Palestine: Acre to Haifa' },
     defaults: {
       title: 'Northern Palestine: Acre to Haifa',
-      description: 'A two-day journey exploring the coastal heritage of northern Palestine.',
+      description:
+        'A two-day journey exploring the coastal heritage of northern Palestine.',
       cover_image: 'acre_haifa.jpg',
       category: 'historical',
       route_summary: 'Acre → Haifa',
@@ -60,10 +70,38 @@ export async function seedTrips() {
   // Stops for Trip 1
   if (jerusalem) {
     const stopsData = [
-      { trip_id: trip1.id, location_id: jerusalem.id, stop_order: 1, title: 'Jaffa Gate Gathering Point', description: 'Meet at the historic Jaffa Gate entrance.', duration_minutes: 30 },
-      { trip_id: trip1.id, location_id: jerusalem.id, stop_order: 2, title: 'Church of the Holy Sepulchre', description: 'Visit one of the most important religious sites.', duration_minutes: 60 },
-      { trip_id: trip1.id, location_id: jerusalem.id, stop_order: 3, title: 'Al-Aqsa Mosque Compound', description: 'Guided tour of the historic mosque and Dome of the Rock.', duration_minutes: 90 },
-      { trip_id: trip1.id, location_id: jerusalem.id, stop_order: 4, title: 'Old City Market (Souq)', description: 'Explore the vibrant traditional market.', duration_minutes: 60 },
+      {
+        trip_id: trip1.id,
+        location_id: jerusalem.id,
+        stop_order: 1,
+        title: 'Jaffa Gate Gathering Point',
+        description: 'Meet at the historic Jaffa Gate entrance.',
+        duration_minutes: 30,
+      },
+      {
+        trip_id: trip1.id,
+        location_id: jerusalem.id,
+        stop_order: 2,
+        title: 'Church of the Holy Sepulchre',
+        description: 'Visit one of the most important religious sites.',
+        duration_minutes: 60,
+      },
+      {
+        trip_id: trip1.id,
+        location_id: jerusalem.id,
+        stop_order: 3,
+        title: 'Al-Aqsa Mosque Compound',
+        description: 'Guided tour of the historic mosque and Dome of the Rock.',
+        duration_minutes: 90,
+      },
+      {
+        trip_id: trip1.id,
+        location_id: jerusalem.id,
+        stop_order: 4,
+        title: 'Old City Market (Souq)',
+        description: 'Explore the vibrant traditional market.',
+        duration_minutes: 60,
+      },
     ];
 
     for (const data of stopsData) {
@@ -77,8 +115,22 @@ export async function seedTrips() {
   // Stops for Trip 2
   if (acre && haifa) {
     const stopsData = [
-      { trip_id: trip2.id, location_id: acre.id, stop_order: 1, title: 'Acre Old City Tour', description: 'Explore the UNESCO World Heritage site.', duration_minutes: 180 },
-      { trip_id: trip2.id, location_id: haifa.id, stop_order: 2, title: 'Haifa Port & German Colony', description: 'Walk through the historic port area.', duration_minutes: 120 },
+      {
+        trip_id: trip2.id,
+        location_id: acre.id,
+        stop_order: 1,
+        title: 'Acre Old City Tour',
+        description: 'Explore the UNESCO World Heritage site.',
+        duration_minutes: 180,
+      },
+      {
+        trip_id: trip2.id,
+        location_id: haifa.id,
+        stop_order: 2,
+        title: 'Haifa Port & German Colony',
+        description: 'Walk through the historic port area.',
+        duration_minutes: 120,
+      },
     ];
 
     for (const data of stopsData) {

@@ -7,7 +7,9 @@ import { User } from '../users/models/user.model';
 export async function seedGroupsAndCollectives() {
   console.log('🚀 Seeding Groups & Collectives...');
 
-  const adminUser = await User.findOne({ where: { email: 'admin@example.com' } });
+  const adminUser = await User.findOne({
+    where: { email: 'admin@example.com' },
+  });
   if (!adminUser) {
     console.error('❌ Admin user not found — seed users first.');
     return;
@@ -15,8 +17,16 @@ export async function seedGroupsAndCollectives() {
 
   // Groups
   const groupsData = [
-    { name: 'Oral History Contributors', description: 'Members contributing oral history materials.', created_by: adminUser.id },
-    { name: 'Heritage Writers', description: 'Writers documenting cultural heritage stories.', created_by: adminUser.id },
+    {
+      name: 'Oral History Contributors',
+      description: 'Members contributing oral history materials.',
+      created_by: adminUser.id,
+    },
+    {
+      name: 'Heritage Writers',
+      description: 'Writers documenting cultural heritage stories.',
+      created_by: adminUser.id,
+    },
   ];
 
   const groups: Group[] = [];
@@ -43,8 +53,18 @@ export async function seedGroupsAndCollectives() {
 
   // Collectives
   const collectivesData = [
-    { name: 'Palestinian Heritage Collective', description: 'A collective of historians and researchers preserving Palestinian heritage.', created_by: adminUser.id },
-    { name: 'Diaspora Voices', description: 'Collective focusing on stories of Palestinian diaspora communities.', created_by: adminUser.id },
+    {
+      name: 'Palestinian Heritage Collective',
+      description:
+        'A collective of historians and researchers preserving Palestinian heritage.',
+      created_by: adminUser.id,
+    },
+    {
+      name: 'Diaspora Voices',
+      description:
+        'Collective focusing on stories of Palestinian diaspora communities.',
+      created_by: adminUser.id,
+    },
   ];
 
   const collectives: Collective[] = [];

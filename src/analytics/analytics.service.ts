@@ -23,16 +23,21 @@ export class AnalyticsService {
     @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
     @InjectModel(Role) private readonly roleModel: typeof Role,
     @InjectModel(Article) private readonly articleModel: typeof Article,
-    @InjectModel(Contribution) private readonly contributionModel: typeof Contribution,
+    @InjectModel(Contribution)
+    private readonly contributionModel: typeof Contribution,
     @InjectModel(Donation) private readonly donationModel: typeof Donation,
     @InjectModel(Trip) private readonly tripModel: typeof Trip,
-    @InjectModel(TripParticipant) private readonly tripParticipantModel: typeof TripParticipant,
+    @InjectModel(TripParticipant)
+    private readonly tripParticipantModel: typeof TripParticipant,
     @InjectModel(OpenCall) private readonly openCallModel: typeof OpenCall,
-    @InjectModel(Participant) private readonly participantModel: typeof Participant,
-    @InjectModel(Discussion) private readonly discussionModel: typeof Discussion,
+    @InjectModel(Participant)
+    private readonly participantModel: typeof Participant,
+    @InjectModel(Discussion)
+    private readonly discussionModel: typeof Discussion,
     @InjectModel(Comment) private readonly commentModel: typeof Comment,
     @InjectModel(Reaction) private readonly reactionModel: typeof Reaction,
-    @InjectModel(Collection) private readonly collectionModel: typeof Collection,
+    @InjectModel(Collection)
+    private readonly collectionModel: typeof Collection,
   ) {}
 
   // ─── HELPER: date range filter ────────────────────────────
@@ -41,11 +46,20 @@ export class AnalyticsService {
     const end = new Date();
     const start = new Date();
     switch (period) {
-      case '7d': start.setDate(end.getDate() - 7); break;
-      case '30d': start.setDate(end.getDate() - 30); break;
-      case '90d': start.setDate(end.getDate() - 90); break;
-      case '1y': start.setFullYear(end.getFullYear() - 1); break;
-      default: start.setDate(end.getDate() - 30);
+      case '7d':
+        start.setDate(end.getDate() - 7);
+        break;
+      case '30d':
+        start.setDate(end.getDate() - 30);
+        break;
+      case '90d':
+        start.setDate(end.getDate() - 90);
+        break;
+      case '1y':
+        start.setFullYear(end.getFullYear() - 1);
+        break;
+      default:
+        start.setDate(end.getDate() - 30);
     }
     return { start, end };
   }
@@ -60,7 +74,7 @@ export class AnalyticsService {
     prevStart.setTime(prevStart.getTime() - (end.getTime() - start.getTime()));
 
     // Current period stats
-    const totalPageViews = await this.articleModel.sum('view_count') || 0;
+    const totalPageViews = (await this.articleModel.sum('view_count')) || 0;
     const totalUsers = await this.userModel.count();
     const newUsersThisPeriod = await this.userModel.count({
       where: { createdAt: { [Op.between]: [start, end] } },
@@ -70,7 +84,9 @@ export class AnalyticsService {
     });
 
     const totalArticles = await this.articleModel.count();
-    const publishedArticles = await this.articleModel.count({ where: { status: 'published' } });
+    const publishedArticles = await this.articleModel.count({
+      where: { status: 'published' },
+    });
 
     const totalContributions = await this.contributionModel.count();
     const newContributions = await this.contributionModel.count({
@@ -106,9 +122,14 @@ export class AnalyticsService {
         total_page_views: totalPageViews,
         total_users: totalUsers,
         new_users: newUsersThisPeriod,
-        user_growth_pct: newUsersPrevPeriod > 0
-          ? Math.round(((newUsersThisPeriod - newUsersPrevPeriod) / newUsersPrevPeriod) * 100)
-          : 0,
+        user_growth_pct:
+          newUsersPrevPeriod > 0
+            ? Math.round(
+                ((newUsersThisPeriod - newUsersPrevPeriod) /
+                  newUsersPrevPeriod) *
+                  100,
+              )
+            : 0,
         total_articles: totalArticles,
         published_articles: publishedArticles,
         total_contributions: totalContributions,
@@ -147,19 +168,29 @@ export class AnalyticsService {
 
     // Top articles by views
     const topArticles = await this.articleModel.findAll({
-      attributes: ['id', 'title', 'slug', 'category', 'view_count', 'published_at'],
+      attributes: [
+        'id',
+        'title',
+        'slug',
+        'category',
+        'view_count',
+        'published_at',
+      ],
       where: { status: 'published' },
-      include: [{ model: User, as: 'author', attributes: ['id', 'username', 'full_name'] }],
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
+      ],
       order: [['view_count', 'DESC']],
       limit: 10,
     });
 
     // Content type distribution
     const contentTypeDistribution = await this.articleModel.findAll({
-      attributes: [
-        'content_type',
-        [fn('COUNT', col('id')), 'count'],
-      ],
+      attributes: ['content_type', [fn('COUNT', col('id')), 'count']],
       group: ['content_type'],
       order: [[fn('COUNT', col('id')), 'DESC']],
       raw: true,
@@ -167,10 +198,7 @@ export class AnalyticsService {
 
     // Status distribution
     const statusDistribution = await this.articleModel.findAll({
-      attributes: [
-        'status',
-        [fn('COUNT', col('id')), 'count'],
-      ],
+      attributes: ['status', [fn('COUNT', col('id')), 'count']],
       group: ['status'],
       raw: true,
     });
@@ -195,7 +223,13 @@ export class AnalyticsService {
         [fn('COUNT', col('Article.id')), 'article_count'],
         [fn('SUM', col('view_count')), 'total_views'],
       ],
-      include: [{ model: User, as: 'author', attributes: ['id', 'username', 'full_name'] }],
+      include: [
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
+      ],
       where: { status: 'published' },
       group: ['author_id', 'author.id', 'author.username', 'author.full_name'],
       order: [[fn('SUM', col('view_count')), 'DESC']],
@@ -268,17 +302,27 @@ export class AnalyticsService {
       {
         stage: 'Contributors',
         count: contributorCount,
-        conversion: totalUsers > 0 ? Math.round((contributorCount / totalUsers) * 1000) / 10 : 0,
+        conversion:
+          totalUsers > 0
+            ? Math.round((contributorCount / totalUsers) * 1000) / 10
+            : 0,
       },
       {
         stage: 'Authors',
         count: authorCount,
-        conversion: contributorCount > 0 ? Math.round((authorCount / contributorCount) * 1000) / 10 : 0,
+        conversion:
+          contributorCount > 0
+            ? Math.round((authorCount / contributorCount) * 1000) / 10
+            : 0,
       },
       {
         stage: 'Editors',
         count: roleCounts['editor'] || 0,
-        conversion: authorCount > 0 ? Math.round(((roleCounts['editor'] || 0) / authorCount) * 1000) / 10 : 0,
+        conversion:
+          authorCount > 0
+            ? Math.round(((roleCounts['editor'] || 0) / authorCount) * 1000) /
+              10
+            : 0,
       },
       {
         stage: 'Admins',

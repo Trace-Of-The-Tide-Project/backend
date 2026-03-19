@@ -23,9 +23,18 @@ export class ArticlesService extends BaseService<Article> {
       model: User,
       as: 'author',
       attributes: ['id', 'username', 'full_name'],
-      include: [{ model: UserProfile, attributes: ['avatar', 'social_links', 'display_name'] }],
+      include: [
+        {
+          model: UserProfile,
+          attributes: ['avatar', 'social_links', 'display_name'],
+        },
+      ],
     },
-    { model: ArticleBlock, separate: true, order: [['block_order', 'ASC']] as any },
+    {
+      model: ArticleBlock,
+      separate: true,
+      order: [['block_order', 'ASC']] as any,
+    },
     {
       model: ArticleContributor,
       include: [{ model: User, attributes: ['id', 'username', 'full_name'] }],
@@ -37,8 +46,10 @@ export class ArticlesService extends BaseService<Article> {
   constructor(
     @InjectModel(Article) private readonly articleModel: typeof Article,
     @InjectModel(ArticleBlock) private readonly blockModel: typeof ArticleBlock,
-    @InjectModel(ArticleContributor) private readonly contributorModel: typeof ArticleContributor,
-    @InjectModel(ArticleTag) private readonly articleTagModel: typeof ArticleTag,
+    @InjectModel(ArticleContributor)
+    private readonly contributorModel: typeof ArticleContributor,
+    @InjectModel(ArticleTag)
+    private readonly articleTagModel: typeof ArticleTag,
   ) {
     super(articleModel);
   }
@@ -54,7 +65,10 @@ export class ArticlesService extends BaseService<Article> {
       .substring(0, 120);
   }
 
-  private async ensureUniqueSlug(slug: string, excludeId?: string): Promise<string> {
+  private async ensureUniqueSlug(
+    slug: string,
+    excludeId?: string,
+  ): Promise<string> {
     let candidate = slug;
     let counter = 1;
     while (true) {
@@ -101,11 +115,14 @@ export class ArticlesService extends BaseService<Article> {
     if (blocks?.length) {
       const wordCount = blocks
         .filter((b: any) => b.content)
-        .reduce((sum: number, b: any) => sum + b.content.split(/\s+/).length, 0);
+        .reduce(
+          (sum: number, b: any) => sum + b.content.split(/\s+/).length,
+          0,
+        );
       articleData.reading_time = Math.max(1, Math.ceil(wordCount / 200));
     }
 
-    const article = await this.articleModel.create(articleData as any);
+    const article = await this.articleModel.create(articleData);
 
     // Create blocks
     if (blocks?.length) {
@@ -113,7 +130,7 @@ export class ArticlesService extends BaseService<Article> {
         await this.blockModel.create({
           ...block,
           article_id: article.id,
-        } as any);
+        });
       }
     }
 
@@ -153,7 +170,10 @@ export class ArticlesService extends BaseService<Article> {
     if (tag_ids !== undefined) {
       await this.articleTagModel.destroy({ where: { article_id: id } });
       for (const tagId of tag_ids) {
-        await this.articleTagModel.create({ article_id: id, tag_id: tagId } as any);
+        await this.articleTagModel.create({
+          article_id: id,
+          tag_id: tagId,
+        } as any);
       }
     }
 
@@ -161,13 +181,18 @@ export class ArticlesService extends BaseService<Article> {
     if (blocks !== undefined) {
       await this.blockModel.destroy({ where: { article_id: id } });
       for (const block of blocks) {
-        await this.blockModel.create({ ...block, article_id: id } as any);
+        await this.blockModel.create({ ...block, article_id: id });
       }
       // Recalculate reading time
       const wordCount = blocks
         .filter((b: any) => b.content)
-        .reduce((sum: number, b: any) => sum + b.content.split(/\s+/).length, 0);
-      await article.update({ reading_time: Math.max(1, Math.ceil(wordCount / 200)) });
+        .reduce(
+          (sum: number, b: any) => sum + b.content.split(/\s+/).length,
+          0,
+        );
+      await article.update({
+        reading_time: Math.max(1, Math.ceil(wordCount / 200)),
+      });
     }
 
     return this.findOne(id);
@@ -180,11 +205,15 @@ export class ArticlesService extends BaseService<Article> {
     if (!article) throw new NotFoundException(`Article ${id} not found`);
 
     if (!['draft', 'scheduled'].includes(article.status)) {
-      throw new BadRequestException(`Cannot publish a ${article.status} article`);
+      throw new BadRequestException(
+        `Cannot publish a ${article.status} article`,
+      );
     }
 
     // Must have at least one block
-    const blockCount = await this.blockModel.count({ where: { article_id: id } });
+    const blockCount = await this.blockModel.count({
+      where: { article_id: id },
+    });
     if (blockCount === 0) {
       throw new BadRequestException('Add content blocks before publishing');
     }
@@ -254,7 +283,7 @@ export class ArticlesService extends BaseService<Article> {
   async addBlock(articleId: string, data: any) {
     const article = await this.articleModel.findByPk(articleId);
     if (!article) throw new NotFoundException(`Article ${articleId} not found`);
-    return this.blockModel.create({ ...data, article_id: articleId } as any);
+    return this.blockModel.create({ ...data, article_id: articleId });
   }
 
   async updateBlock(articleId: string, blockId: string, data: any) {
@@ -303,7 +332,8 @@ export class ArticlesService extends BaseService<Article> {
     const existing = await this.contributorModel.findOne({
       where: { article_id: articleId, user_id: data.user_id },
     });
-    if (existing) throw new BadRequestException('User is already a contributor');
+    if (existing)
+      throw new BadRequestException('User is already a contributor');
 
     return this.contributorModel.create({
       article_id: articleId,
@@ -351,7 +381,11 @@ export class ArticlesService extends BaseService<Article> {
     let relatedArticles = await this.articleModel.findAll({
       where,
       include: [
-        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
         { model: Tag, through: { attributes: [] } },
       ],
       order: [['published_at', 'DESC']],
@@ -366,7 +400,11 @@ export class ArticlesService extends BaseService<Article> {
           status: 'published',
         },
         include: [
-          { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+          {
+            model: User,
+            as: 'author',
+            attributes: ['id', 'username', 'full_name'],
+          },
           {
             model: Tag,
             through: { attributes: [] },
@@ -386,7 +424,10 @@ export class ArticlesService extends BaseService<Article> {
 
   async findByAuthor(authorId: string, query: any = {}) {
     return this.articleModel.findAndCountAll({
-      where: { author_id: authorId, ...(query.status ? { status: query.status } : {}) },
+      where: {
+        author_id: authorId,
+        ...(query.status ? { status: query.status } : {}),
+      },
       include: [
         { model: Tag, through: { attributes: [] } },
         { model: ArticleContributor, attributes: ['id'] },
@@ -398,10 +439,19 @@ export class ArticlesService extends BaseService<Article> {
   }
 
   async getAuthorStats(authorId: string) {
-    const totalArticles = await this.articleModel.count({ where: { author_id: authorId } });
-    const published = await this.articleModel.count({ where: { author_id: authorId, status: 'published' } });
-    const drafts = await this.articleModel.count({ where: { author_id: authorId, status: 'draft' } });
-    const totalViews = await this.articleModel.sum('view_count', { where: { author_id: authorId } }) || 0;
+    const totalArticles = await this.articleModel.count({
+      where: { author_id: authorId },
+    });
+    const published = await this.articleModel.count({
+      where: { author_id: authorId, status: 'published' },
+    });
+    const drafts = await this.articleModel.count({
+      where: { author_id: authorId, status: 'draft' },
+    });
+    const totalViews =
+      (await this.articleModel.sum('view_count', {
+        where: { author_id: authorId },
+      })) || 0;
 
     return {
       total_articles: totalArticles,
@@ -417,9 +467,23 @@ export class ArticlesService extends BaseService<Article> {
     const articles = await this.articleModel.findAll({
       where: { collection_id: collectionId, status: 'published' },
       include: [
-        { model: User, as: 'author', attributes: ['id', 'username', 'full_name'] },
+        {
+          model: User,
+          as: 'author',
+          attributes: ['id', 'username', 'full_name'],
+        },
       ],
-      attributes: ['id', 'title', 'slug', 'cover_image', 'content_type', 'reading_time', 'media_duration', 'edition', 'published_at'],
+      attributes: [
+        'id',
+        'title',
+        'slug',
+        'cover_image',
+        'content_type',
+        'reading_time',
+        'media_duration',
+        'edition',
+        'published_at',
+      ],
       order: [['published_at', 'ASC']],
     });
 

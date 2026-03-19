@@ -79,7 +79,10 @@ describe('BaseService', () => {
     it('should filter by valid model attributes only', async () => {
       mockModel.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
 
-      await service.findAll({ status: 'published', malicious_field: 'drop table' });
+      await service.findAll({
+        status: 'published',
+        malicious_field: 'drop table',
+      });
 
       const callArgs = mockModel.findAndCountAll.mock.calls[0][0];
       expect(callArgs.where).toHaveProperty('status', 'published');
@@ -89,7 +92,13 @@ describe('BaseService', () => {
     it('should ignore reserved query keys in where clause', async () => {
       mockModel.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
 
-      await service.findAll({ page: '1', limit: '10', sortBy: 'title', order: 'ASC', search: 'test' });
+      await service.findAll({
+        page: '1',
+        limit: '10',
+        sortBy: 'title',
+        order: 'ASC',
+        search: 'test',
+      });
 
       const callArgs = mockModel.findAndCountAll.mock.calls[0][0];
       expect(callArgs.where).not.toHaveProperty('page');
@@ -147,13 +156,18 @@ describe('BaseService', () => {
       const result = await service.findOne('uuid-1');
 
       expect(result).toEqual(record);
-      expect(mockModel.findByPk).toHaveBeenCalledWith('uuid-1', expect.any(Object));
+      expect(mockModel.findByPk).toHaveBeenCalledWith(
+        'uuid-1',
+        expect.any(Object),
+      );
     });
 
     it('should throw NotFoundException when record not found', async () => {
       mockModel.findByPk.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -180,7 +194,9 @@ describe('BaseService', () => {
       const updated = { id: 'uuid-1', title: 'Updated' };
       mockModel.findByPk.mockResolvedValue(updated);
 
-      const result = await service.update('uuid-1', { title: 'Updated' } as any);
+      const result = await service.update('uuid-1', {
+        title: 'Updated',
+      } as any);
 
       expect(mockModel.update).toHaveBeenCalledWith(
         { title: 'Updated' },
@@ -206,7 +222,9 @@ describe('BaseService', () => {
 
       const result = await service.remove('uuid-1');
 
-      expect(mockModel.destroy).toHaveBeenCalledWith({ where: { id: 'uuid-1' } });
+      expect(mockModel.destroy).toHaveBeenCalledWith({
+        where: { id: 'uuid-1' },
+      });
       expect(result).toHaveProperty('message');
       expect(result.message).toContain('uuid-1');
     });
@@ -214,7 +232,9 @@ describe('BaseService', () => {
     it('should throw NotFoundException if delete affects 0 rows', async () => {
       mockModel.destroy.mockResolvedValue(0);
 
-      await expect(service.remove('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('nonexistent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

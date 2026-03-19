@@ -30,7 +30,11 @@ export class KnowledgeController {
   @ApiOperation({ summary: 'List books with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title and author' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title and author',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAllBooks(@Query() query: any) {
@@ -70,10 +74,16 @@ export class KnowledgeController {
   // ════════════════════ ARTICLES ════════════════════
 
   @Get('articles')
-  @ApiOperation({ summary: 'List knowledge articles with search and pagination' })
+  @ApiOperation({
+    summary: 'List knowledge articles with search and pagination',
+  })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title and content' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title and content',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAllArticles(@Query() query: any) {
@@ -116,7 +126,11 @@ export class KnowledgeController {
   @ApiOperation({ summary: 'List adventures with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title and description' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title and description',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAllAdventures(@Query() query: any) {
@@ -159,7 +173,11 @@ export class KnowledgeController {
   @ApiOperation({ summary: 'List locations with search and pagination' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in name and address' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in name and address',
+  })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
   findAllLocations(@Query() query: any) {

@@ -25,7 +25,9 @@ export class RolesService extends BaseService<Role> {
   }
 
   async create(data: any) {
-    const existing = await this.roleModel.findOne({ where: { name: data.name } });
+    const existing = await this.roleModel.findOne({
+      where: { name: data.name },
+    });
     if (existing) throw new BadRequestException('Role already exists');
     return this.roleModel.create(data);
   }
@@ -34,7 +36,9 @@ export class RolesService extends BaseService<Role> {
     const role = await this.roleModel.findByPk(id);
     if (!role) throw new NotFoundException('Role not found');
     if (PROTECTED_ROLES.includes(role.name)) {
-      throw new BadRequestException(`Cannot delete built-in role "${role.name}"`);
+      throw new BadRequestException(
+        `Cannot delete built-in role "${role.name}"`,
+      );
     }
     await role.destroy();
     return { message: `Role "${role.name}" deleted successfully` };

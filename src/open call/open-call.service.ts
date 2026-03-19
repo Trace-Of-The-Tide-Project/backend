@@ -36,7 +36,10 @@ export class OpenCallsService extends BaseService<OpenCall> {
     { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
     { model: OpenCall, attributes: ['id', 'title', 'status', 'category'] },
     { model: Contribution, attributes: ['id', 'title', 'status'] },
-    { model: File, attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'] },
+    {
+      model: File,
+      attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'],
+    },
   ];
 
   constructor(
@@ -128,14 +131,19 @@ export class OpenCallsService extends BaseService<OpenCall> {
   ) {
     // Validate open call exists and is open
     const openCall = await this.openCallModel.findByPk(openCallId);
-    if (!openCall) throw new NotFoundException(`Open call ${openCallId} not found`);
+    if (!openCall)
+      throw new NotFoundException(`Open call ${openCallId} not found`);
     if (openCall.status !== 'open') {
-      throw new BadRequestException('This open call is no longer accepting participants');
+      throw new BadRequestException(
+        'This open call is no longer accepting participants',
+      );
     }
 
     // Check deadline
     if (openCall.timeline_end && new Date() > new Date(openCall.timeline_end)) {
-      throw new BadRequestException('The deadline for this open call has passed');
+      throw new BadRequestException(
+        'The deadline for this open call has passed',
+      );
     }
 
     // Check user isn't already a participant (by user_id or email)
@@ -152,7 +160,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
       where: { open_call_id: openCallId, email: dto.email },
     });
     if (existingByEmail) {
-      throw new ConflictException('This email has already been used to join this open call');
+      throw new ConflictException(
+        'This email has already been used to join this open call',
+      );
     }
 
     const participant = await this.participantModel.create({
@@ -200,13 +210,16 @@ export class OpenCallsService extends BaseService<OpenCall> {
 
   async leaveOpenCall(openCallId: string, userId: string) {
     const openCall = await this.openCallModel.findByPk(openCallId);
-    if (!openCall) throw new NotFoundException(`Open call ${openCallId} not found`);
+    if (!openCall)
+      throw new NotFoundException(`Open call ${openCallId} not found`);
 
     const deleted = await this.participantModel.destroy({
       where: { open_call_id: openCallId, user_id: userId },
     });
     if (!deleted) {
-      throw new NotFoundException('You are not a participant of this open call');
+      throw new NotFoundException(
+        'You are not a participant of this open call',
+      );
     }
 
     return { message: 'Successfully withdrawn from open call' };
@@ -228,7 +241,10 @@ export class OpenCallsService extends BaseService<OpenCall> {
       include: [
         { model: User, attributes: ['id', 'username', 'full_name', 'email'] },
         { model: Contribution, attributes: ['id', 'title', 'status'] },
-        { model: File, attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'] },
+        {
+          model: File,
+          attributes: ['id', 'file_name', 'mime_type', 'file_size', 'path'],
+        },
       ],
       limit,
       offset,

@@ -47,7 +47,8 @@ export class BaseService<T = any> {
     if (query.sortBy) {
       // ✅ FIX: Only allow sorting on actual model fields
       if (this.model.rawAttributes && this.model.rawAttributes[query.sortBy]) {
-        const direction = query.order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+        const direction =
+          query.order?.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
         order = [[query.sortBy, direction]];
       }
     } else if (options.order) {

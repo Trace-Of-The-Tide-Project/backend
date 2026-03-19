@@ -141,11 +141,15 @@ export class MessagingGateway
     const { Role } = require('../roles/models/role.model');
     const adminRoles = await UserRole.findAll({
       where: { user_id: client.userId },
-      include: [{ model: Role, as: 'role', where: { name: ['admin', 'editor'] } }],
+      include: [
+        { model: Role, as: 'role', where: { name: ['admin', 'editor'] } },
+      ],
     });
 
     if (!adminRoles || adminRoles.length === 0) {
-      this.logger.warn(`${client.username} tried to join admin room without permission`);
+      this.logger.warn(
+        `${client.username} tried to join admin room without permission`,
+      );
       return { error: 'Forbidden: admin role required' };
     }
 
@@ -230,14 +234,12 @@ export class MessagingGateway
       // Also notify the other party if they're not in the conversation room
       if (isAdmin) {
         // Admin sent → notify user
-        this.server
-          .to(`user:${conversation.user_id}`)
-          .emit('notification', {
-            type: 'new_message',
-            conversation_id: data.conversation_id,
-            sender_name: client.username,
-            preview: data.content.substring(0, 100),
-          });
+        this.server.to(`user:${conversation.user_id}`).emit('notification', {
+          type: 'new_message',
+          conversation_id: data.conversation_id,
+          sender_name: client.username,
+          preview: data.content.substring(0, 100),
+        });
       } else {
         // User sent → notify admins
         this.server.to('admins').emit('notification', {

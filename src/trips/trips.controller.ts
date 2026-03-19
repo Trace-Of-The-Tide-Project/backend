@@ -38,11 +38,21 @@ export class TripsController {
   // ═══════════════════════════════════════════════════════════
 
   @Get()
-  @ApiOperation({ summary: 'List all trips with pagination, search, and filters' })
+  @ApiOperation({
+    summary: 'List all trips with pagination, search, and filters',
+  })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
-  @ApiQuery({ name: 'search', required: false, description: 'Search in title, description, category' })
-  @ApiQuery({ name: 'status', required: false, enum: ['draft', 'published', 'ongoing', 'completed', 'cancelled'] })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search in title, description, category',
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['draft', 'published', 'ongoing', 'completed', 'cancelled'],
+  })
   @ApiQuery({ name: 'category', required: false })
   @ApiQuery({ name: 'sortBy', required: false, example: 'start_date' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
@@ -98,7 +108,9 @@ export class TripsController {
   }
 
   @Get(':id/stats')
-  @ApiOperation({ summary: 'Get trip statistics (participant counts, spots remaining)' })
+  @ApiOperation({
+    summary: 'Get trip statistics (participant counts, spots remaining)',
+  })
   getStats(@Param('id') id: string) {
     return this.tripsService.getTripStats(id);
   }
@@ -124,7 +136,9 @@ export class TripsController {
   @Patch(':id/stops/reorder')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Reorder stops — send array of stop IDs in desired order' })
+  @ApiOperation({
+    summary: 'Reorder stops — send array of stop IDs in desired order',
+  })
   reorderStops(@Param('id') id: string, @Body('stopIds') stopIds: string[]) {
     return this.tripsService.reorderStops(id, stopIds);
   }
@@ -160,8 +174,15 @@ export class TripsController {
   }
 
   @Post(':id/register')
-  @ApiOperation({ summary: 'Register for a trip (authenticated or guest, auto-waitlist if full)' })
-  register(@Param('id') id: string, @Req() req: any, @Body() dto: RegisterParticipantDto) {
+  @ApiOperation({
+    summary:
+      'Register for a trip (authenticated or guest, auto-waitlist if full)',
+  })
+  register(
+    @Param('id') id: string,
+    @Req() req: any,
+    @Body() dto: RegisterParticipantDto,
+  ) {
     const userId = req.user?.sub || null;
     return this.tripsService.registerParticipant(id, userId, dto);
   }
@@ -169,7 +190,9 @@ export class TripsController {
   @Post(':id/cancel-registration')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cancel current user registration (promotes waitlisted)' })
+  @ApiOperation({
+    summary: 'Cancel current user registration (promotes waitlisted)',
+  })
   cancelRegistration(@Param('id') id: string, @Req() req: any) {
     return this.tripsService.cancelRegistration(id, req.user.sub);
   }
