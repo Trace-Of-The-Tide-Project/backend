@@ -115,7 +115,7 @@ export class CreateArticleBlockDto {
     @Min(1)
     block_order!: number;
 
-    @ApiProperty({ example: 'paragraph', enum: ['paragraph', 'quote', 'image', 'gallery', 'callout', 'author_note', 'divider', 'caption_text', 'meta_data', 'statistics'] })
+    @ApiProperty({ example: 'paragraph', enum: ['paragraph', 'quote', 'image', 'gallery', 'callout', 'author_note', 'divider', 'video', 'audio', 'caption_text', 'meta_data', 'statistics'] })
     @IsNotEmpty()
     @IsString()
     block_type!: string;
