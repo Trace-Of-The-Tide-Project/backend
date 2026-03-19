@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 import { BaseService } from '../common/base.service';
 import { Board } from './models/board.model';
 import { BoardMember } from './models/board-member.model';
@@ -353,7 +354,7 @@ export class BoardsService extends BaseService<Board> {
 
   async getElementComments(elementId: string) {
     return this.commentModel.findAll({
-      where: { element_id: elementId, parent_comment_id: null },
+      where: { element_id: elementId, parent_comment_id: null as any },
       include: [
         { model: User, attributes: ['id', 'username', 'full_name'] },
         {
