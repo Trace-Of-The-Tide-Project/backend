@@ -1,0 +1,28 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  ci:
+    name: CI Checks
+    uses: ./.github/workflows/ci.yml
+
+  deploy-staging:
+    name: Deploy Staging
+    needs: ci
+    if: github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy (Staging)
+        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_STAGING }}"
+
+  deploy-production:
+    name: Deploy Production
+    needs: ci
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render Deploy (Production)
+        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK_PRODUCTION }}"
