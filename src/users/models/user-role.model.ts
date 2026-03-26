@@ -8,6 +8,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from './user.model';
 import { Role } from '../../roles/models/role.model';
+import { OpenCall } from '../../open call/models/open-call.model';
 
 @Table({ tableName: 'user_roles' })
 export class UserRole extends Model<UserRole> {
@@ -34,4 +35,11 @@ export class UserRole extends Model<UserRole> {
 
   @Column(DataType.DATE)
   declare assigned_at: Date;
+
+  @ForeignKey(() => OpenCall)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare open_call_id: string;
+
+  @BelongsTo(() => OpenCall)
+  declare openCall: OpenCall;
 }

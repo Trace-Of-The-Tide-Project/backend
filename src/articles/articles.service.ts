@@ -1,10 +1,12 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { BaseService } from '../common/base.service';
 import { Article } from './models/article.model';
 import { ArticleBlock } from './models/article-block.model';
@@ -18,6 +20,7 @@ import { Op } from 'sequelize';
 
 @Injectable()
 export class ArticlesService extends BaseService<Article> {
+  private readonly logger = new Logger(ArticlesService.name);
   private readonly defaultInclude = [
     {
       model: User,
@@ -41,6 +44,12 @@ export class ArticlesService extends BaseService<Article> {
     },
     { model: Tag, through: { attributes: [] } },
     { model: Collection, attributes: ['id', 'name'], required: false },
+    {
+      model: Article,
+      as: 'translations',
+      attributes: ['id', 'title', 'language', 'slug'],
+      required: false,
+    },
   ];
 
   constructor(
@@ -147,13 +156,19 @@ export class ArticlesService extends BaseService<Article> {
     return this.findOne(article.id);
   }
 
-  async updateArticle(id: string, data: any, userId: string) {
+  async updateArticle(
+    id: string,
+    data: any,
+    userId: string,
+    userRoles: string[] = [],
+  ) {
     const article = await this.articleModel.findByPk(id);
     if (!article) throw new NotFoundException(`Article ${id} not found`);
 
-    // Only author or admin can edit (caller should check admin via guard)
-    if (article.author_id !== userId) {
-      throw new ForbiddenException('Only the author can edit this article');
+    // Admin can edit any article; others can only edit their own
+    const isAdmin = userRoles.includes('admin');
+    if (!isAdmin && article.author_id !== userId) {
+      throw new ForbiddenException('Only the author or admin can edit this article');
     }
 
     const { tag_ids, blocks, ...articleData } = data;
@@ -420,6 +435,27 @@ export class ArticlesService extends BaseService<Article> {
     return relatedArticles;
   }
 
+  // ─── TRANSLATIONS ────────────────────────────────────────
+
+  async getTranslations(id: string) {
+    const article = await this.articleModel.findByPk(id);
+    if (!article) throw new NotFoundException(`Article ${id} not found`);
+
+    // If this article is itself a translation, resolve to the original
+    const originalId = article.translation_of || article.id;
+
+    const original = await this.articleModel.findByPk(originalId, {
+      attributes: ['id', 'title', 'language', 'slug'],
+    });
+
+    const translations = await this.articleModel.findAll({
+      where: { translation_of: originalId },
+      attributes: ['id', 'title', 'language', 'slug'],
+    });
+
+    return { original, translations };
+  }
+
   // ─── AUTHOR-SPECIFIC QUERIES ──────────────────────────────
 
   async findByAuthor(authorId: string, query: any = {}) {
@@ -496,5 +532,26 @@ export class ArticlesService extends BaseService<Article> {
       total_hours: +(totalMinutes / 60).toFixed(1),
       articles,
     };
+  }
+
+  // ─── SCHEDULED PUBLISHING CRON ──────────────────────────
+
+  @Cron(CronExpression.EVERY_MINUTE)
+  async publishScheduledArticles() {
+    const now = new Date();
+    const articles = await this.articleModel.findAll({
+      where: {
+        status: 'scheduled',
+        scheduled_at: { [Op.lte]: now },
+      },
+    });
+
+    for (const article of articles) {
+      await article.update({
+        status: 'published',
+        published_at: now,
+      });
+      this.logger.log(`Auto-published scheduled article: ${article.id}`);
+    }
   }
 }

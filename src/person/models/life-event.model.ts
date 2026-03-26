@@ -43,6 +43,9 @@ export class LifeEvent extends Model<LifeEvent> {
   @BelongsTo(() => PersonProfile)
   declare personProfile: PersonProfile;
 
+  @BelongsTo(() => Location)
+  declare location: Location;
+
   @BelongsTo(() => User)
   declare creator: User;
 }

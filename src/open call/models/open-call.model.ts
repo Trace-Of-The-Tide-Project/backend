@@ -62,6 +62,10 @@ export class OpenCall extends Model<OpenCall> {
   @Column({ type: DataType.DATE, allowNull: true })
   declare date: Date;
 
+  // Toolkit / resources for contributors (JSON — guidelines, templates, links)
+  @Column({ type: DataType.TEXT, allowNull: true })
+  declare toolkit: string;
+
   @BelongsTo(() => User)
   declare creator: User;
 

@@ -18,7 +18,7 @@ export class PartnersService extends BaseService<Partner> {
     return super.findAll(query, {
       include: this.defaultInclude,
       searchableFields: ['name', 'email', 'phone_number'],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   }
 

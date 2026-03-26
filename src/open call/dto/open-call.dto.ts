@@ -73,6 +73,16 @@ export class CreateOpenCallDto {
   @IsDateString()
   date?: string;
 
+  @ApiPropertyOptional({
+    description:
+      'Toolkit / resources for contributors (JSON string — guidelines, templates, links)',
+    example:
+      '{"guidelines":"Submit high-res photos","templates":["template1.pdf"],"links":["https://example.com/guide"]}',
+  })
+  @IsOptional()
+  @IsString()
+  toolkit?: string;
+
   @ApiPropertyOptional({ description: 'Creator user UUID' })
   @IsOptional()
   @IsUUID()

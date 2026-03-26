@@ -68,6 +68,9 @@ import { BoardConnector } from 'src/boards/models/board-connector.model';
 import { BoardChat } from 'src/boards/models/board-chat.model';
 import { BoardComment } from 'src/boards/models/board-comment.model';
 import { BoardTemplate } from 'src/boards/models/board-template.model';
+import { Follow } from 'src/follows/models/follow.model';
+import { Task } from 'src/tasks/models/task.model';
+import { Phase } from 'src/phases/models/phase.model';
 
 @Module({
   imports: [
@@ -152,6 +155,9 @@ import { BoardTemplate } from 'src/boards/models/board-template.model';
           BoardChat,
           BoardComment,
           BoardTemplate,
+          Follow,
+          Task,
+          Phase,
         ],
       }),
     }),

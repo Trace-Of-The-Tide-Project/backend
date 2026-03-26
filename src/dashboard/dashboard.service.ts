@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { Op, fn, col, literal } from 'sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { User } from '../users/models/user.model';
@@ -223,6 +227,11 @@ export class DashboardService {
           model: User,
           include: [{ model: UserProfile }],
         },
+        {
+          model: OpenCall,
+          attributes: ['id', 'title', 'status'],
+          required: false,
+        },
       ],
       where: {
         assigned_at: { [Op.is]: null as any },
@@ -238,6 +247,34 @@ export class DashboardService {
       page,
       limit,
     };
+  }
+
+  // ============================================================
+  // 3b. APPLICATION APPROVAL / REJECTION
+  // ============================================================
+
+  async approveApplication(applicationId: string) {
+    const userRole = await UserRole.findByPk(applicationId, {
+      include: [{ model: Role, as: 'role' }],
+    });
+    if (!userRole) throw new NotFoundException('Application not found');
+    if (userRole.assigned_at) {
+      throw new BadRequestException('This application has already been processed');
+    }
+
+    await userRole.update({ assigned_at: new Date() });
+    return { message: 'Application approved', applicationId };
+  }
+
+  async rejectApplication(applicationId: string) {
+    const userRole = await UserRole.findByPk(applicationId);
+    if (!userRole) throw new NotFoundException('Application not found');
+    if (userRole.assigned_at) {
+      throw new BadRequestException('This application has already been approved');
+    }
+
+    await userRole.destroy();
+    return { message: 'Application rejected', applicationId };
   }
 
   // ============================================================
@@ -408,7 +445,7 @@ export class DashboardService {
           attributes: ['id', 'username', 'full_name'],
         },
       ],
-      order: [['timestamp', 'DESC']],
+      order: [['createdAt', 'DESC']],
       limit,
     });
 

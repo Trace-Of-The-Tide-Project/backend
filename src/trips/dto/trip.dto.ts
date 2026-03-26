@@ -111,6 +111,14 @@ export class CreateTripDto {
   @IsInt()
   @Min(1)
   min_participants?: number;
+
+  @ApiPropertyOptional({
+    example: 'Ahmad Khalil',
+    description: 'Name of the trip moderator / guide',
+  })
+  @IsOptional()
+  @IsString()
+  moderator_name?: string;
 }
 
 export class UpdateTripDto extends PartialType(CreateTripDto) {
@@ -204,4 +212,21 @@ export class RegisterParticipantDto {
   @IsOptional()
   @IsEmail()
   guest_email?: string;
+
+  @ApiPropertyOptional({
+    example: 150.0,
+    description: 'Starting price the participant is willing to pay',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @ApiPropertyOptional({
+    example: 'Ramallah city center',
+    description: 'Where the participant wants to start the trip',
+  })
+  @IsOptional()
+  @IsString()
+  start_point?: string;
 }

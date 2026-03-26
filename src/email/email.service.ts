@@ -77,6 +77,48 @@ export class EmailService {
     }
   }
 
+  async sendVerificationEmail(
+    email: string,
+    username: string,
+    token: string,
+  ): Promise<boolean> {
+    const verifyLink = `${this.frontendUrl}/auth/verify-email?token=${token}`;
+
+    try {
+      await this.transporter.sendMail({
+        from: `"Trace of the Tides" <${this.fromAddress}>`,
+        to: email,
+        subject: 'Verify Your Email — Trace of the Tides',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>Welcome, ${username}!</h2>
+            <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
+            <p style="text-align: center; margin: 30px 0;">
+              <a href="${verifyLink}"
+                 style="background-color: #1a1a2e; color: white; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-size: 16px;">
+                Verify Email
+              </a>
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              This link will expire in 24 hours. If you didn't create an account, you can safely ignore this email.
+            </p>
+            <p style="color: #666; font-size: 14px;">
+              Or copy and paste this URL into your browser:<br/>
+              <a href="${verifyLink}">${verifyLink}</a>
+            </p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;" />
+            <p style="color: #999; font-size: 12px;">Trace of the Tides — Palestinian Heritage Storytelling Platform</p>
+          </div>
+        `,
+      });
+      this.logger.log(`Verification email sent to ${email}`);
+      return true;
+    } catch (error) {
+      this.logger.error(`Failed to send verification email to ${email}`, error);
+      return false;
+    }
+  }
+
   async sendOpenCallConfirmationEmail(
     email: string,
     firstName: string,

@@ -115,6 +115,14 @@ export class ArticlesController {
     return this.articlesService.findOne(id);
   }
 
+  @Get(':id/translations')
+  @ApiOperation({
+    summary: 'Get all translations of an article (resolves to original if needed)',
+  })
+  getTranslations(@Param('id') id: string) {
+    return this.articlesService.getTranslations(id);
+  }
+
   @Get(':id/related')
   @ApiOperation({
     summary: 'Get related articles (same category/tags)',
@@ -147,7 +155,12 @@ export class ArticlesController {
     @Body() dto: UpdateArticleDto,
     @Req() req: any,
   ) {
-    return this.articlesService.updateArticle(id, dto, req.user.sub);
+    return this.articlesService.updateArticle(
+      id,
+      dto,
+      req.user.sub,
+      req.user.roles || [],
+    );
   }
 
   @Delete(':id')

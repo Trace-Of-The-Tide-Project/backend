@@ -14,7 +14,7 @@ export class ReferencesService extends BaseService<Reference> {
   async findAll(query: any = {}) {
     return super.findAll(query, {
       searchableFields: ['title', 'author'],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   }
 }

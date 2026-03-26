@@ -9,4 +9,5 @@ export enum RoleEnum {
   ANALYST = 'analyst',
   DEVELOPER = 'developer',
   SUPPORT = 'support',
+  ARTIST = 'artist',
 }

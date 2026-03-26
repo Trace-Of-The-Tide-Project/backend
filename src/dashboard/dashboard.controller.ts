@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Param,
   Query,
   UseGuards,
   ParseIntPipe,
@@ -78,6 +80,22 @@ export class DashboardController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
     return this.dashboardService.getEditorApplications(page, limit);
+  }
+
+  @Post('applications/:id/approve')
+  @ApiOperation({
+    summary: 'Approve a pending role application (editor, artist, etc.)',
+  })
+  async approveApplication(@Param('id') id: string) {
+    return this.dashboardService.approveApplication(id);
+  }
+
+  @Post('applications/:id/reject')
+  @ApiOperation({
+    summary: 'Reject a pending role application (removes the record)',
+  })
+  async rejectApplication(@Param('id') id: string) {
+    return this.dashboardService.rejectApplication(id);
   }
 
   // ============================================================
