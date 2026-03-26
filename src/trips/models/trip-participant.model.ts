@@ -53,6 +53,14 @@ export class TripParticipant extends Model<TripParticipant> {
   @Column(DataType.TEXT)
   declare notes: string;
 
+  // Starting price the participant is willing to pay
+  @Column({ type: DataType.DECIMAL(10, 2), allowNull: true })
+  declare price: number;
+
+  // Where the participant wants to start (meeting point / pickup location)
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare start_point: string;
+
   @BelongsTo(() => Trip)
   declare trip: Trip;
 

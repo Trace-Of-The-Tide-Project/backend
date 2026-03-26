@@ -97,14 +97,13 @@ export class KnowledgeService {
 
   async findAllAdventures(query: any = {}) {
     return this.adventureBase.findAll(query, {
-      include: [Location],
       searchableFields: ['title', 'description'],
       order: [['createdAt', 'DESC']],
     });
   }
 
   async findAdventureById(id: string) {
-    return this.adventureBase.findOne(id, { include: [Location] });
+    return this.adventureBase.findOne(id);
   }
 
   async updateAdventure(id: string, data: Partial<Adventure>) {

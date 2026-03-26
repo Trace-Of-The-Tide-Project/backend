@@ -31,7 +31,7 @@ export class GroupsService extends BaseService<Group> {
     return super.findAll(query, {
       include: this.defaultInclude,
       searchableFields: ['name', 'description'],
-      order: [['createdAt', 'DESC']],
+      order: [['created_at', 'DESC']],
     });
   }
 

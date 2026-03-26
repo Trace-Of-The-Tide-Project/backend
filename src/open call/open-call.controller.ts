@@ -135,6 +135,19 @@ export class OpenCallsController {
     return this.openCallsService.joinOpenCall(id, dto, files || []);
   }
 
+  @Post(':id/apply-editor')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Apply for editor role via an open call',
+    description: 'Creates a pending editor application linked to this open call.',
+  })
+  @ApiResponse({ status: 201, description: 'Application submitted' })
+  @ApiResponse({ status: 409, description: 'Already applied or already an editor' })
+  applyForEditor(@Param('id') id: string, @Req() req: any) {
+    return this.openCallsService.applyForEditor(id, req.user.sub);
+  }
+
   @Delete(':id/leave')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

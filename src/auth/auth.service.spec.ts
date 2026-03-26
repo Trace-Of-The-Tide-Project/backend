@@ -43,6 +43,7 @@ describe('AuthService', () => {
   beforeEach(async () => {
     usersService = {
       findByEmail: jest.fn(),
+      findByIdentifier: jest.fn(),
       findOne: jest.fn(),
       create: jest.fn(),
       getUserRoles: jest.fn(),
@@ -63,6 +64,7 @@ describe('AuthService', () => {
     const emailService = {
       sendResetPasswordEmail: jest.fn().mockResolvedValue(true),
       sendOpenCallConfirmationEmail: jest.fn().mockResolvedValue(true),
+      sendVerificationEmail: jest.fn().mockResolvedValue(true),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -86,18 +88,18 @@ describe('AuthService', () => {
 
   describe('validateUser', () => {
     it('should return user data (without password) for valid credentials', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser as any);
+      usersService.findByIdentifier.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await service.validateUser('test@trace.ps', 'password123');
 
       expect(result).not.toHaveProperty('password');
       expect(result).toHaveProperty('email', 'test@trace.ps');
-      expect(usersService.findByEmail).toHaveBeenCalledWith('test@trace.ps');
+      expect(usersService.findByIdentifier).toHaveBeenCalledWith('test@trace.ps');
     });
 
     it('should throw UnauthorizedException for wrong password', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser as any);
+      usersService.findByIdentifier.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
@@ -106,7 +108,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when user not found (no email leak)', async () => {
-      usersService.findByEmail.mockRejectedValue(
+      usersService.findByIdentifier.mockRejectedValue(
         new NotFoundException('not found'),
       );
 
@@ -121,7 +123,7 @@ describe('AuthService', () => {
         status: 'suspended',
         dataValues: { ...mockUser.dataValues, status: 'suspended' },
       };
-      usersService.findByEmail.mockResolvedValue(suspendedUser as any);
+      usersService.findByIdentifier.mockResolvedValue(suspendedUser as any);
 
       await expect(
         service.validateUser('test@trace.ps', 'password123'),
@@ -134,7 +136,7 @@ describe('AuthService', () => {
         status: 'inactive',
         dataValues: { ...mockUser.dataValues, status: 'inactive' },
       };
-      usersService.findByEmail.mockResolvedValue(inactiveUser as any);
+      usersService.findByIdentifier.mockResolvedValue(inactiveUser as any);
 
       await expect(
         service.validateUser('test@trace.ps', 'password123'),
@@ -146,12 +148,12 @@ describe('AuthService', () => {
 
   describe('login', () => {
     it('should return accessToken, refreshToken, and user object', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser as any);
+      usersService.findByIdentifier.mockResolvedValue(mockUser as any);
       usersService.getUserRoles.mockResolvedValue(['user']);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       const result = await service.login({
-        email: 'test@trace.ps',
+        identifier: 'test@trace.ps',
         password: 'password123',
       } as any);
 
@@ -174,12 +176,12 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException for invalid credentials', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser as any);
+      usersService.findByIdentifier.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
         service.login({
-          email: 'test@trace.ps',
+          identifier: 'test@trace.ps',
           password: 'wrong',
         } as any),
       ).rejects.toThrow(UnauthorizedException);

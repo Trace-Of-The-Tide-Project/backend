@@ -1,5 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './common/guards/throttler-exception.guard';
@@ -41,6 +42,9 @@ import { KnowledgeModule } from 'src/knowledge/knowledge.module';
 import { BoardsModule } from 'src/boards/boards.module';
 import { LogsModule } from './logs/logs.module';
 import { EmailModule } from 'src/email/email.module';
+import { FollowsModule } from 'src/follows/follows.module';
+import { TasksModule } from 'src/tasks/tasks.module';
+import { PhasesModule } from 'src/phases/phases.module';
 
 @Module({
   imports: [
@@ -49,6 +53,9 @@ import { EmailModule } from 'src/email/email.module';
 
     // 🧱 Database
     DatabaseModule,
+
+    // ⏰ Scheduled Jobs
+    ScheduleModule.forRoot(),
 
     // 📧 Email (global)
     EmailModule,
@@ -95,6 +102,9 @@ import { EmailModule } from 'src/email/email.module';
     PersonModule,
     KnowledgeModule,
     BoardsModule,
+    FollowsModule,
+    TasksModule,
+    PhasesModule,
   ],
   providers: [
     {

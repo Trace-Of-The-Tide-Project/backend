@@ -82,6 +82,10 @@ export class Trip extends Model<Trip> {
   @Column({ type: DataType.INTEGER, allowNull: true })
   declare min_participants: number;
 
+  // Name of the trip moderator / guide
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare moderator_name: string;
+
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, allowNull: false })
   declare created_by: string;

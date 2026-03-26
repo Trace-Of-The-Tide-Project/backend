@@ -43,6 +43,9 @@ export class TimelineEvent extends Model<TimelineEvent> {
   @BelongsTo(() => PersonProfile)
   declare personProfile: PersonProfile;
 
+  @BelongsTo(() => Contribution)
+  declare contribution: Contribution;
+
   @BelongsTo(() => User)
   declare creator: User;
 }

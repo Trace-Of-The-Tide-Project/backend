@@ -296,6 +296,19 @@ export class TripsService extends BaseService<Trip> {
     return participant;
   }
 
+  // ─── ARCHIVE (past & completed trips) ────────────────────
+
+  async getArchive(query: any = {}) {
+    return super.findAll(
+      { ...query, status: { [Op.in]: ['completed', 'cancelled'] } },
+      {
+        include: this.defaultInclude,
+        searchableFields: ['title', 'description', 'category'],
+        order: [['end_date', 'DESC']],
+      },
+    );
+  }
+
   // ─── STATS ────────────────────────────────────────────────
 
   async getTripStats(tripId: string) {

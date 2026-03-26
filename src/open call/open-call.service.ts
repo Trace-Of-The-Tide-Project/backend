@@ -12,6 +12,8 @@ import { Participant } from './models/participant.model';
 import { User } from '../users/models/user.model';
 import { Contribution } from '../contributions/models/contribution.model';
 import { File } from '../files/models/file.model';
+import { UserRole } from '../users/models/user-role.model';
+import { Role } from '../roles/models/role.model';
 import { EmailService } from '../email/email.service';
 import { JoinOpenCallDto } from './dto/join-open-call.dto';
 
@@ -46,6 +48,8 @@ export class OpenCallsService extends BaseService<OpenCall> {
     @InjectModel(OpenCall) private readonly openCallModel: typeof OpenCall,
     @InjectModel(Participant)
     private readonly participantModel: typeof Participant,
+    @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
+    @InjectModel(Role) private readonly roleModel: typeof Role,
     private readonly emailService: EmailService,
   ) {
     super(openCallModel);
@@ -313,6 +317,55 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return this.participantModel.findByPk(participantId, {
       include: this.participantInclude,
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  EDITOR APPLICATION via Open Call
+  // ═══════════════════════════════════════════════════════════
+
+  async applyForEditor(openCallId: string, userId: string) {
+    const openCall = await this.openCallModel.findByPk(openCallId);
+    if (!openCall)
+      throw new NotFoundException(`Open call ${openCallId} not found`);
+    if (openCall.status !== 'open') {
+      throw new BadRequestException('This open call is no longer accepting applications');
+    }
+
+    const editorRole = await this.roleModel.findOne({
+      where: { name: 'editor' },
+    });
+    if (!editorRole) throw new NotFoundException('Editor role not found');
+
+    // Check for existing pending application
+    const existing = await this.userRoleModel.findOne({
+      where: {
+        user_id: userId,
+        role_id: editorRole.id,
+        assigned_at: { [Op.is]: null as any },
+      },
+    });
+    if (existing) {
+      throw new ConflictException('You already have a pending editor application');
+    }
+
+    // Check if user already has the editor role
+    const hasRole = await this.userRoleModel.findOne({
+      where: {
+        user_id: userId,
+        role_id: editorRole.id,
+        assigned_at: { [Op.not]: null as any },
+      },
+    });
+    if (hasRole) {
+      throw new ConflictException('You already have the editor role');
+    }
+
+    return this.userRoleModel.create({
+      user_id: userId,
+      role_id: editorRole.id,
+      assigned_at: null,
+      open_call_id: openCallId,
+    } as any);
   }
 
   // ═══════════════════════════════════════════════════════════

@@ -28,6 +28,7 @@ export class UsersService extends BaseService<User> {
     return super.findAll(query, {
       include: this.defaultInclude,
       searchableFields: ['username', 'full_name', 'email'],
+      attributes: { exclude: ['password'] },
       order: [['createdAt', 'DESC']],
     });
   }
@@ -52,6 +53,26 @@ export class UsersService extends BaseService<User> {
     const user = await this.userModel.findOne({ where: { email } });
     if (!user)
       throw new NotFoundException(`User with email ${email} not found`);
+    return user;
+  }
+
+  async findByUsername(username: string) {
+    if (!username) throw new BadRequestException('Username is required');
+    const user = await this.userModel.findOne({ where: { username } });
+    if (!user)
+      throw new NotFoundException(`User with username ${username} not found`);
+    return user;
+  }
+
+  async findByIdentifier(identifier: string) {
+    if (!identifier)
+      throw new BadRequestException('Email or username is required');
+    // If it looks like an email, search by email; otherwise by username
+    const isEmail = identifier.includes('@');
+    const user = await this.userModel.findOne({
+      where: isEmail ? { email: identifier } : { username: identifier },
+    });
+    if (!user) throw new NotFoundException('User not found');
     return user;
   }
 
@@ -89,6 +110,26 @@ export class UsersService extends BaseService<User> {
       profile = await UserProfile.create({
         user_id: userId,
         ...data,
+      } as any);
+    }
+
+    return profile;
+  }
+
+  async updateAvatar(userId: string, filePath: string) {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    let profile = await UserProfile.findOne({
+      where: { user_id: userId },
+    });
+
+    if (profile) {
+      await profile.update({ avatar: filePath });
+    } else {
+      profile = await UserProfile.create({
+        user_id: userId,
+        avatar: filePath,
       } as any);
     }
 

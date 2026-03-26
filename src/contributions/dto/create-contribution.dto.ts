@@ -12,10 +12,10 @@ import { Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateContributionDto {
-  @ApiProperty({ description: 'Contribution type UUID' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ description: 'Contribution type UUID' })
+  @IsOptional()
   @IsUUID()
-  type_id!: string;
+  type_id?: string;
 
   @ApiProperty({ example: "My Grandmother's Story", maxLength: 255 })
   @IsNotEmpty()

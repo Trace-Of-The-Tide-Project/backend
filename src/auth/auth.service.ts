@@ -30,13 +30,13 @@ export class AuthService {
     private emailService: EmailService,
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(identifier: string, pass: string): Promise<any> {
     let user: User;
     try {
-      user = await this.usersService.findByEmail(email);
+      user = await this.usersService.findByIdentifier(identifier);
     } catch {
-      // Don't reveal whether email exists
-      throw new UnauthorizedException('Invalid email or password');
+      // Don't reveal whether user exists
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     // Check if account is suspended/inactive
@@ -49,7 +49,7 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Invalid email or password');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const { password, ...result } = user['dataValues'];
@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+    const user = await this.validateUser(loginDto.identifier, loginDto.password);
     const roles = await this.usersService.getUserRoles(user.id);
     const payload = { sub: user.id, email: user.email, roles };
 
@@ -116,6 +116,21 @@ export class AuthService {
       assigned_at: new Date(),
     } as any);
 
+    // Send verification email
+    const verifyPayload = {
+      sub: newUser.id,
+      email: newUser.email,
+      purpose: 'email-verification',
+    };
+    const verifyToken = this.jwtService.sign(verifyPayload, {
+      expiresIn: '24h',
+    });
+    await this.emailService.sendVerificationEmail(
+      newUser.email,
+      newUser.username,
+      verifyToken,
+    );
+
     // Auto-login: return tokens so user doesn't have to login again
     const roles = ['user'];
     const payload = { sub: newUser.id, email: newUser.email, roles };
@@ -123,16 +138,71 @@ export class AuthService {
     const refreshToken = await this.tokenService.createRefreshToken(newUser.id);
 
     return {
-      message: 'User registered successfully',
+      message:
+        'User registered successfully. Please check your email to verify your account.',
       accessToken,
       refreshToken,
       user: {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
+        email_verified: false,
         roles,
       },
     };
+  }
+
+  async verifyEmail(token: string) {
+    try {
+      const decoded = this.jwtService.verify(token);
+
+      if (decoded.purpose !== 'email-verification') {
+        throw new BadRequestException('Invalid verification token');
+      }
+
+      const user = await this.usersService.findOne(decoded.sub);
+      if (!user) throw new NotFoundException('User not found');
+
+      if (user.email_verified) {
+        return { message: 'Email is already verified' };
+      }
+
+      await this.usersService.update(user.id, { email_verified: true });
+      return { message: 'Email verified successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Invalid or expired verification token');
+    }
+  }
+
+  async resendVerificationEmail(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    if (user.email_verified) {
+      throw new BadRequestException('Email is already verified');
+    }
+
+    const verifyPayload = {
+      sub: user.id,
+      email: user.email,
+      purpose: 'email-verification',
+    };
+    const verifyToken = this.jwtService.sign(verifyPayload, {
+      expiresIn: '24h',
+    });
+    await this.emailService.sendVerificationEmail(
+      user.email,
+      user.username,
+      verifyToken,
+    );
+
+    return { message: 'Verification email sent' };
   }
 
   async logout(userId: string, refreshToken?: string) {

@@ -6,8 +6,8 @@ export async function seedContributions(
   adminUser: User,
   contributionTypes: ContributionType[],
 ) {
-  const storyType = contributionTypes.find((t) => t.name === 'personal_story');
-  const audioType = contributionTypes.find((t) => t.name === 'audio');
+  const storyType = contributionTypes.find((t) => t.name === 'Personal Story');
+  const audioType = contributionTypes.find((t) => t.name === 'Music');
 
   const contributionsData = [
     {

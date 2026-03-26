@@ -117,6 +117,13 @@ export class CreateArticleDto {
   collection_id?: string;
 
   @ApiPropertyOptional({
+    description: 'UUID of the original article this is a translation of',
+  })
+  @IsOptional()
+  @IsUUID()
+  translation_of?: string;
+
+  @ApiPropertyOptional({
     description: 'Array of tag IDs to associate',
     example: ['uuid1', 'uuid2'],
   })

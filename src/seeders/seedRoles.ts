@@ -9,6 +9,7 @@ export async function seedRoles() {
     { name: 'contributor', description: 'Content contributor' },
     { name: 'moderator', description: 'Content moderator' },
     { name: 'manager', description: 'Team manager' },
+    { name: 'artist', description: 'Artist / creative practitioner' },
   ];
 
   const roles: Role[] = [];

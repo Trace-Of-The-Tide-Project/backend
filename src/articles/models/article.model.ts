@@ -117,6 +117,17 @@ export class Article extends Model<Article> {
   @HasMany(() => ArticleContributor)
   declare contributors: ArticleContributor[];
 
+  // Translation link (self-referencing)
+  @ForeignKey(() => Article)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare translation_of: string;
+
+  @BelongsTo(() => Article, 'translation_of')
+  declare originalArticle: Article;
+
+  @HasMany(() => Article, 'translation_of')
+  declare translations: Article[];
+
   // Tags (many-to-many)
   @BelongsToMany(() => Tag, () => ArticleTag)
   declare tags: Tag[];

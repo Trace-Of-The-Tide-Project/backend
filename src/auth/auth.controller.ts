@@ -36,9 +36,29 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login with email and password' })
+  @ApiOperation({ summary: 'Login with email or username and password' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify email using token from verification email',
+  })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
+  async verifyEmail(@Body('token') token: string) {
+    return this.authService.verifyEmail(token);
+  }
+
+  @Post('resend-verification')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Resend email verification link' })
+  async resendVerification(@Req() req) {
+    return this.authService.resendVerificationEmail(req.user.sub);
   }
 
   @Post('forgot-password')

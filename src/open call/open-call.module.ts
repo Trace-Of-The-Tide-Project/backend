@@ -5,11 +5,13 @@ import { OpenCallsService } from './open-call.service';
 import { OpenCallsController } from './open-call.controller';
 import { OpenCall } from './models/open-call.model';
 import { Participant } from './models/participant.model';
+import { UserRole } from '../users/models/user-role.model';
+import { Role } from '../roles/models/role.model';
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
-    SequelizeModule.forFeature([OpenCall, Participant]),
+    SequelizeModule.forFeature([OpenCall, Participant, UserRole, Role]),
   ],
   controllers: [OpenCallsController],
   providers: [OpenCallsService],

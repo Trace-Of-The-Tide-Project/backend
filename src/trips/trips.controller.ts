@@ -60,6 +60,17 @@ export class TripsController {
     return this.tripsService.findAll(query);
   }
 
+  @Get('archive')
+  @ApiOperation({
+    summary: 'Get trip archive (completed and cancelled trips)',
+  })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  getArchive(@Query() query: any) {
+    return this.tripsService.getArchive(query);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get trip by ID with stops and participants' })
   findOne(@Param('id') id: string) {

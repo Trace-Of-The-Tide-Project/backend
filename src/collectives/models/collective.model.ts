@@ -9,6 +9,7 @@ import {
 } from 'sequelize-typescript';
 import { User } from '../../users/models/user.model';
 import { CollectiveMember } from './collective-member.model';
+import { Phase } from '../../phases/models/phase.model';
 
 @Table({ tableName: 'collectives', timestamps: false })
 export class Collective extends Model<Collective> {
@@ -37,4 +38,7 @@ export class Collective extends Model<Collective> {
 
   @HasMany(() => CollectiveMember)
   declare members: CollectiveMember[];
+
+  @HasMany(() => Phase)
+  declare phases: Phase[];
 }
