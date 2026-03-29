@@ -16,6 +16,7 @@ export async function seedContributions(
       type_id: storyType?.id,
       status: 'pending',
       user_id: adminUser.id,
+      phone_number: '+970599111111',
       submission_date: new Date(),
     },
     {
@@ -24,6 +25,7 @@ export async function seedContributions(
       type_id: audioType?.id,
       status: 'published',
       user_id: adminUser.id,
+      phone_number: '+970599222222',
       submission_date: new Date(),
     },
   ];
