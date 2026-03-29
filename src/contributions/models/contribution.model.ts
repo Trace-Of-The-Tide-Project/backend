@@ -57,6 +57,9 @@ export class Contribution extends Model<Contribution> {
   @Column({ type: DataType.STRING, allowNull: true })
   declare contributor_phone: string;
 
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare phone_number: string;
+
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   declare consent_given: boolean;
 

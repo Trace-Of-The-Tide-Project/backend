@@ -63,6 +63,7 @@ export class ContributionsService extends BaseService<Contribution> {
       contributor_name: dto.contributor_name,
       contributor_email: dto.contributor_email,
       contributor_phone: dto.contributor_phone || null,
+      phone_number: dto.phone_number || null,
       consent_given: dto.consent_given,
       open_call_id: dto.open_call_id || null,
       submission_date: new Date(),

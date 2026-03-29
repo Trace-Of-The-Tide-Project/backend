@@ -52,6 +52,11 @@ export class CreateContributionDto {
   @IsString()
   contributor_phone?: string;
 
+  @ApiPropertyOptional({ example: '+970599000000' })
+  @IsOptional()
+  @IsString()
+  phone_number?: string;
+
   @ApiProperty({
     description: 'Must be true — user consents to content review and archival',
     example: true,
