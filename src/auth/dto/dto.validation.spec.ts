@@ -72,22 +72,22 @@ describe('SignupDto', () => {
 describe('LoginDto', () => {
   function createDto(overrides: Partial<LoginDto> = {}): LoginDto {
     return plainToInstance(LoginDto, {
-      identifier: 'test@trace.ps',
+      email: 'test@trace.ps',
       password: 'Test@1234',
       ...overrides,
     });
   }
 
-  it('should validate successfully with valid identifier and password', async () => {
+  it('should validate successfully with valid email and password', async () => {
     const dto = createDto();
     const errors = await validate(dto);
     expect(errors).toHaveLength(0);
   });
 
-  it('should fail when identifier is empty', async () => {
-    const dto = createDto({ identifier: '' });
+  it('should fail when email is empty', async () => {
+    const dto = createDto({ email: '' });
     const errors = await validate(dto);
-    expect(errors.some((e) => e.property === 'identifier')).toBe(true);
+    expect(errors.some((e) => e.property === 'email')).toBe(true);
   });
 
   it('should accept any non-empty password (length validation is on signup, not login)', async () => {
