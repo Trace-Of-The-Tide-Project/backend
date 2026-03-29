@@ -57,7 +57,7 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.identifier, loginDto.password);
+    const user = await this.validateUser(loginDto.email, loginDto.password);
     const roles = await this.usersService.getUserRoles(user.id);
     const payload = { sub: user.id, email: user.email, roles };
 
