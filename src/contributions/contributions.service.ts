@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../common/base.service';
 import { Contribution } from './models/contribution.model';
@@ -7,6 +7,10 @@ import { File } from '../files/models/file.model';
 import { Collection } from '../collections/models/collection.model';
 import { User } from '../users/models/user.model';
 import { CreateContributionDto } from './dto/create-contribution.dto';
+import {
+  CreateContributionTypeDto,
+  UpdateContributionTypeDto,
+} from './dto/contribution-type.dto';
 
 @Injectable()
 export class ContributionsService extends BaseService<Contribution> {
@@ -20,10 +24,43 @@ export class ContributionsService extends BaseService<Contribution> {
   constructor(
     @InjectModel(Contribution)
     private readonly contributionModel: typeof Contribution,
+    @InjectModel(ContributionType)
+    private readonly contributionTypeModel: typeof ContributionType,
     @InjectModel(File)
     private readonly fileModel: typeof File,
   ) {
     super(contributionModel);
+  }
+
+  // ── Contribution Types CRUD ──────────────────────────────
+
+  async findAllTypes() {
+    return this.contributionTypeModel.findAll({
+      attributes: ['id', 'name', 'description'],
+      order: [['name', 'ASC']],
+    });
+  }
+
+  async findOneType(id: string) {
+    const type = await this.contributionTypeModel.findByPk(id);
+    if (!type) throw new NotFoundException(`ContributionType ${id} not found`);
+    return type;
+  }
+
+  async createType(dto: CreateContributionTypeDto) {
+    return this.contributionTypeModel.create(dto as any);
+  }
+
+  async updateType(id: string, dto: UpdateContributionTypeDto) {
+    const type = await this.findOneType(id);
+    await type.update(dto);
+    return type;
+  }
+
+  async removeType(id: string) {
+    const type = await this.findOneType(id);
+    await type.destroy();
+    return { message: `ContributionType ${id} deleted successfully` };
   }
 
   async findAll(query: any = {}) {

@@ -21,6 +21,10 @@ import {
   UpdateContributionDto,
   UpdateContributionStatusDto,
 } from './dto/update-contribution.dto';
+import {
+  CreateContributionTypeDto,
+  UpdateContributionTypeDto,
+} from './dto/contribution-type.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -96,6 +100,47 @@ export class ContributionsController {
     // If authenticated, use token's user_id
     const userId = req.user?.sub || null;
     return this.contributionsService.createWithFiles(dto, files || [], userId);
+  }
+
+  @Get('types')
+  @ApiOperation({ summary: 'List all contribution types (public)' })
+  @ApiResponse({ status: 200, description: 'List of contribution types' })
+  findAllTypes() {
+    return this.contributionsService.findAllTypes();
+  }
+
+  @Get('types/:id')
+  @ApiOperation({ summary: 'Get a single contribution type by ID' })
+  findOneType(@Param('id') id: string) {
+    return this.contributionsService.findOneType(id);
+  }
+
+  @Post('types')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create a new contribution type (admin only)' })
+  @ApiResponse({ status: 201, description: 'Contribution type created' })
+  createType(@Body() dto: CreateContributionTypeDto) {
+    return this.contributionsService.createType(dto);
+  }
+
+  @Patch('types/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update a contribution type (admin only)' })
+  updateType(@Param('id') id: string, @Body() dto: UpdateContributionTypeDto) {
+    return this.contributionsService.updateType(id, dto);
+  }
+
+  @Delete('types/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a contribution type (admin only)' })
+  removeType(@Param('id') id: string) {
+    return this.contributionsService.removeType(id);
   }
 
   @Get()
