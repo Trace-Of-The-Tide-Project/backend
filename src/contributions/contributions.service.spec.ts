@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ContributionsService } from './contributions.service';
 import { getModelToken } from '@nestjs/sequelize';
 import { Contribution } from './models/contribution.model';
+import { ContributionType } from './models/contribution-type.model';
 import { File } from '../files/models/file.model';
 import { NotFoundException } from '@nestjs/common';
 
@@ -48,6 +49,7 @@ describe('ContributionsService', () => {
       providers: [
         ContributionsService,
         { provide: getModelToken(Contribution), useValue: mockModel },
+        { provide: getModelToken(ContributionType), useValue: { findAll: jest.fn(), findByPk: jest.fn(), create: jest.fn() } },
         { provide: getModelToken(File), useValue: mockFileModel },
       ],
     }).compile();
