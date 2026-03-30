@@ -4,13 +4,14 @@ import { SequelizeModule } from '@nestjs/sequelize';
 import { ContributionsService } from './contributions.service';
 import { ContributionsController } from './contributions.controller';
 import { Contribution } from './models/contribution.model';
+import { ContributionType } from './models/contribution-type.model';
 import { CollectionContribution } from '../collections/models/collection-contribution.model';
 import { File } from '../files/models/file.model';
 
 @Module({
   imports: [
     forwardRef(() => AuthModule),
-    SequelizeModule.forFeature([Contribution, CollectionContribution, File]),
+    SequelizeModule.forFeature([Contribution, ContributionType, CollectionContribution, File]),
   ],
   providers: [ContributionsService],
   controllers: [ContributionsController],

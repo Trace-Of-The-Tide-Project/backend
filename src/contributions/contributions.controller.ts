@@ -98,6 +98,13 @@ export class ContributionsController {
     return this.contributionsService.createWithFiles(dto, files || [], userId);
   }
 
+  @Get('types')
+  @ApiOperation({ summary: 'List all contribution types (public)' })
+  @ApiResponse({ status: 200, description: 'List of contribution types' })
+  findAllTypes() {
+    return this.contributionsService.findAllTypes();
+  }
+
   @Get()
   @ApiOperation({
     summary: 'List contributions with filtering, search, and pagination',

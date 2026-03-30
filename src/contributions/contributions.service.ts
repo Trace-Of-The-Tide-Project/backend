@@ -20,10 +20,19 @@ export class ContributionsService extends BaseService<Contribution> {
   constructor(
     @InjectModel(Contribution)
     private readonly contributionModel: typeof Contribution,
+    @InjectModel(ContributionType)
+    private readonly contributionTypeModel: typeof ContributionType,
     @InjectModel(File)
     private readonly fileModel: typeof File,
   ) {
     super(contributionModel);
+  }
+
+  async findAllTypes() {
+    return this.contributionTypeModel.findAll({
+      attributes: ['id', 'name', 'description'],
+      order: [['name', 'ASC']],
+    });
   }
 
   async findAll(query: any = {}) {
