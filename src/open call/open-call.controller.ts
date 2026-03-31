@@ -18,6 +18,7 @@ import { extname } from 'path';
 import { OpenCallsService } from './open-call.service';
 import { CreateOpenCallDto, UpdateOpenCallDto } from './dto/open-call.dto';
 import { JoinOpenCallDto } from './dto/join-open-call.dto';
+import { ApplyOpenCallDto } from './dto/apply-open-call.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -135,6 +136,51 @@ export class OpenCallsController {
     return this.openCallsService.joinOpenCall(id, dto, files || []);
   }
 
+  @Post(':id/apply')
+  @ApiOperation({
+    summary: 'Apply to open call with dynamic form answers',
+    description:
+      'Submit application using the dynamic form defined in the open call. Supports file uploads.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Application submitted' })
+  @ApiResponse({ status: 400, description: 'Validation error or call closed' })
+  @ApiResponse({ status: 409, description: 'Already applied' })
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads/open-calls',
+        filename: (_req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (ALLOWED_MIMES.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(
+            new Error(`File type ${file.mimetype} is not allowed`) as any,
+            false,
+          );
+        }
+      },
+      limits: { fileSize: MAX_FILE_SIZE },
+    }),
+  )
+  apply(
+    @Param('id') id: string,
+    @Body() dto: ApplyOpenCallDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @Req() req: any,
+  ) {
+    if (req.user?.sub) {
+      dto.user_id = req.user.sub;
+    }
+    return this.openCallsService.applyToOpenCall(id, dto, files || []);
+  }
+
   @Post(':id/apply-editor')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -217,6 +263,27 @@ export class OpenCallsController {
   @ApiOperation({ summary: 'Update an open call' })
   update(@Param('id') id: string, @Body() dto: UpdateOpenCallDto) {
     return this.openCallsService.updateOpenCall(id, dto as any);
+  }
+
+  @Patch(':id/publish')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Publish an open call (set status to open)' })
+  publish(@Param('id') id: string) {
+    return this.openCallsService.publishOpenCall(id);
+  }
+
+  @Patch(':id/schedule')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Schedule an open call for future publishing' })
+  schedule(
+    @Param('id') id: string,
+    @Body('scheduled_at') scheduledAt: string,
+  ) {
+    return this.openCallsService.scheduleOpenCall(id, scheduledAt);
   }
 
   @Patch(':id/close')

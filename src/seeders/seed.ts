@@ -1,3 +1,4 @@
+import { Role } from '../roles/models/role.model';
 import { seedRoles } from './seedRoles';
 import { seedUsers } from './seedUsers';
 import { seedUserProfiles } from './seedUserProfiles';
@@ -26,10 +27,54 @@ import { seedSystemSettings } from './seedSystemSettings';
 import { seedFinance } from './seedFinance';
 import { seedMessaging } from './seedMessaging';
 import { seedLogsAndAudits } from './seedLogsAndAudits';
+import { seedFollows } from './seedFollows';
+import { seedTasks } from './seedTasks';
+import { seedPhases } from './seedPhases';
+import { seedBoards } from './seedBoards';
+
+async function cleanDatabase() {
+  console.log('🧹 Cleaning database before seeding...');
+  const tables = [
+    'logs', 'audit_trails',
+    'board_comments', 'board_chats', 'board_connectors', 'board_elements',
+    'board_pages', 'board_members', 'boards', 'board_templates',
+    'follows', 'tasks', 'phases',
+    'invoices', 'fraud_flags', 'payouts',
+    'messages', 'broadcasts', 'message_templates', 'conversations',
+    'moderation_logs', 'notifications', 'user_badges',
+    'reactions', 'comments', 'discussions',
+    'contribution_tags', 'references', 'files',
+    'collection_contributions', 'participants',
+    'article_tags', 'article_blocks', 'article_contributors', 'articles',
+    'trip_participants', 'trip_stops', 'trips',
+    'group_members', 'groups', 'collective_members', 'collectives',
+    'adventures', 'knowledge_articles', 'books',
+    'timeline_events', 'life_events', 'biographical_cards', 'person_profiles',
+    'locations', 'partners', 'donations',
+    'page_sections', 'pages', 'site_settings',
+    'badges', 'email_templates',
+    'open_calls', 'contributions', 'contribution_types', 'collections',
+    'user_settings', 'user_profiles', 'refresh_tokens', 'user_roles',
+    'users', 'roles', 'tags',
+  ];
+
+  const sequelize = Role.sequelize!;
+  for (const table of tables) {
+    try {
+      await sequelize.query(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+    } catch {
+      // Table may not exist yet on first run — skip silently
+    }
+  }
+  console.log('✅ Database cleaned\n');
+}
 
 export async function seed() {
   try {
     console.log('\n🌱 Starting Database Seeding...\n');
+
+    // ── Phase 0: Clean existing data ───────────────
+    await cleanDatabase();
 
     // ── Phase 1: Core Identity ──────────────────────
     const roles = await seedRoles();
@@ -51,6 +96,7 @@ export async function seed() {
     await seedComments(users[0], discussions);
     await seedReactions();
     await seedGroupsAndCollectives();
+    await seedFollows();
 
     // ── Phase 4: Knowledge & Geography ──────────────
     const locations = await seedLocations();
@@ -67,6 +113,9 @@ export async function seed() {
     await seedArticles();
     await seedCms();
     await seedSystemSettings();
+    await seedTasks();
+    await seedPhases();
+    await seedBoards();
 
     // ── Phase 7: Transactional Data ─────────────────
     await seedFinance();

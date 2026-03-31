@@ -16,6 +16,7 @@ import { UserRole } from '../users/models/user-role.model';
 import { Role } from '../roles/models/role.model';
 import { EmailService } from '../email/email.service';
 import { JoinOpenCallDto } from './dto/join-open-call.dto';
+import { ApplyOpenCallDto } from './dto/apply-open-call.dto';
 
 @Injectable()
 export class OpenCallsService extends BaseService<OpenCall> {
@@ -83,19 +84,83 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return super.findOne(id, { include: this.openCallInclude });
   }
 
-  async createOpenCall(data: Partial<OpenCall>) {
+  async createOpenCall(data: any) {
     if (!data.title) {
       throw new BadRequestException('Title is required');
     }
 
+    // Map action to status
+    let status = 'draft';
+    if (data.action === 'publish') {
+      status = 'open';
+      (data as any).published_at = new Date();
+    } else if (data.action === 'schedule') {
+      if (!data.scheduled_at) {
+        throw new BadRequestException('scheduled_at is required when action is "schedule"');
+      }
+      status = 'scheduled';
+    } else if (data.action === 'draft') {
+      status = 'draft';
+    }
+
+    // Extract settings if provided as nested object
+    if (data.settings) {
+      if (data.settings.category) data.category = data.settings.category;
+      if (data.settings.tags) data.tags = data.settings.tags;
+      if (data.settings.language) data.language = data.settings.language;
+      if (data.settings.visibility) data.visibility = data.settings.visibility;
+      delete data.settings;
+    }
+
+    delete data.action;
+
     return this.openCallModel.create({
-      status: 'open',
+      status,
       ...data,
     } as any);
   }
 
-  async updateOpenCall(id: string, data: Partial<OpenCall>) {
+  async updateOpenCall(id: string, data: any) {
+    // Handle action on update
+    if (data.action === 'publish') {
+      data.status = 'open';
+      data.published_at = new Date();
+    } else if (data.action === 'schedule') {
+      if (!data.scheduled_at) {
+        throw new BadRequestException('scheduled_at is required when action is "schedule"');
+      }
+      data.status = 'scheduled';
+    } else if (data.action === 'draft') {
+      data.status = 'draft';
+    }
+
+    if (data.settings) {
+      if (data.settings.category) data.category = data.settings.category;
+      if (data.settings.tags) data.tags = data.settings.tags;
+      if (data.settings.language) data.language = data.settings.language;
+      if (data.settings.visibility) data.visibility = data.settings.visibility;
+      delete data.settings;
+    }
+
+    delete data.action;
     return super.update(id, data);
+  }
+
+  async publishOpenCall(id: string) {
+    const openCall = await this.openCallModel.findByPk(id);
+    if (!openCall) throw new NotFoundException(`Open call ${id} not found`);
+    await openCall.update({ status: 'open', published_at: new Date() });
+    return openCall;
+  }
+
+  async scheduleOpenCall(id: string, scheduledAt: string) {
+    if (!scheduledAt) {
+      throw new BadRequestException('scheduled_at is required');
+    }
+    const openCall = await this.openCallModel.findByPk(id);
+    if (!openCall) throw new NotFoundException(`Open call ${id} not found`);
+    await openCall.update({ status: 'scheduled', scheduled_at: new Date(scheduledAt) });
+    return openCall;
   }
 
   async closeOpenCall(id: string) {
@@ -208,6 +273,104 @@ export class OpenCallsService extends BaseService<OpenCall> {
       dto.first_name,
       openCall.title,
     );
+
+    return participant;
+  }
+
+  async applyToOpenCall(
+    openCallId: string,
+    dto: ApplyOpenCallDto,
+    files: Express.Multer.File[] = [],
+  ) {
+    const openCall = await this.openCallModel.findByPk(openCallId);
+    if (!openCall)
+      throw new NotFoundException(`Open call ${openCallId} not found`);
+    if (openCall.status !== 'open') {
+      throw new BadRequestException('This open call is no longer accepting applications');
+    }
+
+    if (openCall.timeline_end && new Date() > new Date(openCall.timeline_end)) {
+      throw new BadRequestException('The deadline for this open call has passed');
+    }
+
+    // Validate answers against application_form if defined
+    if (openCall.application_form?.fields) {
+      for (const field of openCall.application_form.fields) {
+        if (field.required && field.type !== 'checkbox' && field.type !== 'file_multiple') {
+          if (!dto.answers[field.name] && dto.answers[field.name] !== false) {
+            throw new BadRequestException(`Field "${field.name}" is required`);
+          }
+        }
+        if (field.type === 'email' && dto.answers[field.name]) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(dto.answers[field.name])) {
+            throw new BadRequestException(`Field "${field.name}" must be a valid email`);
+          }
+        }
+      }
+    }
+
+    // Check duplicate by email (from answers)
+    const email = dto.answers.email || dto.answers.Email;
+    if (email) {
+      const existingByEmail = await this.participantModel.findOne({
+        where: { open_call_id: openCallId, email },
+      });
+      if (existingByEmail) {
+        throw new ConflictException('This email has already been used to apply');
+      }
+    }
+
+    if (dto.user_id) {
+      const existing = await this.participantModel.findOne({
+        where: { open_call_id: openCallId, user_id: dto.user_id },
+      });
+      if (existing) {
+        throw new ConflictException('You have already applied to this open call');
+      }
+    }
+
+    // Map known answer fields to legacy columns for backward compatibility
+    const participant = await this.participantModel.create({
+      open_call_id: openCallId,
+      user_id: dto.user_id || null,
+      first_name: dto.answers.first_name || null,
+      last_name: dto.answers.last_name || null,
+      email: email || null,
+      phone_number: dto.answers.phone || dto.answers.phone_number || null,
+      experience_field: dto.answers.experience_field || null,
+      about: dto.answers.about || null,
+      country: dto.answers.country || null,
+      city: dto.answers.city || null,
+      terms_agreed: dto.terms_agreement,
+      form_answers: dto.answers,
+      role: 'participant',
+      status: 'active',
+      join_date: new Date(),
+    } as any);
+
+    if (files.length > 0) {
+      for (const file of files) {
+        await File.create({
+          contribution_id: null,
+          participant_id: participant.id,
+          file_name: file.originalname,
+          mime_type: file.mimetype,
+          file_size: file.size,
+          path: file.path.replace(/\\/g, '/'),
+          uploaded_by: dto.user_id || null,
+          upload_date: new Date(),
+        } as any);
+      }
+    }
+
+    if (email) {
+      await this.emailService.sendOpenCallConfirmationEmail(
+        email,
+        dto.answers.first_name || 'Applicant',
+        openCall.title,
+      );
+    }
 
     return participant;
   }

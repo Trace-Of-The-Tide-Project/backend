@@ -70,6 +70,10 @@ export class Participant extends Model<Participant> {
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   declare terms_agreed: boolean;
 
+  // Dynamic form answers (JSON — matches the open call's application_form)
+  @Column({ type: DataType.JSON, allowNull: true })
+  declare form_answers: any;
+
   // Associations
   @BelongsTo(() => User)
   declare user: User;

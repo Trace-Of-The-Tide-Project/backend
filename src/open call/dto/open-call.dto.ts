@@ -5,6 +5,8 @@ import {
   IsDateString,
   IsUUID,
   IsIn,
+  IsArray,
+  IsObject,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 
@@ -87,6 +89,94 @@ export class CreateOpenCallDto {
   @IsOptional()
   @IsUUID()
   created_by?: string;
+
+  // ── New CMS-like fields ──────────────────────────────────
+
+  @ApiPropertyOptional({
+    description: 'Content blocks array: [{type, value, order}]',
+    example: [
+      { type: 'paragraph', value: 'Introduction text...', order: 1 },
+      { type: 'image', value: 'https://example.com/photo.jpg', order: 2 },
+    ],
+  })
+  @IsOptional()
+  @IsArray()
+  content_blocks?: { type: string; value: string | string[]; order: number }[];
+
+  @ApiPropertyOptional({
+    description: 'Main media: {type, url, size_mb}',
+    example: { type: 'image', url: 'https://example.com/cover.jpg', size_mb: 5 },
+  })
+  @IsOptional()
+  @IsObject()
+  main_media?: { type: string; url: string; size_mb: number };
+
+  @ApiPropertyOptional({
+    description: 'Dynamic application form definition',
+    example: {
+      fields: [
+        { name: 'first_name', type: 'text', required: true },
+        { name: 'email', type: 'email', required: true },
+        { name: 'experience_field', type: 'select', required: true, options: ['Design', 'Writing'] },
+        { name: 'terms_agreement', type: 'checkbox', required: true },
+      ],
+    },
+  })
+  @IsOptional()
+  @IsObject()
+  application_form?: {
+    fields: {
+      name: string;
+      type: string;
+      required: boolean;
+      options?: string[];
+      max_files?: number;
+      allowed_types?: string[];
+      max_size_mb?: number;
+    }[];
+  };
+
+  @ApiPropertyOptional({
+    description: 'SEO metadata',
+    example: { title: 'Open Call — Trace of the Tide', meta_description: 'Submit your work...' },
+  })
+  @IsOptional()
+  @IsObject()
+  seo?: { title: string; meta_description: string };
+
+  @ApiPropertyOptional({
+    description: 'Tags array',
+    example: ['photography', 'heritage'],
+  })
+  @IsOptional()
+  @IsArray()
+  tags?: string[];
+
+  @ApiPropertyOptional({ description: 'Language', enum: ['en', 'ar'] })
+  @IsOptional()
+  @IsString()
+  @IsIn(['en', 'ar'])
+  language?: string;
+
+  @ApiPropertyOptional({ description: 'Visibility', enum: ['public', 'private'] })
+  @IsOptional()
+  @IsString()
+  @IsIn(['public', 'private'])
+  visibility?: string;
+
+  @ApiPropertyOptional({ description: 'Scheduled publish date (ISO string)' })
+  @IsOptional()
+  @IsDateString()
+  scheduled_at?: string;
+
+  @ApiPropertyOptional({
+    description: 'Action to take: publish (live now), draft (save only), schedule (publish later)',
+    enum: ['publish', 'draft', 'schedule'],
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['publish', 'draft', 'schedule'])
+  action?: string;
 }
 
 export class UpdateOpenCallDto extends PartialType(CreateOpenCallDto) {}
