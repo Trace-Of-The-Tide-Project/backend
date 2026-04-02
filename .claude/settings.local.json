@@ -15,7 +15,8 @@
       "Bash(python3 generate-article-docs.py)",
       "Bash(find 'e:/Ahmed saleh projects/backend/src' -name *.service.ts -type f)",
       "Bash(python3 generate-api-docs.py)",
-      "Read(//e//**)"
+      "Read(//e//**)",
+      "Bash(find \"e:/Ahmed saleh projects/backend/src\" -type f -name \"*.ts\" -exec grep -l \"json\\(\\)\\\\|JsonBodyParser\" {} \\\\;)"
     ]
   }
 }

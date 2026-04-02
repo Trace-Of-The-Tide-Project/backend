@@ -105,6 +105,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
 
     // Extract settings if provided as nested object
     if (data.settings) {
+      if (data.settings.status && !data.action) status = data.settings.status;
       if (data.settings.category) data.category = data.settings.category;
       if (data.settings.tags) data.tags = data.settings.tags;
       if (data.settings.language) data.language = data.settings.language;
