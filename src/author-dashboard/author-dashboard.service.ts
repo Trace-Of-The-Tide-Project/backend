@@ -35,26 +35,12 @@ export class AuthorDashboardService {
 
   // ─── MAIN DASHBOARD ──────────────────────────────
 
-  async getDashboard(userId: string) {
+  async getStats(userId: string) {
     const user = await this.userModel.findByPk(userId, {
-      attributes: [
-        'id',
-        'username',
-        'full_name',
-        'email',
-        'status',
-        'createdAt',
-      ],
-      include: [
-        {
-          model: UserProfile,
-          attributes: ['avatar', 'location', 'about', 'social_links'],
-        },
-      ],
+      attributes: ['id', 'createdAt'],
     });
     if (!user) throw new NotFoundException('User not found');
 
-    // Stats cards
     const [articlesPublished, contributions, totalReads, daysActive] =
       await Promise.all([
         this.articleModel.count({
@@ -77,6 +63,35 @@ export class AuthorDashboardService {
           ),
         ),
       ]);
+
+    return {
+      articles_published: articlesPublished || 0,
+      contributions: contributions || 0,
+      total_reads: totalReads || 0,
+      days_active: daysActive || 0,
+    };
+  }
+
+  async getDashboard(userId: string) {
+    const user = await this.userModel.findByPk(userId, {
+      attributes: [
+        'id',
+        'username',
+        'full_name',
+        'email',
+        'status',
+        'createdAt',
+      ],
+      include: [
+        {
+          model: UserProfile,
+          attributes: ['avatar', 'location', 'about', 'social_links'],
+        },
+      ],
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    const stats = await this.getStats(userId);
 
     // Recent articles (last 5)
     const recentArticles = await this.articleModel.findAll({
@@ -101,12 +116,7 @@ export class AuthorDashboardService {
 
     return {
       user,
-      stats: {
-        articles_published: articlesPublished || 0,
-        contributions: contributions || 0,
-        total_reads: totalReads || 0,
-        days_active: daysActive || 0,
-      },
+      stats,
       recent_articles: recentArticles,
       recent_supporters: recentSupporters,
     };

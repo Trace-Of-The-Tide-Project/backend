@@ -45,6 +45,7 @@ import { EmailModule } from 'src/email/email.module';
 import { FollowsModule } from 'src/follows/follows.module';
 import { TasksModule } from 'src/tasks/tasks.module';
 import { PhasesModule } from 'src/phases/phases.module';
+import { UploadModule } from 'src/upload/upload.module';
 
 @Module({
   imports: [
@@ -105,6 +106,7 @@ import { PhasesModule } from 'src/phases/phases.module';
     FollowsModule,
     TasksModule,
     PhasesModule,
+    UploadModule,
   ],
   providers: [
     {

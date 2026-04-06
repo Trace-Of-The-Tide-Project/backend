@@ -29,6 +29,16 @@ export class AuthorDashboardController {
     return req.user.sub || req.user.id || req.user.userId;
   }
 
+  // ─── STATS ONLY ──────────────────────────────────
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Author stats only (articles published, contributions, reads, days active)',
+  })
+  async getStats(@Req() req: any) {
+    return this.service.getStats(this.getUserId(req));
+  }
+
   // ─── MAIN DASHBOARD ──────────────────────────────
 
   @Get('dashboard')

@@ -43,6 +43,20 @@ export class UsersService extends BaseService<User> {
   }
 
   async create(data: any) {
+    // Auto-generate username from email prefix if not provided
+    if (!data.username && data.email) {
+      let base = data.email.split('@')[0].replace(/[^a-zA-Z0-9_]/g, '_');
+      let username = base;
+      let suffix = 1;
+      while (
+        await this.userModel.findOne({ where: { username } })
+      ) {
+        username = `${base}${suffix}`;
+        suffix++;
+      }
+      data = { ...data, username };
+    }
+
     const user = await super.create(data);
     // Re-fetch without password to avoid leaking the hash
     return this.findOne(user.id);
