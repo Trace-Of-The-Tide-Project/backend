@@ -14,6 +14,7 @@ import { ArticleContributor } from './article-contributor.model';
 import { Tag } from '../../tags/models/tag.model';
 import { ArticleTag } from './article-tag.model';
 import { Collection } from '../../collections/models/collection.model';
+import { OpenCall } from '../../open call/models/open-call.model';
 
 @Table({ tableName: 'articles' })
 export class Article extends Model<Article> {
@@ -103,11 +104,19 @@ export class Article extends Model<Article> {
   @Column({ type: DataType.UUID, allowNull: true })
   declare collection_id: string;
 
+  // Optional open call link (for content_type = 'open_call')
+  @ForeignKey(() => OpenCall)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare open_call_id: string;
+
   @BelongsTo(() => User)
   declare author: User;
 
   @BelongsTo(() => Collection)
   declare collection: Collection;
+
+  @BelongsTo(() => OpenCall)
+  declare open_call: OpenCall;
 
   // Block-based content
   @HasMany(() => ArticleBlock)

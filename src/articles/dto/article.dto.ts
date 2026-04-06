@@ -124,6 +124,13 @@ export class CreateArticleDto {
   translation_of?: string;
 
   @ApiPropertyOptional({
+    description: 'UUID of the linked open call (for content_type = open_call)',
+  })
+  @IsOptional()
+  @IsUUID()
+  open_call_id?: string;
+
+  @ApiPropertyOptional({
     description: 'Array of tag IDs to associate',
     example: ['uuid1', 'uuid2'],
   })
