@@ -17,7 +17,7 @@ import { UserProfile } from '../users/models/user-profile.model';
 import { Tag } from '../tags/models/tag.model';
 import { Collection } from '../collections/models/collection.model';
 import { OpenCall } from '../open call/models/open-call.model';
-import { Op } from 'sequelize';
+import { Op, literal } from 'sequelize';
 
 @Injectable()
 export class ArticlesService extends BaseService<Article> {
@@ -379,23 +379,32 @@ export class ArticlesService extends BaseService<Article> {
 
     const tagIds = article.tags?.map((t) => t.id) || [];
 
-    // Find articles that share the same category or tags
+    // Build conditions: match by category OR shared tags
+    const orConditions: any[] = [];
+
+    if (article.category) {
+      orConditions.push({ category: article.category });
+    }
+
+    if (tagIds.length > 0) {
+      const escaped = tagIds.map((t) => `'${t}'`).join(',');
+      orConditions.push(
+        literal(
+          `"Article"."id" IN (SELECT "article_id" FROM "article_tags" WHERE "tag_id" IN (${escaped}))`,
+        ),
+      );
+    }
+
     const where: any = {
       id: { [Op.ne]: id },
       status: 'published',
-      [Op.or]: [] as any[],
     };
 
-    if (article.category) {
-      where[Op.or].push({ category: article.category });
+    if (orConditions.length > 0) {
+      where[Op.or] = orConditions;
     }
 
-    // If no filters available, just get recent published articles
-    if (where[Op.or].length === 0) {
-      delete where[Op.or];
-    }
-
-    let relatedArticles = await this.articleModel.findAll({
+    return this.articleModel.findAll({
       where,
       include: [
         {
@@ -408,33 +417,6 @@ export class ArticlesService extends BaseService<Article> {
       order: [['published_at', 'DESC']],
       limit: 4,
     });
-
-    // If we have tag IDs, boost articles that share tags
-    if (tagIds.length > 0 && relatedArticles.length < 4) {
-      const tagRelated = await this.articleModel.findAll({
-        where: {
-          id: { [Op.ne]: id, [Op.notIn]: relatedArticles.map((a) => a.id) },
-          status: 'published',
-        },
-        include: [
-          {
-            model: User,
-            as: 'author',
-            attributes: ['id', 'username', 'full_name'],
-          },
-          {
-            model: Tag,
-            through: { attributes: [] },
-            where: { id: { [Op.in]: tagIds } },
-            required: true,
-          },
-        ],
-        limit: 4 - relatedArticles.length,
-      });
-      relatedArticles = [...relatedArticles, ...tagRelated];
-    }
-
-    return relatedArticles;
   }
 
   // ─── TRANSLATIONS ────────────────────────────────────────
