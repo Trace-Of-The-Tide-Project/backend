@@ -16,6 +16,7 @@ import { User } from '../users/models/user.model';
 import { UserProfile } from '../users/models/user-profile.model';
 import { Tag } from '../tags/models/tag.model';
 import { Collection } from '../collections/models/collection.model';
+import { OpenCall } from '../open call/models/open-call.model';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -44,6 +45,7 @@ export class ArticlesService extends BaseService<Article> {
     },
     { model: Tag, through: { attributes: [] } },
     { model: Collection, attributes: ['id', 'name'], required: false },
+    { model: OpenCall, attributes: ['id', 'title'], required: false },
     {
       model: Article,
       as: 'translations',
