@@ -158,11 +158,47 @@ export class UpdateTripDto extends PartialType(CreateTripDto) {
   status?: string;
 }
 
+export class CreateInlineLocationDto {
+  @ApiProperty({ example: 'Damascus Gate' })
+  @IsNotEmpty()
+  @IsString()
+  name!: string;
+
+  @ApiPropertyOptional({ example: 'Historic gate in the Old City' })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({ example: 31.7838 })
+  @IsOptional()
+  @IsNumber()
+  latitude?: number;
+
+  @ApiPropertyOptional({ example: 35.2296 })
+  @IsOptional()
+  @IsNumber()
+  longitude?: number;
+
+  @ApiPropertyOptional({ example: 'Damascus Gate, Old City, Jerusalem' })
+  @IsOptional()
+  @IsString()
+  address?: string;
+}
+
 export class CreateTripStopDto {
   @ApiPropertyOptional({ description: 'UUID of existing Location' })
   @IsOptional()
   @IsString()
   location_id?: string;
+
+  @ApiPropertyOptional({
+    type: () => CreateInlineLocationDto,
+    description: 'Inline location to create with the stop',
+  })
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateInlineLocationDto)
+  location?: CreateInlineLocationDto;
 
   @ApiProperty({
     example: 1,
