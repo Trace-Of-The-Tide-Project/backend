@@ -140,8 +140,8 @@ export class TripsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add a stop to a trip' })
-  addStop(@Param('id') id: string, @Body() dto: CreateTripStopDto) {
-    return this.tripsService.addStop(id, dto);
+  addStop(@Param('id') id: string, @Body() dto: CreateTripStopDto, @Req() req: any) {
+    return this.tripsService.addStop(id, dto, req.user.sub);
   }
 
   @Patch(':id/stops/reorder')

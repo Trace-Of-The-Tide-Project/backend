@@ -58,7 +58,16 @@ export class TripsService extends BaseService<Trip> {
 
     if (stops?.length) {
       for (const stop of stops) {
-        await this.tripStopModel.create({ ...stop, trip_id: trip.id });
+        // Create inline location if provided
+        if (stop.location && !stop.location_id) {
+          const loc = await Location.create({
+            ...stop.location,
+            created_by: userId,
+          } as any);
+          stop.location_id = loc.id;
+        }
+        const { location, ...stopData } = stop;
+        await this.tripStopModel.create({ ...stopData, trip_id: trip.id });
       }
     }
 
@@ -129,9 +138,18 @@ export class TripsService extends BaseService<Trip> {
     });
   }
 
-  async addStop(tripId: string, data: any) {
+  async addStop(tripId: string, data: any, userId?: string) {
     const trip = await this.tripModel.findByPk(tripId);
     if (!trip) throw new NotFoundException(`Trip ${tripId} not found`);
+
+    // Create inline location if provided
+    if (data.location && !data.location_id && userId) {
+      const loc = await Location.create({
+        ...data.location,
+        created_by: userId,
+      } as any);
+      data.location_id = loc.id;
+    }
 
     // Validate location if provided
     if (data.location_id) {
@@ -140,7 +158,8 @@ export class TripsService extends BaseService<Trip> {
         throw new NotFoundException(`Location ${data.location_id} not found`);
     }
 
-    return this.tripStopModel.create({ ...data, trip_id: tripId });
+    const { location, ...stopData } = data;
+    return this.tripStopModel.create({ ...stopData, trip_id: tripId });
   }
 
   async updateStop(tripId: string, stopId: string, data: any) {
