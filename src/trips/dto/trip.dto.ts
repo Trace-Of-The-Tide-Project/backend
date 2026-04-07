@@ -8,8 +8,11 @@ import {
   Min,
   IsEnum,
   IsEmail,
+  IsArray,
+  ValidateNested,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateTripDto {
   @ApiProperty({ example: 'Journey Through Old Jerusalem' })
@@ -54,6 +57,10 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({ example: 50.0 })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === null || value === undefined || value === '') return undefined;
+    return Number(value);
+  })
   @IsNumber()
   @Min(0)
   price?: number;
@@ -84,22 +91,25 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({ example: '["heritage","walking","photography"]' })
   @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
   @IsString()
   tags?: string;
 
   @ApiPropertyOptional({
     example: '["English","Arabic"]',
-    description: 'JSON array of languages',
+    description: 'JSON array of languages or array',
   })
   @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
   @IsString()
   languages?: string;
 
   @ApiPropertyOptional({
     example: '["Visit Al-Aqsa","Local cuisine tasting"]',
-    description: 'JSON array of highlights',
+    description: 'JSON array of highlights or array',
   })
   @IsOptional()
+  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
   @IsString()
   highlights?: string;
 
@@ -119,6 +129,24 @@ export class CreateTripDto {
   @IsOptional()
   @IsString()
   moderator_name?: string;
+
+  @ApiPropertyOptional({
+    example: 'draft',
+    enum: ['draft', 'published'],
+  })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({
+    type: () => [CreateTripStopDto],
+    description: 'Inline stops to create with the trip',
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateTripStopDto)
+  stops?: CreateTripStopDto[];
 }
 
 export class UpdateTripDto extends PartialType(CreateTripDto) {

@@ -53,7 +53,15 @@ export class TripsService extends BaseService<Trip> {
   }
 
   async createTrip(data: any, userId: string) {
-    const trip = await super.create({ ...data, created_by: userId });
+    const { stops, ...tripData } = data;
+    const trip = await super.create({ ...tripData, created_by: userId });
+
+    if (stops?.length) {
+      for (const stop of stops) {
+        await this.tripStopModel.create({ ...stop, trip_id: trip.id });
+      }
+    }
+
     return this.findOne(trip.id);
   }
 
