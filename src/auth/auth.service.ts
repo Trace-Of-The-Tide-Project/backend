@@ -17,17 +17,16 @@ import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 import { TokenService } from './token.service';
 import { EmailService } from '../email/email.service';
+import { CooldownService } from '../common/services/cooldown.service';
 
 @Injectable()
 export class AuthService {
-  // In-memory rate limit map: email -> last request timestamp
-  private resetEmailCooldowns = new Map<string, number>();
-
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
     private tokenService: TokenService,
     private emailService: EmailService,
+    private cooldownService: CooldownService,
   ) {}
 
   async validateUser(identifier: string, pass: string): Promise<any> {
@@ -125,11 +124,15 @@ export class AuthService {
     const verifyToken = this.jwtService.sign(verifyPayload, {
       expiresIn: '24h',
     });
-    await this.emailService.sendVerificationEmail(
+    const emailSent = await this.emailService.sendVerificationEmail(
       newUser.email,
       newUser.username,
       verifyToken,
     );
+    if (!emailSent) {
+      // User is created but email failed — let them retry via resend
+      console.warn(`Verification email failed for ${newUser.email}`);
+    }
 
     // Auto-login: return tokens so user doesn't have to login again
     const roles = ['user'];
@@ -188,6 +191,9 @@ export class AuthService {
       throw new BadRequestException('Email is already verified');
     }
 
+    // Rate limit: 60 seconds between verification email resends
+    await this.cooldownService.enforce('verification', userId, 60);
+
     const verifyPayload = {
       sub: user.id,
       email: user.email,
@@ -196,11 +202,19 @@ export class AuthService {
     const verifyToken = this.jwtService.sign(verifyPayload, {
       expiresIn: '24h',
     });
-    await this.emailService.sendVerificationEmail(
+
+    const sent = await this.emailService.sendVerificationEmail(
       user.email,
       user.username,
       verifyToken,
     );
+    if (!sent) {
+      await this.cooldownService.clear('verification', userId);
+      throw new HttpException(
+        'Failed to send verification email. Please try again.',
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
 
     return { message: 'Verification email sent' };
   }
@@ -215,8 +229,8 @@ export class AuthService {
    * Rate limited to 1 request per 60 seconds per email.
    */
   async generateResetToken(email: string) {
-    // Rate limiting: max 1 request per 60 seconds per email
-    this.enforceResetCooldown(email, 60);
+    // Rate limiting: max 1 request per 60 seconds per email (Redis-backed when available)
+    await this.cooldownService.enforce('reset', email, 60);
 
     try {
       const user = await this.usersService.findByEmail(email);
@@ -227,11 +241,17 @@ export class AuthService {
       };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
 
-      // Send the reset email
-      await this.emailService.sendResetPasswordEmail(user.email, resetToken);
-
-      // Record the cooldown timestamp
-      this.resetEmailCooldowns.set(email.toLowerCase(), Date.now());
+      const sent = await this.emailService.sendResetPasswordEmail(
+        user.email,
+        resetToken,
+      );
+      if (!sent) {
+        await this.cooldownService.clear('reset', email);
+        throw new HttpException(
+          'Failed to send reset email. Please try again.',
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
 
       return { message: 'Reset email sent' };
     } catch (error) {
@@ -250,7 +270,8 @@ export class AuthService {
    * Resend reset password email with 48-second cooldown.
    */
   async resendResetEmail(email: string) {
-    this.enforceResetCooldown(email, 48);
+    // Use same 60s cooldown as generateResetToken to prevent bypass (Redis-backed when available)
+    await this.cooldownService.enforce('reset', email, 60);
 
     try {
       const user = await this.usersService.findByEmail(email);
@@ -261,13 +282,22 @@ export class AuthService {
       };
       const resetToken = this.jwtService.sign(payload, { expiresIn: '1h' });
 
-      await this.emailService.sendResetPasswordEmail(user.email, resetToken);
-      this.resetEmailCooldowns.set(email.toLowerCase(), Date.now());
+      const sent = await this.emailService.sendResetPasswordEmail(
+        user.email,
+        resetToken,
+      );
+      if (!sent) {
+        await this.cooldownService.clear('reset', email);
+        throw new HttpException(
+          'Failed to send reset email. Please try again.',
+          HttpStatus.SERVICE_UNAVAILABLE,
+        );
+      }
 
-      return { message: 'Reset email resent', cooldown: 48 };
+      return { message: 'Reset email resent', cooldown: 60 };
     } catch (error) {
       if (error instanceof NotFoundException) {
-        return { message: 'Reset email resent', cooldown: 48 };
+        return { message: 'Reset email resent', cooldown: 60 };
       }
       if (error instanceof HttpException) {
         throw error;
@@ -294,11 +324,26 @@ export class AuthService {
         throw new BadRequestException('Invalid reset token');
       }
 
-      const user = await this.usersService.findByEmail(decoded.email);
+      // Use user ID (not email) for robust lookup even if email changed
+      const user = await this.usersService.findOne(decoded.sub);
       if (!user) throw new NotFoundException('User not found');
 
+      // Enforce single-use: reject if password was changed after token was issued
+      if (
+        user.password_changed_at &&
+        decoded.iat <
+          Math.floor(user.password_changed_at.getTime() / 1000)
+      ) {
+        throw new BadRequestException(
+          'This reset link has already been used',
+        );
+      }
+
       const hashedPassword = await bcrypt.hash(newPassword, 10);
-      await this.usersService.update(user.id, { password: hashedPassword });
+      await this.usersService.update(user.id, {
+        password: hashedPassword,
+        password_changed_at: new Date(),
+      });
 
       // Revoke all refresh tokens — force re-login on all devices
       await this.tokenService.revokeRefreshToken(user.id);
@@ -315,23 +360,34 @@ export class AuthService {
     }
   }
 
-  async refreshAccessToken(refreshToken: string) {
+  async refreshAccessToken(refreshToken: string, accessToken?: string) {
     if (!refreshToken) {
       throw new BadRequestException('Refresh token is required');
     }
 
+    // Scope the DB query by userId to prevent full-table bcrypt DoS
+    let userId: string | undefined;
+    if (accessToken) {
+      try {
+        const decoded = this.jwtService.decode(accessToken) as any;
+        if (decoded?.sub) userId = decoded.sub;
+      } catch {
+        // Ignore decode failures — fall through to unscoped lookup
+      }
+    }
+
     const tokenRecord =
-      await this.tokenService.verifyAndConsumeRefreshToken(refreshToken);
+      await this.tokenService.verifyAndConsumeRefreshToken(refreshToken, userId);
     if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
 
     const user = await this.usersService.findOne(tokenRecord.user_id);
     const roles = await this.usersService.getUserRoles(user.id);
     const payload = { sub: user.id, email: user.email, roles };
 
-    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const newAccessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
     // Issue a new refresh token (token rotation)
     const newRefreshToken = await this.tokenService.createRefreshToken(user.id);
-    return { accessToken, refreshToken: newRefreshToken };
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
   }
 
   async getUserFromToken(userId: string) {
@@ -347,8 +403,13 @@ export class AuthService {
     userId: string,
     currentPassword: string,
     newPassword: string,
+    confirmPassword: string,
   ) {
-    const user = await User.findByPk(userId);
+    if (newPassword !== confirmPassword) {
+      throw new BadRequestException('Passwords do not match');
+    }
+
+    const user = await this.usersService.findOne(userId);
     if (!user) throw new NotFoundException('User not found');
 
     const isValid = await bcrypt.compare(currentPassword, user.password);
@@ -356,29 +417,24 @@ export class AuthService {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.usersService.update(userId, { password: hashedPassword });
+    // Prevent reusing the same password
+    const isSame = await bcrypt.compare(newPassword, user.password);
+    if (isSame) {
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
+    }
 
-    // Revoke all refresh tokens except current session
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update(userId, {
+      password: hashedPassword,
+      password_changed_at: new Date(),
+    });
+
+    // Revoke all refresh tokens — force re-login on all devices
     await this.tokenService.revokeRefreshToken(userId);
 
     return { message: 'Password changed successfully' };
   }
 
-  // ─── PRIVATE HELPERS ────────────────────────────────────────
-
-  private enforceResetCooldown(email: string, cooldownSeconds: number) {
-    const key = email.toLowerCase();
-    const lastRequest = this.resetEmailCooldowns.get(key);
-    if (lastRequest) {
-      const elapsed = (Date.now() - lastRequest) / 1000;
-      if (elapsed < cooldownSeconds) {
-        const remaining = Math.ceil(cooldownSeconds - elapsed);
-        throw new HttpException(
-          `Please wait ${remaining} seconds before requesting another reset email`,
-          HttpStatus.TOO_MANY_REQUESTS,
-        );
-      }
-    }
-  }
 }

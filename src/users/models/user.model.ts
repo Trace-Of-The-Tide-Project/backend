@@ -41,6 +41,9 @@ export class User extends Model<User> {
   @Column({ type: DataType.BOOLEAN, defaultValue: false })
   declare email_verified: boolean;
 
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare password_changed_at: Date;
+
   @Column({
     type: DataType.ENUM(...Object.values(UserStatus)),
     defaultValue: UserStatus.active,

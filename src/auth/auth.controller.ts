@@ -130,11 +130,20 @@ export class AuthController {
   @ApiOperation({ summary: 'Get new access token using refresh token' })
   @ApiBody({
     schema: {
-      properties: { refreshToken: { type: 'string' } },
+      properties: {
+        refreshToken: { type: 'string' },
+        accessToken: {
+          type: 'string',
+          description: 'Expired access token (used to scope lookup for performance)',
+        },
+      },
     },
   })
-  async refreshToken(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshAccessToken(refreshToken);
+  async refreshToken(
+    @Body('refreshToken') refreshToken: string,
+    @Body('accessToken') accessToken?: string,
+  ) {
+    return this.authService.refreshAccessToken(refreshToken, accessToken);
   }
 
   @Get('me')
@@ -159,6 +168,7 @@ export class AuthController {
       req.user.sub,
       dto.currentPassword,
       dto.newPassword,
+      dto.confirmPassword,
     );
   }
 }
