@@ -18,6 +18,7 @@ import { SignupDto } from './dto/signup.dto';
 import { TokenService } from './token.service';
 import { EmailService } from '../email/email.service';
 import { CooldownService } from '../common/services/cooldown.service';
+import { validateEmailDomain } from '../common/utils/email-validator';
 
 @Injectable()
 export class AuthService {
@@ -28,6 +29,39 @@ export class AuthService {
     private emailService: EmailService,
     private cooldownService: CooldownService,
   ) {}
+
+  async checkEmail(email: string) {
+    // 1. Validate domain (MX records + disposable check)
+    const domainCheck = await validateEmailDomain(email);
+    if (!domainCheck.valid) {
+      return {
+        available: false,
+        valid: false,
+        reason: domainCheck.reason,
+        message: domainCheck.message,
+      };
+    }
+
+    // 2. Check if already registered
+    try {
+      await this.usersService.findByEmail(email);
+      return {
+        available: false,
+        valid: true,
+        reason: 'already_registered',
+        message: 'This email is already registered',
+      };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return {
+          available: true,
+          valid: true,
+          message: 'Email is available',
+        };
+      }
+      throw error;
+    }
+  }
 
   async validateUser(identifier: string, pass: string): Promise<any> {
     let user: User;
@@ -77,6 +111,12 @@ export class AuthService {
   }
 
   async signup(signupDto: SignupDto) {
+    // Validate email domain (MX records + disposable check)
+    const domainCheck = await validateEmailDomain(signupDto.email);
+    if (!domainCheck.valid) {
+      throw new BadRequestException(domainCheck.message);
+    }
+
     // Check if email already exists
     try {
       await this.usersService.findByEmail(signupDto.email);

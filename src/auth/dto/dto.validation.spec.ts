@@ -62,7 +62,7 @@ describe('SignupDto', () => {
   });
 
   it('should accept password with exactly 8 characters', async () => {
-    const dto = createDto({ password: '12345678' });
+    const dto = createDto({ password: 'Test1234' });
     const errors = await validate(dto);
     const pwErrors = errors.filter((e) => e.property === 'password');
     expect(pwErrors).toHaveLength(0);
