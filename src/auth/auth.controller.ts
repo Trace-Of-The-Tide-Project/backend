@@ -15,6 +15,7 @@ import { SignupDto } from './dto/signup.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { CheckEmailDto } from './dto/check-email.dto';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -27,6 +28,21 @@ import {
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('check-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Check if an email is valid and available for registration',
+    description:
+      'Validates the email domain (MX records), blocks disposable providers, and checks if the email is already registered.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns availability and validity status',
+  })
+  async checkEmail(@Body() dto: CheckEmailDto) {
+    return this.authService.checkEmail(dto.email);
+  }
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a new user (auto-login on success)' })
@@ -130,11 +146,20 @@ export class AuthController {
   @ApiOperation({ summary: 'Get new access token using refresh token' })
   @ApiBody({
     schema: {
-      properties: { refreshToken: { type: 'string' } },
+      properties: {
+        refreshToken: { type: 'string' },
+        accessToken: {
+          type: 'string',
+          description: 'Expired access token (used to scope lookup for performance)',
+        },
+      },
     },
   })
-  async refreshToken(@Body('refreshToken') refreshToken: string) {
-    return this.authService.refreshAccessToken(refreshToken);
+  async refreshToken(
+    @Body('refreshToken') refreshToken: string,
+    @Body('accessToken') accessToken?: string,
+  ) {
+    return this.authService.refreshAccessToken(refreshToken, accessToken);
   }
 
   @Get('me')
@@ -159,6 +184,7 @@ export class AuthController {
       req.user.sub,
       dto.currentPassword,
       dto.newPassword,
+      dto.confirmPassword,
     );
   }
 }

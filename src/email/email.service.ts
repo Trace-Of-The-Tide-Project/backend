@@ -2,6 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
+/** Escape HTML special characters to prevent XSS in email templates */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
@@ -91,7 +101,7 @@ export class EmailService {
         subject: 'Verify Your Email — Trace of the Tides',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Welcome, ${username}!</h2>
+            <h2>Welcome, ${escapeHtml(username)}!</h2>
             <p>Thank you for signing up. Please verify your email address by clicking the button below:</p>
             <p style="text-align: center; margin: 30px 0;">
               <a href="${verifyLink}"
@@ -131,8 +141,8 @@ export class EmailService {
         subject: `You've joined: ${openCallTitle} — Trace of the Tides`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2>Welcome, ${firstName}!</h2>
-            <p>Thank you for joining the open call: <strong>${openCallTitle}</strong>.</p>
+            <h2>Welcome, ${escapeHtml(firstName)}!</h2>
+            <p>Thank you for joining the open call: <strong>${escapeHtml(openCallTitle)}</strong>.</p>
             <p>Your participation has been registered. We'll review your submission and keep you updated on next steps.</p>
             <p style="margin-top: 30px;">
               <a href="${this.frontendUrl}"

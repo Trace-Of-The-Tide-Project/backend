@@ -42,6 +42,7 @@ import { KnowledgeModule } from 'src/knowledge/knowledge.module';
 import { BoardsModule } from 'src/boards/boards.module';
 import { LogsModule } from './logs/logs.module';
 import { EmailModule } from 'src/email/email.module';
+import { CooldownModule } from './common/services/cooldown.module';
 import { FollowsModule } from 'src/follows/follows.module';
 import { TasksModule } from 'src/tasks/tasks.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -60,6 +61,9 @@ import { UploadModule } from 'src/upload/upload.module';
 
     // 📧 Email (global)
     EmailModule,
+
+    // 🔒 Cooldown / Rate limiting (global, Redis-backed when REDIS_URL is set)
+    CooldownModule,
 
     // 🚦 Rate Limiting
     ThrottlerModule.forRoot([

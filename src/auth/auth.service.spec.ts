@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../email/email.service';
+import { CooldownService } from '../common/services/cooldown.service';
 
 jest.mock('bcrypt');
 
@@ -67,6 +68,11 @@ describe('AuthService', () => {
       sendVerificationEmail: jest.fn().mockResolvedValue(true),
     };
 
+    const cooldownService = {
+      enforce: jest.fn().mockResolvedValue(undefined),
+      clear: jest.fn().mockResolvedValue(undefined),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -74,6 +80,7 @@ describe('AuthService', () => {
         { provide: JwtService, useValue: jwtService },
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
+        { provide: CooldownService, useValue: cooldownService },
       ],
     }).compile();
 
@@ -321,8 +328,9 @@ describe('AuthService', () => {
         email: 'test@trace.ps',
         sub: 'user-uuid-1',
         purpose: 'password-reset',
+        iat: Math.floor(Date.now() / 1000),
       });
-      usersService.findByEmail.mockResolvedValue(mockUser as any);
+      usersService.findOne.mockResolvedValue(mockUser as any);
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed');
 
       const result = await service.resetPassword(
@@ -333,6 +341,7 @@ describe('AuthService', () => {
 
       expect(usersService.update).toHaveBeenCalledWith('user-uuid-1', {
         password: 'new-hashed',
+        password_changed_at: expect.any(Date),
       });
       expect(tokenService.revokeRefreshToken).toHaveBeenCalledWith(
         'user-uuid-1',
@@ -402,18 +411,22 @@ describe('AuthService', () => {
 
   describe('changePassword', () => {
     it('should change password when current password is correct', async () => {
-      jest.spyOn(User, 'findByPk').mockResolvedValue(mockUser as any);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      usersService.findOne.mockResolvedValue(mockUser as any);
+      (bcrypt.compare as jest.Mock)
+        .mockResolvedValueOnce(true)   // current password check
+        .mockResolvedValueOnce(false); // same-password check
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed');
 
       const result = await service.changePassword(
         'user-uuid-1',
         'currentPass',
         'newPass@123',
+        'newPass@123',
       );
 
       expect(usersService.update).toHaveBeenCalledWith('user-uuid-1', {
         password: 'new-hashed',
+        password_changed_at: expect.any(Date),
       });
       expect(tokenService.revokeRefreshToken).toHaveBeenCalledWith(
         'user-uuid-1',
@@ -422,19 +435,19 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException for wrong current password', async () => {
-      jest.spyOn(User, 'findByPk').mockResolvedValue(mockUser as any);
+      usersService.findOne.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
-        service.changePassword('user-uuid-1', 'wrongPass', 'newPass@123'),
+        service.changePassword('user-uuid-1', 'wrongPass', 'newPass@123', 'newPass@123'),
       ).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
-      jest.spyOn(User, 'findByPk').mockResolvedValue(null);
+      usersService.findOne.mockResolvedValue(null);
 
       await expect(
-        service.changePassword('nonexistent', 'pass', 'newPass'),
+        service.changePassword('nonexistent', 'pass', 'newPass', 'newPass'),
       ).rejects.toThrow(NotFoundException);
     });
   });

@@ -125,6 +125,7 @@ describe('AuthController', () => {
 
       expect(authService.refreshAccessToken).toHaveBeenCalledWith(
         'old-refresh-tok',
+        undefined,
       );
       expect(result).toEqual({ accessToken: 'new-tok' });
     });
@@ -156,11 +157,13 @@ describe('AuthController', () => {
       const result = await controller.changePassword(req, {
         currentPassword: 'oldPass',
         newPassword: 'newPass@123',
+        confirmPassword: 'newPass@123',
       } as any);
 
       expect(authService.changePassword).toHaveBeenCalledWith(
         'user-uuid-1',
         'oldPass',
+        'newPass@123',
         'newPass@123',
       );
     });
