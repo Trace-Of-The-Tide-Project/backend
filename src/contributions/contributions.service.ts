@@ -6,6 +6,7 @@ import { ContributionType } from './models/contribution-type.model';
 import { File } from '../files/models/file.model';
 import { Collection } from '../collections/models/collection.model';
 import { User } from '../users/models/user.model';
+import { StorageService } from '../storage/storage.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
 import {
   CreateContributionTypeDto,
@@ -28,6 +29,7 @@ export class ContributionsService extends BaseService<Contribution> {
     private readonly contributionTypeModel: typeof ContributionType,
     @InjectModel(File)
     private readonly fileModel: typeof File,
+    private readonly storageService: StorageService,
   ) {
     super(contributionModel);
   }
@@ -107,15 +109,16 @@ export class ContributionsService extends BaseService<Contribution> {
       status: 'pending',
     } as any);
 
-    // Create file records for uploaded files
+    // Upload files to GCS and create file records
     if (files.length > 0) {
       for (const file of files) {
+        const url = await this.storageService.uploadFile(file, 'contributions');
         await this.fileModel.create({
           contribution_id: contribution.id,
           file_name: file.originalname,
           mime_type: file.mimetype,
           file_size: file.size,
-          path: file.path.replace(/\\/g, '/'),
+          path: url,
           uploaded_by: userId,
           upload_date: new Date(),
         } as any);

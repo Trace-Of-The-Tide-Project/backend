@@ -13,9 +13,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { UsersService } from './users.service';
+import { StorageService } from '../storage/storage.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
@@ -36,7 +36,10 @@ const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5 MB
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly storageService: StorageService,
+  ) {}
 
   // ─── Admin endpoints ──────────────────────────────────
 
@@ -143,14 +146,7 @@ export class UsersController {
   })
   @UseInterceptors(
     FileInterceptor('avatar', {
-      storage: diskStorage({
-        destination: './uploads/avatars',
-        filename: (_req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (AVATAR_MIMES.includes(file.mimetype)) {
           cb(null, true);
@@ -166,11 +162,12 @@ export class UsersController {
       limits: { fileSize: MAX_AVATAR_SIZE },
     }),
   )
-  uploadAvatar(
+  async uploadAvatar(
     @Param('id') id: string,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) throw new BadRequestException('Avatar file is required');
-    return this.usersService.updateAvatar(id, file.path);
+    const path = await this.storageService.uploadFile(file, 'avatars');
+    return this.usersService.updateAvatar(id, path);
   }
 }

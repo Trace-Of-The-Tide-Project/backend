@@ -13,8 +13,7 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { OpenCallsService } from './open-call.service';
 import { CreateOpenCallDto, UpdateOpenCallDto } from './dto/open-call.dto';
 import { JoinOpenCallDto } from './dto/join-open-call.dto';
@@ -22,6 +21,7 @@ import { ApplyOpenCallDto } from './dto/apply-open-call.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
+import { UploadQuotaGuard } from '../common/guards/upload-quota.guard';
 import {
   ApiTags,
   ApiOperation,
@@ -88,6 +88,7 @@ export class OpenCallsController {
   // ═══════════════════════════════════════════════════════════
 
   @Post(':id/join')
+  @UseGuards(UploadQuotaGuard)
   @ApiOperation({
     summary: 'Join an open call (public — guest allowed)',
     description:
@@ -102,14 +103,7 @@ export class OpenCallsController {
   @ApiResponse({ status: 409, description: 'Already a participant' })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './uploads/open-calls',
-        filename: (_req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);
@@ -137,6 +131,7 @@ export class OpenCallsController {
   }
 
   @Post(':id/apply')
+  @UseGuards(UploadQuotaGuard)
   @ApiOperation({
     summary: 'Apply to open call with dynamic form answers',
     description:
@@ -148,14 +143,7 @@ export class OpenCallsController {
   @ApiResponse({ status: 409, description: 'Already applied' })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './uploads/open-calls',
-        filename: (_req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);

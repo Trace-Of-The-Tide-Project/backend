@@ -9,6 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { FilesService } from './files.service';
+import { StorageService } from '../storage/storage.service';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import {
@@ -21,7 +22,10 @@ import {
 @ApiTags('Files')
 @Controller('files')
 export class FilesController {
-  constructor(private readonly filesService: FilesService) {}
+  constructor(
+    private readonly filesService: FilesService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -64,6 +68,16 @@ export class FilesController {
   @ApiOperation({ summary: 'Get a file by ID' })
   findOne(@Param('id') id: string) {
     return this.filesService.findOne(id);
+  }
+
+  @Get(':id/url')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get a temporary signed URL for a file' })
+  async getFileUrl(@Param('id') id: string) {
+    const file = await this.filesService.findOne(id);
+    const url = await this.storageService.getSignedUrl(file.path);
+    return { url };
   }
 
   @Post()

@@ -4,6 +4,7 @@ import { getModelToken } from '@nestjs/sequelize';
 import { Contribution } from './models/contribution.model';
 import { ContributionType } from './models/contribution-type.model';
 import { File } from '../files/models/file.model';
+import { StorageService } from '../storage/storage.service';
 import { NotFoundException } from '@nestjs/common';
 
 describe('ContributionsService', () => {
@@ -51,6 +52,7 @@ describe('ContributionsService', () => {
         { provide: getModelToken(Contribution), useValue: mockModel },
         { provide: getModelToken(ContributionType), useValue: { findAll: jest.fn(), findByPk: jest.fn(), create: jest.fn() } },
         { provide: getModelToken(File), useValue: mockFileModel },
+        { provide: StorageService, useValue: { uploadFile: jest.fn(), getSignedUrl: jest.fn() } },
       ],
     }).compile();
 
