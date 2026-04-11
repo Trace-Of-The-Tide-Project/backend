@@ -25,10 +25,7 @@ export class StorageService {
    * The path is stored in the database; use getSignedUrl() to generate
    * a temporary access URL when serving to clients.
    */
-  async uploadFile(
-    file: Express.Multer.File,
-    folder: string,
-  ): Promise<string> {
+  async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const fileName = `${folder}/${uniqueSuffix}${extname(file.originalname)}`;
 

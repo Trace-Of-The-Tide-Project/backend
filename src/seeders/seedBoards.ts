@@ -24,9 +24,27 @@ export async function seedBoards() {
       template_data: JSON.stringify({
         pages: [{ title: 'Main Board' }],
         elements: [
-          { element_type: 'sticky_note', x: 400, y: 300, content: 'Main Idea', properties: '{"color":"yellow"}' },
-          { element_type: 'sticky_note', x: 200, y: 150, content: 'Idea 1', properties: '{"color":"blue"}' },
-          { element_type: 'sticky_note', x: 600, y: 150, content: 'Idea 2', properties: '{"color":"green"}' },
+          {
+            element_type: 'sticky_note',
+            x: 400,
+            y: 300,
+            content: 'Main Idea',
+            properties: '{"color":"yellow"}',
+          },
+          {
+            element_type: 'sticky_note',
+            x: 200,
+            y: 150,
+            content: 'Idea 1',
+            properties: '{"color":"blue"}',
+          },
+          {
+            element_type: 'sticky_note',
+            x: 600,
+            y: 150,
+            content: 'Idea 2',
+            properties: '{"color":"green"}',
+          },
         ],
       }),
     },
@@ -38,9 +56,33 @@ export async function seedBoards() {
       template_data: JSON.stringify({
         pages: [{ title: 'Pipeline' }],
         elements: [
-          { element_type: 'rectangle', x: 50, y: 50, width: 250, height: 500, content: 'Draft', properties: '{"color":"#f0f0f0"}' },
-          { element_type: 'rectangle', x: 350, y: 50, width: 250, height: 500, content: 'In Review', properties: '{"color":"#fff3cd"}' },
-          { element_type: 'rectangle', x: 650, y: 50, width: 250, height: 500, content: 'Published', properties: '{"color":"#d4edda"}' },
+          {
+            element_type: 'rectangle',
+            x: 50,
+            y: 50,
+            width: 250,
+            height: 500,
+            content: 'Draft',
+            properties: '{"color":"#f0f0f0"}',
+          },
+          {
+            element_type: 'rectangle',
+            x: 350,
+            y: 50,
+            width: 250,
+            height: 500,
+            content: 'In Review',
+            properties: '{"color":"#fff3cd"}',
+          },
+          {
+            element_type: 'rectangle',
+            x: 650,
+            y: 50,
+            width: 250,
+            height: 500,
+            content: 'Published',
+            properties: '{"color":"#d4edda"}',
+          },
         ],
       }),
     },
@@ -57,11 +99,16 @@ export async function seedBoards() {
   const boardsData = [
     {
       title: 'Heritage Documentation Strategy',
-      description: 'Planning board for the Palestinian heritage documentation project.',
+      description:
+        'Planning board for the Palestinian heritage documentation project.',
       owner_id: admin.id,
       status: 'active',
       visibility: 'team',
-      settings: JSON.stringify({ grid: true, minimap: true, background_color: '#fafafa' }),
+      settings: JSON.stringify({
+        grid: true,
+        minimap: true,
+        background_color: '#fafafa',
+      }),
     },
     {
       title: 'Open Call Planning',

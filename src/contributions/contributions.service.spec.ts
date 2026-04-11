@@ -50,9 +50,19 @@ describe('ContributionsService', () => {
       providers: [
         ContributionsService,
         { provide: getModelToken(Contribution), useValue: mockModel },
-        { provide: getModelToken(ContributionType), useValue: { findAll: jest.fn(), findByPk: jest.fn(), create: jest.fn() } },
+        {
+          provide: getModelToken(ContributionType),
+          useValue: {
+            findAll: jest.fn(),
+            findByPk: jest.fn(),
+            create: jest.fn(),
+          },
+        },
         { provide: getModelToken(File), useValue: mockFileModel },
-        { provide: StorageService, useValue: { uploadFile: jest.fn(), getSignedUrl: jest.fn() } },
+        {
+          provide: StorageService,
+          useValue: { uploadFile: jest.fn(), getSignedUrl: jest.fn() },
+        },
       ],
     }).compile();
 

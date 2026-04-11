@@ -17,4 +17,8 @@ import { Role } from '../roles/models/role.model';
   providers: [OpenCallsService],
   exports: [OpenCallsService],
 })
-export class OpenCallsModule {}
+export class OpenCallsModule {
+
+
+  
+}

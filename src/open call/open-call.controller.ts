@@ -174,10 +174,14 @@ export class OpenCallsController {
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Apply for editor role via an open call',
-    description: 'Creates a pending editor application linked to this open call.',
+    description:
+      'Creates a pending editor application linked to this open call.',
   })
   @ApiResponse({ status: 201, description: 'Application submitted' })
-  @ApiResponse({ status: 409, description: 'Already applied or already an editor' })
+  @ApiResponse({
+    status: 409,
+    description: 'Already applied or already an editor',
+  })
   applyForEditor(@Param('id') id: string, @Req() req: any) {
     return this.openCallsService.applyForEditor(id, req.user.sub);
   }
@@ -267,10 +271,7 @@ export class OpenCallsController {
   @Roles('admin', 'editor')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Schedule an open call for future publishing' })
-  schedule(
-    @Param('id') id: string,
-    @Body('scheduled_at') scheduledAt: string,
-  ) {
+  schedule(@Param('id') id: string, @Body('scheduled_at') scheduledAt: string) {
     return this.openCallsService.scheduleOpenCall(id, scheduledAt);
   }
 

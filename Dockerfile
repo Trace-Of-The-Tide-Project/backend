@@ -18,6 +18,11 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install cloud-sql-proxy
+RUN apk add --no-cache curl
+RUN curl -o cloud-sql-proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 && \
+    chmod +x cloud-sql-proxy
+
 # Copy only what is needed from the build stage
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
@@ -25,4 +30,4 @@ COPY --from=builder /app/dist ./dist
 
 ENV NODE_ENV=production
 
-CMD ["node", "dist/main"]
+CMD ["/bin/sh", "-c", "./cloud-sql-proxy trace-of-the-tide:europe-west2:trace-of-the-tide-db --unix-socket /cloudsql &  node dist/main"]

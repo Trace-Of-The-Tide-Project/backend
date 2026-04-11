@@ -11,7 +11,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { CreateTaskDto, UpdateTaskDto, UpdateTaskStatusDto } from './dto/task.dto';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  UpdateTaskStatusDto,
+} from './dto/task.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -41,7 +45,11 @@ export class TasksController {
     required: false,
     enum: ['pending', 'in_progress', 'completed', 'cancelled'],
   })
-  @ApiQuery({ name: 'priority', required: false, enum: ['low', 'medium', 'high'] })
+  @ApiQuery({
+    name: 'priority',
+    required: false,
+    enum: ['low', 'medium', 'high'],
+  })
   findAll(@Query() query: any) {
     return this.tasksService.findAll(query);
   }

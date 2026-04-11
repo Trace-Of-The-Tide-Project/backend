@@ -11,7 +11,8 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class ApplyOpenCallDto {
   @ApiProperty({
-    description: 'Dynamic form answers matching the open call application_form fields',
+    description:
+      'Dynamic form answers matching the open call application_form fields',
     example: {
       first_name: 'Ahmad',
       last_name: 'Saleh',

@@ -259,7 +259,9 @@ export class DashboardService {
     });
     if (!userRole) throw new NotFoundException('Application not found');
     if (userRole.assigned_at) {
-      throw new BadRequestException('This application has already been processed');
+      throw new BadRequestException(
+        'This application has already been processed',
+      );
     }
 
     await userRole.update({ assigned_at: new Date() });
@@ -270,7 +272,9 @@ export class DashboardService {
     const userRole = await UserRole.findByPk(applicationId);
     if (!userRole) throw new NotFoundException('Application not found');
     if (userRole.assigned_at) {
-      throw new BadRequestException('This application has already been approved');
+      throw new BadRequestException(
+        'This application has already been approved',
+      );
     }
 
     await userRole.destroy();

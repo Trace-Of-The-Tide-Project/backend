@@ -20,12 +20,15 @@ export class UploadQuotaGuard implements CanActivate {
 
   constructor() {
     // Clean expired entries every 10 minutes
-    const timer = setInterval(() => {
-      const now = Date.now();
-      for (const [key, entry] of this.store) {
-        if (now >= entry.resetAt) this.store.delete(key);
-      }
-    }, 10 * 60 * 1000);
+    const timer = setInterval(
+      () => {
+        const now = Date.now();
+        for (const [key, entry] of this.store) {
+          if (now >= entry.resetAt) this.store.delete(key);
+        }
+      },
+      10 * 60 * 1000,
+    );
     timer.unref();
   }
 

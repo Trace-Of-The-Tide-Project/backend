@@ -91,7 +91,9 @@ export class CreateTripDto {
 
   @ApiPropertyOptional({ example: '["heritage","walking","photography"]' })
   @IsOptional()
-  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
+  @Transform(({ value }) =>
+    Array.isArray(value) ? JSON.stringify(value) : value,
+  )
   @IsString()
   tags?: string;
 
@@ -100,7 +102,9 @@ export class CreateTripDto {
     description: 'JSON array of languages or array',
   })
   @IsOptional()
-  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
+  @Transform(({ value }) =>
+    Array.isArray(value) ? JSON.stringify(value) : value,
+  )
   @IsString()
   languages?: string;
 
@@ -109,7 +113,9 @@ export class CreateTripDto {
     description: 'JSON array of highlights or array',
   })
   @IsOptional()
-  @Transform(({ value }) => (Array.isArray(value) ? JSON.stringify(value) : value))
+  @Transform(({ value }) =>
+    Array.isArray(value) ? JSON.stringify(value) : value,
+  )
   @IsString()
   highlights?: string;
 

@@ -44,7 +44,11 @@ const DISPOSABLE_DOMAINS = new Set([
 
 export interface EmailValidationResult {
   valid: boolean;
-  reason?: 'invalid_format' | 'no_mx_records' | 'disposable_domain' | 'dns_error';
+  reason?:
+    | 'invalid_format'
+    | 'no_mx_records'
+    | 'disposable_domain'
+    | 'dns_error';
   message: string;
 }
 

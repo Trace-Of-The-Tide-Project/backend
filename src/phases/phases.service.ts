@@ -10,9 +10,7 @@ export class PhasesService extends BaseService<Phase> {
     { model: Collective, attributes: ['id', 'name'], required: false },
   ];
 
-  constructor(
-    @InjectModel(Phase) private readonly phaseModel: typeof Phase,
-  ) {
+  constructor(@InjectModel(Phase) private readonly phaseModel: typeof Phase) {
     super(phaseModel);
   }
 

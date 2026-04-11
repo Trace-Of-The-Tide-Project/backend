@@ -33,7 +33,8 @@ export class AuthorDashboardController {
 
   @Get('stats')
   @ApiOperation({
-    summary: 'Author stats only (articles published, contributions, reads, days active)',
+    summary:
+      'Author stats only (articles published, contributions, reads, days active)',
   })
   async getStats(@Req() req: any) {
     return this.service.getStats(this.getUserId(req));

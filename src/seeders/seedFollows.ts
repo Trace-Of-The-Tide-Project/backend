@@ -12,7 +12,10 @@ export async function seedFollows() {
   const followsData = [
     // user1 follows admin, editor1, author
     { follower_id: users[4]?.id, following_id: users[0]?.id },
-    { follower_id: users[4]?.id, following_id: users[4 + 1]?.id || users[1]?.id },
+    {
+      follower_id: users[4]?.id,
+      following_id: users[4 + 1]?.id || users[1]?.id,
+    },
     // user2 follows admin, user1
     { follower_id: users[5]?.id, following_id: users[0]?.id },
     { follower_id: users[5]?.id, following_id: users[4]?.id },
@@ -27,9 +30,16 @@ export async function seedFollows() {
   ];
 
   for (const data of followsData) {
-    if (data.follower_id && data.following_id && data.follower_id !== data.following_id) {
+    if (
+      data.follower_id &&
+      data.following_id &&
+      data.follower_id !== data.following_id
+    ) {
       await Follow.findOrCreate({
-        where: { follower_id: data.follower_id, following_id: data.following_id },
+        where: {
+          follower_id: data.follower_id,
+          following_id: data.following_id,
+        },
         defaults: data as any,
       });
     }
