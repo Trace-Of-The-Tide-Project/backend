@@ -13,8 +13,7 @@ import {
   UploadedFiles,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { ContributionsService } from './contributions.service';
 import { CreateContributionDto } from './dto/create-contribution.dto';
 import {
@@ -28,6 +27,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
+import { UploadQuotaGuard } from '../common/guards/upload-quota.guard';
 import {
   ApiTags,
   ApiOperation,
@@ -56,6 +56,7 @@ export class ContributionsController {
   constructor(private readonly contributionsService: ContributionsService) {}
 
   @Post()
+  @UseGuards(UploadQuotaGuard)
   @ApiOperation({
     summary: 'Create a new contribution with optional file uploads',
     description:
@@ -69,14 +70,7 @@ export class ContributionsController {
   @ApiResponse({ status: 400, description: 'Validation error' })
   @UseInterceptors(
     FilesInterceptor('files', 10, {
-      storage: diskStorage({
-        destination: './uploads/contributions',
-        filename: (_req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);

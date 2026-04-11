@@ -3,6 +3,9 @@
 /node_modules
 /build
 
+# GCP service account key
+gcp-key.json
+
 #doker
 docker-compose.yml
 

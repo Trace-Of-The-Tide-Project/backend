@@ -43,6 +43,7 @@ import { BoardsModule } from 'src/boards/boards.module';
 import { LogsModule } from './logs/logs.module';
 import { EmailModule } from 'src/email/email.module';
 import { CooldownModule } from './common/services/cooldown.module';
+import { StorageModule } from 'src/storage/storage.module';
 import { FollowsModule } from 'src/follows/follows.module';
 import { TasksModule } from 'src/tasks/tasks.module';
 import { PhasesModule } from 'src/phases/phases.module';
@@ -64,6 +65,9 @@ import { UploadModule } from 'src/upload/upload.module';
 
     // 🔒 Cooldown / Rate limiting (global, Redis-backed when REDIS_URL is set)
     CooldownModule,
+
+    // ☁️ Cloud Storage (GCP Bucket)
+    StorageModule,
 
     // 🚦 Rate Limiting
     ThrottlerModule.forRoot([

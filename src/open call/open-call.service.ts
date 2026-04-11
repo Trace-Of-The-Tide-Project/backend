@@ -15,6 +15,7 @@ import { File } from '../files/models/file.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Role } from '../roles/models/role.model';
 import { EmailService } from '../email/email.service';
+import { StorageService } from '../storage/storage.service';
 import { JoinOpenCallDto } from './dto/join-open-call.dto';
 import { ApplyOpenCallDto } from './dto/apply-open-call.dto';
 
@@ -52,6 +53,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
     @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
     @InjectModel(Role) private readonly roleModel: typeof Role,
     private readonly emailService: EmailService,
+    private readonly storageService: StorageService,
   ) {
     super(openCallModel);
   }
@@ -252,16 +254,17 @@ export class OpenCallsService extends BaseService<OpenCall> {
       join_date: new Date(),
     } as any);
 
-    // Store uploaded files linked to the participant
+    // Upload files to GCS and link to the participant
     if (files.length > 0) {
       for (const file of files) {
+        const url = await this.storageService.uploadFile(file, 'open-calls');
         await File.create({
           contribution_id: null,
           participant_id: participant.id,
           file_name: file.originalname,
           mime_type: file.mimetype,
           file_size: file.size,
-          path: file.path.replace(/\\/g, '/'),
+          path: url,
           uploaded_by: dto.user_id || null,
           upload_date: new Date(),
         } as any);
@@ -352,13 +355,14 @@ export class OpenCallsService extends BaseService<OpenCall> {
 
     if (files.length > 0) {
       for (const file of files) {
+        const url = await this.storageService.uploadFile(file, 'open-calls');
         await File.create({
           contribution_id: null,
           participant_id: participant.id,
           file_name: file.originalname,
           mime_type: file.mimetype,
           file_size: file.size,
-          path: file.path.replace(/\\/g, '/'),
+          path: url,
           uploaded_by: dto.user_id || null,
           upload_date: new Date(),
         } as any);

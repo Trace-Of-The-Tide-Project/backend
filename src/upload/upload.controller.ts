@@ -7,9 +7,9 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { StorageService } from '../storage/storage.service';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -29,6 +29,8 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 @ApiTags('Upload')
 @Controller('upload')
 export class UploadController {
+  constructor(private readonly storageService: StorageService) {}
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -42,14 +44,7 @@ export class UploadController {
   })
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './uploads/images',
-        filename: (_req, file, cb) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, uniqueSuffix + extname(file.originalname));
-        },
-      }),
+      storage: memoryStorage(),
       fileFilter: (_req, file, cb) => {
         if (ALLOWED_MIMES.includes(file.mimetype)) {
           cb(null, true);
@@ -65,8 +60,9 @@ export class UploadController {
       limits: { fileSize: MAX_FILE_SIZE },
     }),
   )
-  upload(@UploadedFile() file: Express.Multer.File) {
+  async upload(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('File is required');
-    return { url: file.path.replace(/\\/g, '/') };
+    const { path, url } = await this.storageService.uploadFileAndSign(file, 'images');
+    return { path, url };
   }
 }
