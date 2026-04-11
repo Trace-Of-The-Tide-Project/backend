@@ -63,7 +63,7 @@ export class TripsService extends BaseService<Trip> {
           const loc = await Location.create({
             ...stop.location,
             created_by: userId,
-          } as any);
+          });
           stop.location_id = loc.id;
         }
         const { location, ...stopData } = stop;
@@ -147,7 +147,7 @@ export class TripsService extends BaseService<Trip> {
       const loc = await Location.create({
         ...data.location,
         created_by: userId,
-      } as any);
+      });
       data.location_id = loc.id;
     }
 

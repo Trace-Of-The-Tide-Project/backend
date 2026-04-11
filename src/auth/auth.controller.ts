@@ -150,7 +150,8 @@ export class AuthController {
         refreshToken: { type: 'string' },
         accessToken: {
           type: 'string',
-          description: 'Expired access token (used to scope lookup for performance)',
+          description:
+            'Expired access token (used to scope lookup for performance)',
         },
       },
     },

@@ -1,4 +1,10 @@
-import { Injectable, HttpException, HttpStatus, Logger, OnModuleDestroy } from '@nestjs/common';
+import {
+  Injectable,
+  HttpException,
+  HttpStatus,
+  Logger,
+  OnModuleDestroy,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
 
@@ -24,12 +30,16 @@ export class CooldownService implements OnModuleDestroy {
         lazyConnect: true,
       });
       this.redis.connect().catch((err) => {
-        this.logger.warn(`Redis connection failed, falling back to in-memory: ${err.message}`);
+        this.logger.warn(
+          `Redis connection failed, falling back to in-memory: ${err.message}`,
+        );
         this.redis = null;
       });
       this.logger.log('Cooldown service using Redis');
     } else {
-      this.logger.log('Cooldown service using in-memory store (set REDIS_URL for horizontal scaling)');
+      this.logger.log(
+        'Cooldown service using in-memory store (set REDIS_URL for horizontal scaling)',
+      );
     }
 
     // Periodic cleanup for in-memory store (every 5 minutes)
@@ -67,7 +77,13 @@ export class CooldownService implements OnModuleDestroy {
 
     if (this.redis) {
       // SET NX with TTL — atomic, no race conditions
-      const set = await this.redis.set(fullKey, '1', 'EX', cooldownSeconds, 'NX');
+      const set = await this.redis.set(
+        fullKey,
+        '1',
+        'EX',
+        cooldownSeconds,
+        'NX',
+      );
       if (!set) {
         const ttl = await this.redis.ttl(fullKey);
         throw new HttpException(

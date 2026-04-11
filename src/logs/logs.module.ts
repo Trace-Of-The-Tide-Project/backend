@@ -6,10 +6,7 @@ import { LogsController } from './logs.controller';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [
-    SequelizeModule.forFeature([Log]),
-    forwardRef(() => AuthModule),
-  ],
+  imports: [SequelizeModule.forFeature([Log]), forwardRef(() => AuthModule)],
   controllers: [LogsController],
   providers: [LogsService],
   exports: [SequelizeModule, LogsService],

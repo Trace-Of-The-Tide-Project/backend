@@ -11,9 +11,7 @@ import { User } from '../../users/models/user.model';
 @Table({
   tableName: 'follows',
   timestamps: false,
-  indexes: [
-    { unique: true, fields: ['follower_id', 'following_id'] },
-  ],
+  indexes: [{ unique: true, fields: ['follower_id', 'following_id'] }],
 })
 export class Follow extends Model<Follow> {
   @Column({

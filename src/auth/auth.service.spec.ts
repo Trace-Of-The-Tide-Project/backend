@@ -102,7 +102,9 @@ describe('AuthService', () => {
 
       expect(result).not.toHaveProperty('password');
       expect(result).toHaveProperty('email', 'test@trace.ps');
-      expect(usersService.findByIdentifier).toHaveBeenCalledWith('test@trace.ps');
+      expect(usersService.findByIdentifier).toHaveBeenCalledWith(
+        'test@trace.ps',
+      );
     });
 
     it('should throw UnauthorizedException for wrong password', async () => {
@@ -413,7 +415,7 @@ describe('AuthService', () => {
     it('should change password when current password is correct', async () => {
       usersService.findOne.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock)
-        .mockResolvedValueOnce(true)   // current password check
+        .mockResolvedValueOnce(true) // current password check
         .mockResolvedValueOnce(false); // same-password check
       (bcrypt.hash as jest.Mock).mockResolvedValue('new-hashed');
 
@@ -439,7 +441,12 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
-        service.changePassword('user-uuid-1', 'wrongPass', 'newPass@123', 'newPass@123'),
+        service.changePassword(
+          'user-uuid-1',
+          'wrongPass',
+          'newPass@123',
+          'newPass@123',
+        ),
       ).rejects.toThrow(UnauthorizedException);
     });
 

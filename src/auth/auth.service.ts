@@ -371,12 +371,9 @@ export class AuthService {
       // Enforce single-use: reject if password was changed after token was issued
       if (
         user.password_changed_at &&
-        decoded.iat <
-          Math.floor(user.password_changed_at.getTime() / 1000)
+        decoded.iat < Math.floor(user.password_changed_at.getTime() / 1000)
       ) {
-        throw new BadRequestException(
-          'This reset link has already been used',
-        );
+        throw new BadRequestException('This reset link has already been used');
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -409,15 +406,17 @@ export class AuthService {
     let userId: string | undefined;
     if (accessToken) {
       try {
-        const decoded = this.jwtService.decode(accessToken) as any;
+        const decoded = this.jwtService.decode(accessToken);
         if (decoded?.sub) userId = decoded.sub;
       } catch {
         // Ignore decode failures — fall through to unscoped lookup
       }
     }
 
-    const tokenRecord =
-      await this.tokenService.verifyAndConsumeRefreshToken(refreshToken, userId);
+    const tokenRecord = await this.tokenService.verifyAndConsumeRefreshToken(
+      refreshToken,
+      userId,
+    );
     if (!tokenRecord) throw new UnauthorizedException('Invalid refresh token');
 
     const user = await this.usersService.findOne(tokenRecord.user_id);
@@ -476,5 +475,4 @@ export class AuthService {
 
     return { message: 'Password changed successfully' };
   }
-
 }

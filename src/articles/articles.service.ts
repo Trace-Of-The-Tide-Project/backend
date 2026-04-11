@@ -170,7 +170,9 @@ export class ArticlesService extends BaseService<Article> {
     // Admin can edit any article; others can only edit their own
     const isAdmin = userRoles.includes('admin');
     if (!isAdmin && article.author_id !== userId) {
-      throw new ForbiddenException('Only the author or admin can edit this article');
+      throw new ForbiddenException(
+        'Only the author or admin can edit this article',
+      );
     }
 
     const { tag_ids, blocks, ...articleData } = data;

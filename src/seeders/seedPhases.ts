@@ -24,7 +24,8 @@ export async function seedPhases() {
     {
       collective_id: collective.id,
       name: 'Content Collection',
-      description: 'Gathering stories, photographs, and documents from community members.',
+      description:
+        'Gathering stories, photographs, and documents from community members.',
       status: 'active',
       start_date: new Date('2025-04-01'),
       end_date: new Date('2025-09-30'),
@@ -33,7 +34,8 @@ export async function seedPhases() {
     {
       collective_id: collective.id,
       name: 'Curation & Review',
-      description: 'Reviewing, editing, and curating collected materials for publication.',
+      description:
+        'Reviewing, editing, and curating collected materials for publication.',
       status: 'planned',
       start_date: new Date('2025-10-01'),
       end_date: new Date('2026-01-31'),
@@ -42,7 +44,8 @@ export async function seedPhases() {
     {
       collective_id: collective.id,
       name: 'Publication & Exhibition',
-      description: 'Publishing curated content online and organizing a physical exhibition.',
+      description:
+        'Publishing curated content online and organizing a physical exhibition.',
       status: 'planned',
       start_date: new Date('2026-02-01'),
       end_date: new Date('2026-06-30'),

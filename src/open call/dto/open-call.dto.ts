@@ -33,7 +33,12 @@ export class CreateOpenCallDto {
       fields: [
         { name: 'first_name', type: 'text', required: true },
         { name: 'email', type: 'email', required: true },
-        { name: 'experience_field', type: 'select', required: true, options: ['Design', 'Writing'] },
+        {
+          name: 'experience_field',
+          type: 'select',
+          required: true,
+          options: ['Design', 'Writing'],
+        },
         { name: 'terms_agreement', type: 'checkbox', required: true },
       ],
     },
@@ -73,7 +78,8 @@ export class CreateOpenCallDto {
   };
 
   @ApiProperty({
-    description: 'Action to take: publish (live now), draft (save only), schedule (publish later)',
+    description:
+      'Action to take: publish (live now), draft (save only), schedule (publish later)',
     enum: ['publish', 'draft', 'schedule'],
   })
   @IsNotEmpty()
@@ -83,7 +89,11 @@ export class CreateOpenCallDto {
 
   @ApiPropertyOptional({
     description: 'Main media: {type, url, size_mb}',
-    example: { type: 'image', url: 'https://example.com/cover.jpg', size_mb: 5 },
+    example: {
+      type: 'image',
+      url: 'https://example.com/cover.jpg',
+      size_mb: 5,
+    },
   })
   @IsOptional()
   @IsObject()
@@ -91,7 +101,10 @@ export class CreateOpenCallDto {
 
   @ApiPropertyOptional({
     description: 'SEO metadata',
-    example: { title: 'Open Call — Trace of the Tide', meta_description: 'Submit your work...' },
+    example: {
+      title: 'Open Call — Trace of the Tide',
+      meta_description: 'Submit your work...',
+    },
   })
   @IsOptional()
   @IsObject()
@@ -190,7 +203,10 @@ export class CreateOpenCallDto {
   @IsIn(['en', 'ar'])
   language?: string;
 
-  @ApiPropertyOptional({ description: 'Visibility', enum: ['public', 'private'] })
+  @ApiPropertyOptional({
+    description: 'Visibility',
+    enum: ['public', 'private'],
+  })
   @IsOptional()
   @IsString()
   @IsIn(['public', 'private'])

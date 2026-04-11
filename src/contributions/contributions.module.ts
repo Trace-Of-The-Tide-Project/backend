@@ -11,7 +11,12 @@ import { File } from '../files/models/file.model';
 @Module({
   imports: [
     forwardRef(() => AuthModule),
-    SequelizeModule.forFeature([Contribution, ContributionType, CollectionContribution, File]),
+    SequelizeModule.forFeature([
+      Contribution,
+      ContributionType,
+      CollectionContribution,
+      File,
+    ]),
   ],
   providers: [ContributionsService],
   controllers: [ContributionsController],

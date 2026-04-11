@@ -117,7 +117,8 @@ export class ArticlesController {
 
   @Get(':id/translations')
   @ApiOperation({
-    summary: 'Get all translations of an article (resolves to original if needed)',
+    summary:
+      'Get all translations of an article (resolves to original if needed)',
   })
   getTranslations(@Param('id') id: string) {
     return this.articlesService.getTranslations(id);

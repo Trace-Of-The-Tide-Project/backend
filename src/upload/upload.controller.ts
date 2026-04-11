@@ -18,12 +18,7 @@ import {
   ApiBody,
 } from '@nestjs/swagger';
 
-const ALLOWED_MIMES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-];
+const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 @ApiTags('Upload')
@@ -62,7 +57,10 @@ export class UploadController {
   )
   async upload(@UploadedFile() file: Express.Multer.File) {
     if (!file) throw new BadRequestException('File is required');
-    const { path, url } = await this.storageService.uploadFileAndSign(file, 'images');
+    const { path, url } = await this.storageService.uploadFileAndSign(
+      file,
+      'images',
+    );
     return { path, url };
   }
 }

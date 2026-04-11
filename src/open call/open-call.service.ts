@@ -95,10 +95,12 @@ export class OpenCallsService extends BaseService<OpenCall> {
     let status = 'draft';
     if (data.action === 'publish') {
       status = 'open';
-      (data as any).published_at = new Date();
+      data.published_at = new Date();
     } else if (data.action === 'schedule') {
       if (!data.scheduled_at) {
-        throw new BadRequestException('scheduled_at is required when action is "schedule"');
+        throw new BadRequestException(
+          'scheduled_at is required when action is "schedule"',
+        );
       }
       status = 'scheduled';
     } else if (data.action === 'draft') {
@@ -120,7 +122,7 @@ export class OpenCallsService extends BaseService<OpenCall> {
     return this.openCallModel.create({
       status,
       ...data,
-    } as any);
+    });
   }
 
   async updateOpenCall(id: string, data: any) {
@@ -130,7 +132,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
       data.published_at = new Date();
     } else if (data.action === 'schedule') {
       if (!data.scheduled_at) {
-        throw new BadRequestException('scheduled_at is required when action is "schedule"');
+        throw new BadRequestException(
+          'scheduled_at is required when action is "schedule"',
+        );
       }
       data.status = 'scheduled';
     } else if (data.action === 'draft') {
@@ -162,7 +166,10 @@ export class OpenCallsService extends BaseService<OpenCall> {
     }
     const openCall = await this.openCallModel.findByPk(id);
     if (!openCall) throw new NotFoundException(`Open call ${id} not found`);
-    await openCall.update({ status: 'scheduled', scheduled_at: new Date(scheduledAt) });
+    await openCall.update({
+      status: 'scheduled',
+      scheduled_at: new Date(scheduledAt),
+    });
     return openCall;
   }
 
@@ -290,17 +297,25 @@ export class OpenCallsService extends BaseService<OpenCall> {
     if (!openCall)
       throw new NotFoundException(`Open call ${openCallId} not found`);
     if (openCall.status !== 'open') {
-      throw new BadRequestException('This open call is no longer accepting applications');
+      throw new BadRequestException(
+        'This open call is no longer accepting applications',
+      );
     }
 
     if (openCall.timeline_end && new Date() > new Date(openCall.timeline_end)) {
-      throw new BadRequestException('The deadline for this open call has passed');
+      throw new BadRequestException(
+        'The deadline for this open call has passed',
+      );
     }
 
     // Validate answers against application_form if defined
     if (openCall.application_form?.fields) {
       for (const field of openCall.application_form.fields) {
-        if (field.required && field.type !== 'checkbox' && field.type !== 'file_multiple') {
+        if (
+          field.required &&
+          field.type !== 'checkbox' &&
+          field.type !== 'file_multiple'
+        ) {
           if (!dto.answers[field.name] && dto.answers[field.name] !== false) {
             throw new BadRequestException(`Field "${field.name}" is required`);
           }
@@ -308,7 +323,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
         if (field.type === 'email' && dto.answers[field.name]) {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(dto.answers[field.name])) {
-            throw new BadRequestException(`Field "${field.name}" must be a valid email`);
+            throw new BadRequestException(
+              `Field "${field.name}" must be a valid email`,
+            );
           }
         }
       }
@@ -321,7 +338,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
         where: { open_call_id: openCallId, email },
       });
       if (existingByEmail) {
-        throw new ConflictException('This email has already been used to apply');
+        throw new ConflictException(
+          'This email has already been used to apply',
+        );
       }
     }
 
@@ -330,7 +349,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
         where: { open_call_id: openCallId, user_id: dto.user_id },
       });
       if (existing) {
-        throw new ConflictException('You have already applied to this open call');
+        throw new ConflictException(
+          'You have already applied to this open call',
+        );
       }
     }
 
@@ -496,7 +517,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
     if (!openCall)
       throw new NotFoundException(`Open call ${openCallId} not found`);
     if (openCall.status !== 'open') {
-      throw new BadRequestException('This open call is no longer accepting applications');
+      throw new BadRequestException(
+        'This open call is no longer accepting applications',
+      );
     }
 
     const editorRole = await this.roleModel.findOne({
@@ -513,7 +536,9 @@ export class OpenCallsService extends BaseService<OpenCall> {
       },
     });
     if (existing) {
-      throw new ConflictException('You already have a pending editor application');
+      throw new ConflictException(
+        'You already have a pending editor application',
+      );
     }
 
     // Check if user already has the editor role

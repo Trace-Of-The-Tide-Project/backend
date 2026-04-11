@@ -12,7 +12,13 @@ import { Notification } from '../notifications/models/notification.model';
 @Module({
   imports: [
     forwardRef(() => AuthModule),
-    SequelizeModule.forFeature([Follow, User, UserProfile, UserSettings, Notification]),
+    SequelizeModule.forFeature([
+      Follow,
+      User,
+      UserProfile,
+      UserSettings,
+      Notification,
+    ]),
   ],
   controllers: [FollowsController],
   providers: [FollowsService],

@@ -19,7 +19,8 @@ export async function seedTasks() {
   const tasksData = [
     {
       title: 'Review Palestinian Heritage Article',
-      description: 'Review the article on British immigration restrictions for accuracy and publish it.',
+      description:
+        'Review the article on British immigration restrictions for accuracy and publish it.',
       status: 'pending',
       priority: 'high',
       due_date: new Date('2026-04-15'),
@@ -29,7 +30,8 @@ export async function seedTasks() {
     },
     {
       title: 'Translate Article to Arabic',
-      description: 'Full translation of the heritage article into Arabic, maintaining cultural context.',
+      description:
+        'Full translation of the heritage article into Arabic, maintaining cultural context.',
       status: 'in_progress',
       priority: 'medium',
       due_date: new Date('2026-04-30'),
@@ -39,7 +41,8 @@ export async function seedTasks() {
     },
     {
       title: 'Moderate New Contributions',
-      description: 'Review and approve/reject the latest batch of community contributions.',
+      description:
+        'Review and approve/reject the latest batch of community contributions.',
       status: 'pending',
       priority: 'high',
       due_date: new Date('2026-04-10'),
@@ -49,7 +52,8 @@ export async function seedTasks() {
     },
     {
       title: 'Update SEO for Open Calls',
-      description: 'Add proper SEO metadata to all open call pages for better discoverability.',
+      description:
+        'Add proper SEO metadata to all open call pages for better discoverability.',
       status: 'completed',
       priority: 'low',
       due_date: new Date('2026-03-25'),
@@ -58,7 +62,8 @@ export async function seedTasks() {
     },
     {
       title: 'Design Cover Image for Heritage Walk',
-      description: 'Create a compelling cover image for the Heritage Walk trip page.',
+      description:
+        'Create a compelling cover image for the Heritage Walk trip page.',
       status: 'pending',
       priority: 'medium',
       due_date: new Date('2026-05-01'),
