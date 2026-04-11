@@ -47,7 +47,7 @@ async function bootstrap() {
   SwaggerModule.setup('api/docs', app, document);
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
   const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
   console.log(`🚀 Server running on ${baseUrl}`);
   console.log(`📚 Swagger docs at ${baseUrl}/api/docs`);
