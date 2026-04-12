@@ -198,9 +198,11 @@ export class BoardsService extends BaseService<Board> {
     await this.findOne(boardId);
 
     const maxOrder =
-      (await this.pageModel.max('page_order', {
-        where: { board_id: boardId },
-      })) || 0;
+      Number(
+        (await this.pageModel.max('page_order', {
+          where: { board_id: boardId },
+        })) ?? 0,
+      ) || 0;
 
     return this.pageModel.create({
       board_id: boardId,
