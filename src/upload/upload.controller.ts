@@ -2,14 +2,10 @@ import {
   Controller,
   Post,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   BadRequestException,
+  PayloadTooLargeException,
+  Req,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { memoryStorage } from 'multer';
-import { JwtAuthGuard } from '../auth/jwt/auth.guard';
-import { StorageService } from '../storage/storage.service';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -17,9 +13,22 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
+import type { Request } from 'express';
+import Busboy from 'busboy';
+import { JwtAuthGuard } from '../auth/jwt/auth.guard';
+import { StorageService } from '../storage/storage.service';
+import {
+  ALL_MEDIA_MIMES,
+  MAX_UPLOAD_SIZE,
+  getMediaCategory,
+} from '../common/constants/media-types';
 
-const ALLOWED_MIMES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+interface UploadResult {
+  path: string;
+  url: string;
+  mimeType: string;
+  size: number;
+}
 
 @ApiTags('Upload')
 @Controller('upload')
@@ -29,7 +38,9 @@ export class UploadController {
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload an image file and get its URL' })
+  @ApiOperation({
+    summary: 'Upload an image, audio, or video file and get its URL',
+  })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -37,30 +48,105 @@ export class UploadController {
       properties: { file: { type: 'string', format: 'binary' } },
     },
   })
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: memoryStorage(),
-      fileFilter: (_req, file, cb) => {
-        if (ALLOWED_MIMES.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(
-            new BadRequestException(
-              'Only image files are allowed (JPEG, PNG, WebP, GIF)',
+  async upload(@Req() req: Request): Promise<UploadResult> {
+    return new Promise<UploadResult>((resolve, reject) => {
+      let busboy: Busboy.Busboy;
+      try {
+        busboy = Busboy({
+          headers: req.headers,
+          limits: { fileSize: MAX_UPLOAD_SIZE, files: 1 },
+        });
+      } catch {
+        return reject(
+          new BadRequestException('Invalid multipart/form-data request'),
+        );
+      }
+
+      let fileHandled = false;
+      let settled = false;
+      let uploadedPath: string | null = null;
+
+      const settle = (fn: () => void) => {
+        if (settled) return;
+        settled = true;
+        fn();
+      };
+
+      busboy.on('file', (_field, fileStream, info) => {
+        if (fileHandled) {
+          fileStream.resume();
+          return;
+        }
+        fileHandled = true;
+
+        const { filename, mimeType } = info;
+
+        if (!ALL_MEDIA_MIMES.includes(mimeType)) {
+          fileStream.resume();
+          return settle(() =>
+            reject(
+              new BadRequestException(
+                `Unsupported file type "${mimeType}". Allowed: images (jpeg, png, webp, gif), audio (mp3, wav, ogg, m4a, aac), video (mp4, webm, mov, mkv).`,
+              ),
             ),
-            false,
           );
         }
-      },
-      limits: { fileSize: MAX_FILE_SIZE },
-    }),
-  )
-  async upload(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('File is required');
-    const { path, url } = await this.storageService.uploadFileAndSign(
-      file,
-      'images',
-    );
-    return { path, url };
+
+        const folder = getMediaCategory(mimeType)!;
+        let size = 0;
+        let limitExceeded = false;
+
+        fileStream.on('data', (chunk: Buffer) => {
+          size += chunk.length;
+        });
+
+        fileStream.on('limit', () => {
+          limitExceeded = true;
+          settle(() =>
+            reject(
+              new PayloadTooLargeException(
+                `File exceeds maximum size of ${MAX_UPLOAD_SIZE} bytes`,
+              ),
+            ),
+          );
+        });
+
+        this.storageService
+          .uploadStream(fileStream, folder, filename, mimeType)
+          .then(async (path) => {
+            uploadedPath = path;
+            if (limitExceeded) {
+              await this.storageService.deleteFile(path).catch(() => undefined);
+              return;
+            }
+            const url = await this.storageService.getSignedUrl(path);
+            settle(() => resolve({ path, url, mimeType, size }));
+          })
+          .catch(async (err) => {
+            if (uploadedPath) {
+              await this.storageService
+                .deleteFile(uploadedPath)
+                .catch(() => undefined);
+            }
+            settle(() =>
+              reject(err instanceof Error ? err : new Error(String(err))),
+            );
+          });
+      });
+
+      busboy.on('error', (err) => {
+        settle(() =>
+          reject(err instanceof Error ? err : new Error(String(err))),
+        );
+      });
+
+      busboy.on('finish', () => {
+        if (!fileHandled) {
+          settle(() => reject(new BadRequestException('File is required')));
+        }
+      });
+
+      req.pipe(busboy);
+    });
   }
 }
