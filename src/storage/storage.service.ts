@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Storage } from '@google-cloud/storage';
 import { extname } from 'path';
+import { Readable } from 'stream';
+import { pipeline } from 'stream/promises';
 
 @Injectable()
 export class StorageService {
@@ -66,6 +68,36 @@ export class StorageService {
     const path = await this.uploadFile(file, folder);
     const url = await this.getSignedUrl(path);
     return { path, url };
+  }
+
+  /**
+   * Stream a file directly into GCS without buffering it in memory.
+   * Required for large media uploads (audio/video) — buffering 500 MB
+   * via memoryStorage would OOM Cloud Run instances.
+   *
+   * Note: This relies on Cloud Run gen2 execution environment for
+   * request body sizes >32 MiB. See cloudbuild config.
+   */
+  async uploadStream(
+    stream: Readable,
+    folder: string,
+    originalName: string,
+    contentType: string,
+  ): Promise<string> {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    const fileName = `${folder}/${uniqueSuffix}${extname(originalName)}`;
+    const blob = this.storage.bucket(this.bucketName).file(fileName);
+
+    await pipeline(
+      stream,
+      blob.createWriteStream({
+        resumable: true,
+        metadata: { contentType },
+      }),
+    );
+
+    this.logger.log(`Streamed ${fileName} to GCS`);
+    return fileName;
   }
 
   async uploadFiles(

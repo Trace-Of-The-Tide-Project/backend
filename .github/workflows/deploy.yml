@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
   ci:
@@ -10,9 +10,48 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   deploy:
-    name: Deploy to Render
+    name: Deploy to Cloud Run
     needs: ci
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
-      - name: Trigger Render Deploy
-        run: curl -s "${{ secrets.RENDER_DEPLOY_HOOK }}"
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker europe-west2-docker.pkg.dev --quiet
+
+      - name: Build and push Docker image
+        run: |
+          IMAGE="europe-west2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/backend/ttt-api"
+          docker build -t "${IMAGE}:${{ github.sha }}" -t "${IMAGE}:latest" .
+          docker push --all-tags "${IMAGE}"
+
+      - name: Deploy to Cloud Run
+        run: |
+          IMAGE="europe-west2-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/backend/ttt-api"
+          gcloud run deploy ttt-api \
+            --image="${IMAGE}:${{ github.sha }}" \
+            --region=europe-west2 \
+            --platform=managed \
+            --execution-environment=gen2 \
+            --memory=1Gi \
+            --cpu=1 \
+            --timeout=900 \
+            --concurrency=20 \
+            --min-instances=0 \
+            --max-instances=5 \
+            --port=8080 \
+            --allow-unauthenticated \
+            --project=${{ secrets.GCP_PROJECT_ID }}
