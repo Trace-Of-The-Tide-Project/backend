@@ -29,8 +29,8 @@ async function bootstrap() {
     origin: '*',
   });
 
-  // Only sync and seed in development
-  if (process.env.NODE_ENV !== 'production') {
+  // Sync database and seed if RUN_SEED is set, or in development
+  if (process.env.RUN_SEED === 'true' || process.env.NODE_ENV !== 'production') {
     const sequelize = app.get(Sequelize);
     await sequelize.sync({ alter: true });
     await seed();
