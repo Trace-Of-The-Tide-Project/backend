@@ -128,19 +128,21 @@ export class UploadController {
                 .deleteFile(uploadedPath)
                 .catch(() => undefined);
             }
-            settle(() => reject(err));
+            settle(() =>
+              reject(err instanceof Error ? err : new Error(String(err))),
+            );
           });
       });
 
       busboy.on('error', (err) => {
-        settle(() => reject(err));
+        settle(() =>
+          reject(err instanceof Error ? err : new Error(String(err))),
+        );
       });
 
       busboy.on('finish', () => {
         if (!fileHandled) {
-          settle(() =>
-            reject(new BadRequestException('File is required')),
-          );
+          settle(() => reject(new BadRequestException('File is required')));
         }
       });
 

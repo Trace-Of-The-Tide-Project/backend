@@ -3,7 +3,8 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('database', () => {
   const host = process.env.POSTGRES_HOST;
   const isUnixSocket = host?.startsWith('/');
-  const needsSsl = host?.includes('neon.tech') || process.env.POSTGRES_SSL === 'true';
+  const needsSsl =
+    host?.includes('neon.tech') || process.env.POSTGRES_SSL === 'true';
 
   return {
     dialect: 'postgres',

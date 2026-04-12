@@ -197,11 +197,10 @@ export class BoardsService extends BaseService<Board> {
   async addPage(boardId: string, dto: CreateBoardPageDto) {
     await this.findOne(boardId);
 
-    const maxOrder = (
+    const maxOrder =
       (await this.pageModel.max('page_order', {
         where: { board_id: boardId },
-      })) || 0
-    ) as number;
+      })) || 0;
 
     return this.pageModel.create({
       board_id: boardId,

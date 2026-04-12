@@ -21,11 +21,7 @@ export const VIDEO_MIMES = [
   'video/x-matroska',
 ];
 
-export const ALL_MEDIA_MIMES = [
-  ...IMAGE_MIMES,
-  ...AUDIO_MIMES,
-  ...VIDEO_MIMES,
-];
+export const ALL_MEDIA_MIMES = [...IMAGE_MIMES, ...AUDIO_MIMES, ...VIDEO_MIMES];
 
 export const MAX_UPLOAD_SIZE = 500 * 1024 * 1024; // 500 MB
 
