@@ -15,6 +15,8 @@ import { Tag } from '../../tags/models/tag.model';
 import { ArticleTag } from './article-tag.model';
 import { Collection } from '../../collections/models/collection.model';
 import { OpenCall } from '../../open call/models/open-call.model';
+import { Magazine } from '../../magazine/models/magazine.model';
+import { MagazineIssue } from '../../magazine-issue/models/magazine-issue.model';
 
 @Table({ tableName: 'articles' })
 export class Article extends Model<Article> {
@@ -109,6 +111,20 @@ export class Article extends Model<Article> {
   @Column({ type: DataType.UUID, allowNull: true })
   declare open_call_id: string;
 
+  // Magazine this article belongs to (null for non-magazine content)
+  @ForeignKey(() => Magazine)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare magazine_id: string;
+
+  // Magazine issue this article is part of (null if not issue-specific)
+  @ForeignKey(() => MagazineIssue)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare issue_id: string;
+
+  // Spotlight flag — exactly one article per magazine should have this set
+  @Column({ type: DataType.BOOLEAN, defaultValue: false })
+  declare is_featured: boolean;
+
   @BelongsTo(() => User)
   declare author: User;
 
@@ -117,6 +133,12 @@ export class Article extends Model<Article> {
 
   @BelongsTo(() => OpenCall)
   declare open_call: OpenCall;
+
+  @BelongsTo(() => Magazine)
+  declare magazine: Magazine;
+
+  @BelongsTo(() => MagazineIssue)
+  declare issue: MagazineIssue;
 
   // Block-based content
   @HasMany(() => ArticleBlock)

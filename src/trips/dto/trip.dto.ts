@@ -89,7 +89,10 @@ export class CreateTripDto {
   @IsNumber()
   duration_hours?: number;
 
-  @ApiPropertyOptional({ example: '["heritage","walking","photography"]' })
+  @ApiPropertyOptional({
+    example: ['heritage', 'walking', 'photography'],
+    description: 'Array of tags',
+  })
   @IsOptional()
   @Transform(({ value }) =>
     Array.isArray(value) ? JSON.stringify(value) : value,
@@ -98,8 +101,8 @@ export class CreateTripDto {
   tags?: string;
 
   @ApiPropertyOptional({
-    example: '["English","Arabic"]',
-    description: 'JSON array of languages or array',
+    example: ['English', 'Arabic'],
+    description: 'Array of languages spoken on the trip',
   })
   @IsOptional()
   @Transform(({ value }) =>
@@ -109,8 +112,8 @@ export class CreateTripDto {
   languages?: string;
 
   @ApiPropertyOptional({
-    example: '["Visit Al-Aqsa","Local cuisine tasting"]',
-    description: 'JSON array of highlights or array',
+    example: ['Visit Al-Aqsa Mosque', 'Local cuisine tasting', 'Damascus Gate tour'],
+    description: 'Array of trip highlights',
   })
   @IsOptional()
   @Transform(({ value }) =>
@@ -143,6 +146,22 @@ export class CreateTripDto {
   @IsOptional()
   @IsString()
   status?: string;
+
+  @ApiPropertyOptional({
+    description: 'Dynamic application form definition. If set, participants must apply via POST /trips/:id/apply',
+    example: {
+      fields: [
+        { name: 'first_name', type: 'text', required: true, label: 'First Name' },
+        { name: 'last_name', type: 'text', required: true, label: 'Last Name' },
+        { name: 'email', type: 'email', required: true, label: 'Email Address' },
+        { name: 'phone', type: 'text', required: false, label: 'Phone Number' },
+        { name: 'experience', type: 'textarea', required: false, label: 'Previous trip experience' },
+        { name: 'city', type: 'text', required: false, label: 'City' },
+      ],
+    },
+  })
+  @IsOptional()
+  application_form?: Record<string, any>;
 
   @ApiPropertyOptional({
     type: () => [CreateTripStopDto],

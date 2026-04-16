@@ -48,6 +48,12 @@ import { FollowsModule } from 'src/follows/follows.module';
 import { TasksModule } from 'src/tasks/tasks.module';
 import { PhasesModule } from 'src/phases/phases.module';
 import { UploadModule } from 'src/upload/upload.module';
+import { MagazineModule } from 'src/magazine/magazine.module';
+import { MagazineIssueModule } from 'src/magazine-issue/magazine-issue.module';
+import { WriterProfileModule } from 'src/writer-profile/writer-profile.module';
+import { IssuePledgeModule } from 'src/issue-pledge/issue-pledge.module';
+import { NewsletterSubscriberModule } from 'src/newsletter-subscriber/newsletter-subscriber.module';
+import { BookClubModule } from 'src/book-club/book-club.module';
 
 @Module({
   imports: [
@@ -115,6 +121,13 @@ import { UploadModule } from 'src/upload/upload.module';
     TasksModule,
     PhasesModule,
     UploadModule,
+    // 📰 Magazine Feature
+    MagazineModule,
+    MagazineIssueModule,
+    WriterProfileModule,
+    IssuePledgeModule,
+    NewsletterSubscriberModule,
+    BookClubModule,
   ],
   providers: [
     {

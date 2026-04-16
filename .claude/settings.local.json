@@ -16,7 +16,9 @@
       "Bash(find 'e:/Ahmed saleh projects/backend/src' -name *.service.ts -type f)",
       "Bash(python3 generate-api-docs.py)",
       "Read(//e//**)",
-      "Bash(find \"e:/Ahmed saleh projects/backend/src\" -type f -name \"*.ts\" -exec grep -l \"json\\(\\)\\\\|JsonBodyParser\" {} \\\\;)"
+      "Bash(find \"e:/Ahmed saleh projects/backend/src\" -type f -name \"*.ts\" -exec grep -l \"json\\(\\)\\\\|JsonBodyParser\" {} \\\\;)",
+      "Bash(git -C \"E:/Ahmed saleh projects/backend\" status)",
+      "Bash(git -C \"E:/Ahmed saleh projects/backend\" log --oneline -15)"
     ]
   }
 }

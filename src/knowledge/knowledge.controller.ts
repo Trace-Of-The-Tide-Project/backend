@@ -27,18 +27,43 @@ export class KnowledgeController {
   // ════════════════════ BOOKS ════════════════════
 
   @Get('books')
-  @ApiOperation({ summary: 'List books with search and pagination' })
+  @ApiOperation({ summary: 'List books with search, pagination, and filters' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 10 })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    description: 'Search in title and author',
-  })
+  @ApiQuery({ name: 'search', required: false, description: 'Search in title and author' })
   @ApiQuery({ name: 'sortBy', required: false, example: 'createdAt' })
   @ApiQuery({ name: 'order', required: false, enum: ['ASC', 'DESC'] })
+  @ApiQuery({ name: 'genre', required: false, description: 'Filter by genre' })
+  @ApiQuery({ name: 'language', required: false, description: 'Filter by language (en, ar, es, fr, de)' })
+  @ApiQuery({ name: 'price_type', required: false, enum: ['free', 'paid'], description: 'Filter by price type' })
+  @ApiQuery({ name: 'min_rating', required: false, description: 'Minimum average rating (1-5)' })
+  @ApiQuery({ name: 'magazine_id', required: false, description: 'Filter by magazine' })
   findAllBooks(@Query() query: any) {
     return this.knowledgeService.findAllBooks(query);
+  }
+
+  // ── Book Reviews ──
+
+  @Get('books/:id/reviews')
+  @ApiOperation({ summary: 'List reviews for a book' })
+  @ApiQuery({ name: 'page', required: false, example: 1 })
+  @ApiQuery({ name: 'limit', required: false, example: 20 })
+  getBookReviews(@Param('id') id: string, @Query() query: any) {
+    return this.knowledgeService.getBookReviews(id, query);
+  }
+
+  @Post('books/:id/reviews')
+  @ApiOperation({ summary: 'Submit a review for a book (public)' })
+  createBookReview(@Param('id') id: string, @Body() body: any) {
+    return this.knowledgeService.createBookReview(id, body);
+  }
+
+  @Delete('books/reviews/:reviewId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a book review (admin)' })
+  deleteBookReview(@Param('reviewId') reviewId: string) {
+    return this.knowledgeService.deleteBookReview(reviewId);
   }
 
   @Get('books/:id')

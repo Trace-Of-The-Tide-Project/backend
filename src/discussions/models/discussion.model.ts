@@ -46,6 +46,10 @@ export class Discussion extends Model<Discussion> {
   @Column(DataType.UUID)
   declare related_collection_id: string;
 
+  // Book club selection this discussion belongs to (null if not book-club-related)
+  @Column({ type: DataType.UUID, allowNull: true })
+  declare related_book_club_selection_id: string;
+
   @BelongsTo(() => User)
   declare creator: User;
 

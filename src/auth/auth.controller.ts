@@ -5,8 +5,10 @@ import {
   UseGuards,
   Req,
   Get,
+  Headers,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt/auth.guard';
@@ -130,6 +132,37 @@ export class AuthController {
       dto.newPassword,
       dto.confirmPassword,
     );
+  }
+
+  @Post('set-new-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Reset password using token from Authorization header',
+    description: 'Send the reset token as "Authorization: Bearer <token>". Body only needs newPassword and confirmPassword.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['newPassword', 'confirmPassword'],
+      properties: {
+        newPassword: { type: 'string', minLength: 8, example: 'NewPass@123' },
+        confirmPassword: { type: 'string', minLength: 8, example: 'NewPass@123' },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid/expired token or passwords do not match' })
+  async setNewPassword(
+    @Headers('authorization') authorization: string,
+    @Body('newPassword') newPassword: string,
+    @Body('confirmPassword') confirmPassword: string,
+  ) {
+    if (!authorization) {
+      throw new BadRequestException('Authorization header with reset token is required');
+    }
+    const token = authorization.replace(/^Bearer\s+/i, '').trim();
+    return this.authService.resetPassword(token, newPassword, confirmPassword);
   }
 
   @Post('logout')

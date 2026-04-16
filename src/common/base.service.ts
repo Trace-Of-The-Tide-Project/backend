@@ -11,6 +11,7 @@ export class BaseService<T = any> {
       include?: any[];
       order?: any[];
       attributes?: any; // ✅ FIX: Allow excluding fields (e.g. password)
+      where?: Record<string, any>;
     } = {},
   ) {
     const page = Number(query.page) || 1;
@@ -55,8 +56,11 @@ export class BaseService<T = any> {
       order = options.order;
     }
 
+    // Merge caller-supplied where (e.g. pre-built Op filters) with auto-built where
+    const mergedWhere = options.where ? { ...options.where, ...where } : where;
+
     const findOptions: any = {
-      where,
+      where: mergedWhere,
       include: options.include || [],
       limit,
       offset,

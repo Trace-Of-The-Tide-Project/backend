@@ -86,6 +86,10 @@ export class Trip extends Model<Trip> {
   @Column({ type: DataType.STRING, allowNull: true })
   declare moderator_name: string;
 
+  // Dynamic application form definition: {fields: [{name, type, required, options?, ...}]}
+  @Column({ type: DataType.JSON, allowNull: true })
+  declare application_form: any;
+
   @ForeignKey(() => User)
   @Column({ type: DataType.UUID, allowNull: false })
   declare created_by: string;
