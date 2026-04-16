@@ -9,7 +9,11 @@ import {
   Query,
   Req,
   UseGuards,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { TripsService } from './trips.service';
 import {
   CreateTripDto,
@@ -18,6 +22,7 @@ import {
   UpdateTripStopDto,
   RegisterParticipantDto,
 } from './dto/trip.dto';
+import { ApplyTripDto } from './dto/apply-trip.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -26,6 +31,7 @@ import {
   ApiOperation,
   ApiQuery,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 
 @ApiTags('Trips')
@@ -200,6 +206,22 @@ export class TripsController {
   ) {
     const userId = req.user?.sub || null;
     return this.tripsService.registerParticipant(id, userId, dto);
+  }
+
+  @Post(':id/apply')
+  @ApiOperation({
+    summary: 'Apply to a trip via dynamic form (supports file uploads)',
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(
+    FilesInterceptor('files', 10, { storage: memoryStorage() }),
+  )
+  apply(
+    @Param('id') id: string,
+    @Body() dto: ApplyTripDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.tripsService.applyToTrip(id, dto, files || []);
   }
 
   @Post(':id/cancel-registration')

@@ -61,6 +61,10 @@ export class TripParticipant extends Model<TripParticipant> {
   @Column({ type: DataType.STRING, allowNull: true })
   declare start_point: string;
 
+  // Stores submitted form answers when applying via dynamic application_form
+  @Column({ type: DataType.JSON, allowNull: true })
+  declare form_answers: any;
+
   @BelongsTo(() => Trip)
   declare trip: Trip;
 

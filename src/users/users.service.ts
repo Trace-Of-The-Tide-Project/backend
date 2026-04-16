@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ConflictException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { BaseService } from '../common/base.service';
@@ -9,6 +10,7 @@ import { User } from './models/user.model';
 import { UserRole } from './models/user-role.model';
 import { UserProfile } from './models/user-profile.model';
 import { Role } from '../roles/models/role.model';
+import { CreateProfileDto, UpdateProfileDto } from './dto/user-profile.dto';
 
 @Injectable()
 export class UsersService extends BaseService<User> {
@@ -60,6 +62,12 @@ export class UsersService extends BaseService<User> {
     return this.findOne(user.id);
   }
 
+  async findOneWithPassword(id: string) {
+    const user = await this.userModel.findByPk(id);
+    if (!user) throw new NotFoundException(`User ${id} not found`);
+    return user;
+  }
+
   async findByEmail(email: string) {
     if (!email) throw new BadRequestException('Email is required');
     const user = await this.userModel.findOne({ where: { email } });
@@ -108,20 +116,35 @@ export class UsersService extends BaseService<User> {
     return user;
   }
 
-  async updateProfile(userId: string, data: Partial<UserProfile>) {
+  async createProfile(userId: string, data: CreateProfileDto) {
     const user = await this.userModel.findByPk(userId);
     if (!user) throw new NotFoundException(`User ${userId} not found`);
 
-    let profile = await UserProfile.findOne({
-      where: { user_id: userId },
-    });
+    const existing = await UserProfile.findOne({ where: { user_id: userId } });
+    if (existing)
+      throw new ConflictException('Profile already exists. Use PATCH to update.');
+
+    if (data.full_name) await user.update({ full_name: data.full_name });
+
+    const { full_name, ...profileData } = data;
+    return UserProfile.create({ user_id: userId, ...profileData } as any);
+  }
+
+  async updateProfile(userId: string, data: UpdateProfileDto) {
+    const user = await this.userModel.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    if (data.full_name) await user.update({ full_name: data.full_name });
+
+    const { full_name, ...profileData } = data;
+    let profile = await UserProfile.findOne({ where: { user_id: userId } });
 
     if (profile) {
-      await profile.update(data);
+      await profile.update(profileData as any);
     } else {
       profile = await UserProfile.create({
         user_id: userId,
-        ...data,
+        ...profileData,
       } as any);
     }
 

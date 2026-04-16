@@ -31,6 +31,7 @@ import { seedFollows } from './seedFollows';
 import { seedTasks } from './seedTasks';
 import { seedPhases } from './seedPhases';
 import { seedBoards } from './seedBoards';
+import { seedMagazine } from './seedMagazine';
 
 async function cleanDatabase() {
   console.log('🧹 Cleaning database before seeding...');
@@ -103,6 +104,14 @@ async function cleanDatabase() {
     'users',
     'roles',
     'tags',
+    // Magazine feature tables
+    'book_reviews',
+    'book_club_selections',
+    'newsletter_subscribers',
+    'issue_pledges',
+    'magazine_issues',
+    'writer_profiles',
+    'magazines',
   ];
 
   const sequelize = Role.sequelize!;
@@ -161,6 +170,7 @@ export async function seed() {
     await seedTrips();
     await seedArticles();
     await seedCms();
+    await seedMagazine(users[0]);
     await seedSystemSettings();
     await seedTasks();
     await seedPhases();

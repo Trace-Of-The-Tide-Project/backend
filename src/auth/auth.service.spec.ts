@@ -46,6 +46,7 @@ describe('AuthService', () => {
       findByEmail: jest.fn(),
       findByIdentifier: jest.fn(),
       findOne: jest.fn(),
+      findOneWithPassword: jest.fn(),
       create: jest.fn(),
       getUserRoles: jest.fn(),
       update: jest.fn(),
@@ -413,7 +414,7 @@ describe('AuthService', () => {
 
   describe('changePassword', () => {
     it('should change password when current password is correct', async () => {
-      usersService.findOne.mockResolvedValue(mockUser as any);
+      usersService.findOneWithPassword.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock)
         .mockResolvedValueOnce(true) // current password check
         .mockResolvedValueOnce(false); // same-password check
@@ -437,7 +438,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException for wrong current password', async () => {
-      usersService.findOne.mockResolvedValue(mockUser as any);
+      usersService.findOneWithPassword.mockResolvedValue(mockUser as any);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       await expect(
@@ -451,7 +452,7 @@ describe('AuthService', () => {
     });
 
     it('should throw NotFoundException for non-existent user', async () => {
-      usersService.findOne.mockResolvedValue(null);
+      usersService.findOneWithPassword.mockRejectedValue(new NotFoundException('User not found'));
 
       await expect(
         service.changePassword('nonexistent', 'pass', 'newPass', 'newPass'),

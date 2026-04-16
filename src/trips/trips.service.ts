@@ -13,6 +13,10 @@ import { TripParticipant } from './models/trip-participant.model';
 import { User } from '../users/models/user.model';
 import { Location } from '../knowledge/models/location.model';
 import { Donation } from '../donations/models/donation.model';
+import { File } from '../files/models/file.model';
+import { StorageService } from '../storage/storage.service';
+import { EmailService } from '../email/email.service';
+import { ApplyTripDto } from './dto/apply-trip.dto';
 
 @Injectable()
 export class TripsService extends BaseService<Trip> {
@@ -34,6 +38,8 @@ export class TripsService extends BaseService<Trip> {
     @InjectModel(TripStop) private readonly tripStopModel: typeof TripStop,
     @InjectModel(TripParticipant)
     private readonly tripParticipantModel: typeof TripParticipant,
+    private readonly storageService: StorageService,
+    private readonly emailService: EmailService,
   ) {
     super(tripModel);
   }
@@ -320,6 +326,120 @@ export class TripsService extends BaseService<Trip> {
     });
     if (!participant) throw new NotFoundException('Participant not found');
     await participant.update({ status });
+    return participant;
+  }
+
+  // ─── FORM APPLICATION ────────────────────────────────────
+
+  async applyToTrip(
+    tripId: string,
+    dto: ApplyTripDto,
+    files: Express.Multer.File[] = [],
+  ) {
+    const trip = await this.tripModel.findByPk(tripId);
+    if (!trip) throw new NotFoundException(`Trip ${tripId} not found`);
+    if (trip.status !== 'published') {
+      throw new BadRequestException('This trip is not accepting applications');
+    }
+
+    // Validate answers against application_form if defined
+    if (trip.application_form?.fields) {
+      for (const field of trip.application_form.fields) {
+        if (
+          field.required &&
+          field.type !== 'checkbox' &&
+          field.type !== 'file_multiple'
+        ) {
+          if (!dto.answers[field.name] && dto.answers[field.name] !== false) {
+            throw new BadRequestException(`Field "${field.name}" is required`);
+          }
+        }
+        if (field.type === 'email' && dto.answers[field.name]) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(dto.answers[field.name])) {
+            throw new BadRequestException(
+              `Field "${field.name}" must be a valid email`,
+            );
+          }
+        }
+      }
+    }
+
+    // Duplicate check
+    const email = dto.answers.email || dto.answers.Email;
+    if (email) {
+      const byEmail = await this.tripParticipantModel.findOne({
+        where: { trip_id: tripId, guest_email: email },
+      });
+      if (byEmail) {
+        throw new ConflictException(
+          'This email is already registered for this trip',
+        );
+      }
+    }
+    if (dto.user_id) {
+      const byUser = await this.tripParticipantModel.findOne({
+        where: {
+          trip_id: tripId,
+          user_id: dto.user_id,
+          status: { [Op.in]: ['registered', 'confirmed', 'waitlisted'] },
+        },
+      });
+      if (byUser) {
+        throw new ConflictException('You have already applied to this trip');
+      }
+    }
+
+    // Capacity check — auto-waitlist if full
+    let status = 'registered';
+    if (trip.max_participants) {
+      const activeCount = await this.tripParticipantModel.count({
+        where: {
+          trip_id: tripId,
+          status: { [Op.in]: ['registered', 'confirmed'] },
+        },
+      });
+      if (activeCount >= trip.max_participants) status = 'waitlisted';
+    }
+
+    const guestName = dto.answers.first_name
+      ? `${dto.answers.first_name} ${dto.answers.last_name || ''}`.trim()
+      : null;
+
+    const participant = await this.tripParticipantModel.create({
+      trip_id: tripId,
+      user_id: dto.user_id || null,
+      guest_name: guestName,
+      guest_email: email || null,
+      form_answers: dto.answers,
+      status,
+      role: 'participant',
+      registered_at: new Date(),
+    } as any);
+
+    // Upload attached files
+    for (const file of files) {
+      const url = await this.storageService.uploadFile(file, 'trips');
+      await File.create({
+        participant_id: participant.id,
+        file_name: file.originalname,
+        mime_type: file.mimetype,
+        file_size: file.size,
+        path: url,
+        uploaded_by: dto.user_id || null,
+        upload_date: new Date(),
+      } as any);
+    }
+
+    // Send confirmation email
+    if (email) {
+      await this.emailService.sendOpenCallConfirmationEmail(
+        email,
+        dto.answers.first_name || 'Applicant',
+        trip.title,
+      );
+    }
+
     return participant;
   }
 

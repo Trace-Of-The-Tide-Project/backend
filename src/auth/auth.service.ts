@@ -448,7 +448,7 @@ export class AuthService {
       throw new BadRequestException('Passwords do not match');
     }
 
-    const user = await this.usersService.findOne(userId);
+    const user = await this.usersService.findOneWithPassword(userId);
     if (!user) throw new NotFoundException('User not found');
 
     const isValid = await bcrypt.compare(currentPassword, user.password);

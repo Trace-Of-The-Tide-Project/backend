@@ -27,6 +27,15 @@ export class UserProfile extends Model<UserProfile> {
   @Column(DataType.STRING)
   declare display_name: string;
 
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare company: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare job_title: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare personal_link: string;
+
   @Column(DataType.DATE)
   declare birth_date: Date;
 

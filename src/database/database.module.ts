@@ -71,6 +71,13 @@ import { BoardTemplate } from 'src/boards/models/board-template.model';
 import { Follow } from 'src/follows/models/follow.model';
 import { Task } from 'src/tasks/models/task.model';
 import { Phase } from 'src/phases/models/phase.model';
+import { Magazine } from 'src/magazine/models/magazine.model';
+import { MagazineIssue } from 'src/magazine-issue/models/magazine-issue.model';
+import { WriterProfile } from 'src/writer-profile/models/writer-profile.model';
+import { IssuePledge } from 'src/issue-pledge/models/issue-pledge.model';
+import { NewsletterSubscriber } from 'src/newsletter-subscriber/models/newsletter-subscriber.model';
+import { BookClubSelection } from 'src/book-club/models/book-club-selection.model';
+import { BookReview } from 'src/knowledge/models/book-review.model';
 
 @Module({
   imports: [
@@ -158,6 +165,13 @@ import { Phase } from 'src/phases/models/phase.model';
           Follow,
           Task,
           Phase,
+          Magazine,
+          MagazineIssue,
+          WriterProfile,
+          IssuePledge,
+          NewsletterSubscriber,
+          BookClubSelection,
+          BookReview,
         ],
       }),
     }),

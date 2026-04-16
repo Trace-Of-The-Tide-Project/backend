@@ -18,6 +18,7 @@ import { UsersService } from './users.service';
 import { StorageService } from '../storage/storage.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateProfileDto, UpdateProfileDto } from './dto/user-profile.dto';
 import { JwtAuthGuard } from '../auth/jwt/auth.guard';
 import { RolesGuard } from '../auth/jwt/roles.guard';
 import { Roles } from '../auth/jwt/roles.decorator';
@@ -121,16 +122,23 @@ export class UsersController {
     return this.usersService.getUserProfile(id);
   }
 
+  @Post(':id/profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create user profile' })
+  createProfile(@Param('id') id: string, @Body() dto: CreateProfileDto) {
+    return this.usersService.createProfile(id, dto);
+  }
+
   @Patch(':id/profile')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Update user profile',
-    description:
-      "Creates profile if it doesn't exist, updates if it does. Fields: avatar, display_name, birth_date, gender, location, about, social_links.",
+    description: "Creates profile if it doesn't exist, updates if it does.",
   })
-  updateProfile(@Param('id') id: string, @Body() body: any) {
-    return this.usersService.updateProfile(id, body);
+  updateProfile(@Param('id') id: string, @Body() dto: UpdateProfileDto) {
+    return this.usersService.updateProfile(id, dto);
   }
 
   @Post(':id/avatar')
