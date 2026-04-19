@@ -60,7 +60,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       error = exception.name;
     }
 
-    if (process.env.NODE_ENV !== 'production') {
+    if (!(exception instanceof HttpException)) {
       console.error(`[${request.method}] ${request.url} →`, exception);
     }
 

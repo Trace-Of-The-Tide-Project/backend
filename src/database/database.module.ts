@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { SequelizeModule } from '@nestjs/sequelize';
 import databaseConfig from './database.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DatabaseBootstrapService } from './database-bootstrap.service';
 
 import { User } from 'src/users/models/user.model';
 import { Role } from 'src/roles/models/role.model';
@@ -176,6 +177,7 @@ import { BookReview } from 'src/knowledge/models/book-review.model';
       }),
     }),
   ],
-  exports: [SequelizeModule],
+  providers: [DatabaseBootstrapService],
+  exports: [SequelizeModule, DatabaseBootstrapService],
 })
 export class DatabaseModule {}
