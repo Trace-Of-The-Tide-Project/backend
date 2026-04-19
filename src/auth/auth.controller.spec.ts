@@ -53,9 +53,9 @@ describe('AuthController', () => {
       const expected = { accessToken: 'tok', user: { id: '1' } };
       authService.login.mockResolvedValue(expected as any);
 
-      const result = await controller.login(dto as any);
+      const result = await controller.login(dto as any, {} as any);
 
-      expect(authService.login).toHaveBeenCalledWith(dto);
+      expect(authService.login).toHaveBeenCalledWith(dto, {});
       expect(result).toEqual(expected);
     });
   });

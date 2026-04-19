@@ -23,6 +23,7 @@ import { ModerationLog } from '../moderation/models/moderation-log.model';
 import { AuditTrail } from '../audit-trails/models/audit-trail.model';
 import { Notification } from '../notifications/models/notification.model';
 import { Log } from 'src/logs/models/log.model';
+import { SecurityEvent } from '../auth/models/security-event.model';
 
 @Injectable()
 export class DashboardService {
@@ -965,6 +966,41 @@ export class DashboardService {
       usersByRole,
       financeSnapshot,
       recentActivity,
+    };
+  }
+
+  async getSecurityEvents(opts: {
+    userId?: string;
+    event_type?: string;
+    from?: string;
+    to?: string;
+    limit: number;
+    offset: number;
+  }) {
+    const where: any = {};
+    if (opts.userId) where.user_id = opts.userId;
+    if (opts.event_type) where.event_type = opts.event_type;
+    if (opts.from || opts.to) {
+      where.created_at = {};
+      if (opts.from) where.created_at[Op.gte] = new Date(opts.from);
+      if (opts.to) where.created_at[Op.lte] = new Date(opts.to);
+    }
+
+    const { rows, count } = await SecurityEvent.findAndCountAll({
+      where,
+      include: [{ model: User, attributes: ['id', 'username', 'email'] }],
+      order: [['created_at', 'DESC']],
+      limit: opts.limit,
+      offset: opts.offset,
+    });
+
+    return {
+      rows,
+      meta: {
+        total: count,
+        limit: opts.limit,
+        offset: opts.offset,
+      },
     };
   }
 }

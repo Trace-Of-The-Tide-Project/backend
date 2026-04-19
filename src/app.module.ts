@@ -2,6 +2,7 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import { LanguageMiddleware } from './common/middleware/language.middleware';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CustomThrottlerGuard } from './common/guards/throttler-exception.guard';
 import { APP_GUARD } from '@nestjs/core';
@@ -138,6 +139,6 @@ import { BookClubModule } from 'src/book-club/book-club.module';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestContextMiddleware).forRoutes('*');
+    consumer.apply(RequestContextMiddleware, LanguageMiddleware).forRoutes('*');
   }
 }

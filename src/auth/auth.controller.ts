@@ -18,6 +18,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CheckEmailDto } from './dto/check-email.dto';
+import { Verify2FADto, Validate2FADto, Disable2FADto } from './dto/setup-2fa.dto';
 import {
   ApiBearerAuth,
   ApiTags,
@@ -55,8 +56,8 @@ export class AuthController {
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with email or username and password' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: any) {
+    return this.authService.login(loginDto, req);
   }
 
   @Post('verify-email')
@@ -220,5 +221,50 @@ export class AuthController {
       dto.newPassword,
       dto.confirmPassword,
     );
+  }
+
+  // ─── 2FA ────────────────────────────────────────────────────
+
+  @Post('2fa/setup')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Generate TOTP secret and QR code to set up 2FA (admin only)',
+  })
+  async setup2FA(@Req() req: any) {
+    return this.authService.setup2FA(req.user.sub);
+  }
+
+  @Post('2fa/verify')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Confirm TOTP code to activate 2FA and receive backup codes',
+  })
+  async verify2FA(@Req() req: any, @Body() dto: Verify2FADto) {
+    return this.authService.verify2FA(req.user.sub, dto.code);
+  }
+
+  @Post('2fa/validate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Submit TOTP code after login returned requires_2fa=true',
+    description: 'Pass the temp_token from the login response and the 6-digit TOTP code.',
+  })
+  async validate2FA(@Body() dto: Validate2FADto, @Req() req: any) {
+    return this.authService.validate2FA(dto.temp_token, dto.code, req);
+  }
+
+  @Post('2fa/disable')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Disable 2FA for authenticated admin (requires current password)',
+  })
+  async disable2FA(@Req() req: any, @Body() dto: Disable2FADto) {
+    return this.authService.disable2FA(req.user.sub, dto.password);
   }
 }

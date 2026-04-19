@@ -107,6 +107,15 @@ export class TripsController {
     return this.tripsService.publishTrip(id);
   }
 
+  @Patch(':id/archive')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin', 'editor')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Archive a completed trip (admin/editor only)' })
+  archive(@Param('id') id: string) {
+    return this.tripsService.archiveTrip(id);
+  }
+
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

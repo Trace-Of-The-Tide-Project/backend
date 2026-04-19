@@ -84,8 +84,8 @@ export class TripsService extends BaseService<Trip> {
     const trip = await this.tripModel.findByPk(id);
     if (!trip) throw new NotFoundException(`Trip ${id} not found`);
 
-    // Can't edit completed/cancelled trips
-    if (['completed', 'cancelled'].includes(trip.status)) {
+    // Can't edit completed/cancelled/archived trips
+    if (['completed', 'cancelled', 'archived'].includes(trip.status)) {
       throw new BadRequestException(`Cannot edit a ${trip.status} trip`);
     }
 
@@ -108,6 +108,16 @@ export class TripsService extends BaseService<Trip> {
     }
 
     await trip.update({ status: 'published' });
+    return trip;
+  }
+
+  async archiveTrip(id: string) {
+    const trip = await this.tripModel.findByPk(id);
+    if (!trip) throw new NotFoundException(`Trip ${id} not found`);
+    if (trip.status !== 'completed') {
+      throw new BadRequestException('Only completed trips can be archived');
+    }
+    await trip.update({ status: 'archived' });
     return trip;
   }
 
@@ -447,7 +457,7 @@ export class TripsService extends BaseService<Trip> {
 
   async getArchive(query: any = {}) {
     return super.findAll(
-      { ...query, status: { [Op.in]: ['completed', 'cancelled'] } },
+      { ...query, status: { [Op.in]: ['completed', 'cancelled', 'archived'] } },
       {
         include: this.defaultInclude,
         searchableFields: ['title', 'description', 'category'],

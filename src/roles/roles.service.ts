@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/sequelize';
 import { Role } from './models/role.model';
 import { UserRole } from '../users/models/user-role.model';
+import { UserPermission } from './models/user-permission.model';
 import { User } from '../users/models/user.model';
 import { BaseService } from '../common/base.service';
 
@@ -13,7 +14,11 @@ const PROTECTED_ROLES = ['admin', 'user', 'moderator'];
 
 @Injectable()
 export class RolesService extends BaseService<Role> {
-  constructor(@InjectModel(Role) private readonly roleModel: typeof Role) {
+  constructor(
+    @InjectModel(Role) private readonly roleModel: typeof Role,
+    @InjectModel(UserPermission)
+    private readonly userPermissionModel: typeof UserPermission,
+  ) {
     super(roleModel);
   }
 
@@ -77,5 +82,46 @@ export class RolesService extends BaseService<Role> {
     }
 
     return { message: `Role "${roleName}" revoked successfully` };
+  }
+
+  // ─── PER-USER PERMISSION OVERRIDES ───────────────────────────
+
+  async getUserPermissions(userId: string) {
+    return this.userPermissionModel.findAll({
+      where: { user_id: userId },
+      include: [{ model: User, as: 'creator', attributes: ['id', 'username'] }],
+      order: [['createdAt', 'ASC']],
+    });
+  }
+
+  async grantPermission(
+    userId: string,
+    permission: string,
+    granted: boolean,
+    createdBy: string,
+  ) {
+    const user = await User.findByPk(userId);
+    if (!user) throw new NotFoundException(`User ${userId} not found`);
+
+    // Upsert — update existing override or create new one
+    const [record, created] = await this.userPermissionModel.findOrCreate({
+      where: { user_id: userId, permission },
+      defaults: { user_id: userId, permission, granted, created_by: createdBy } as any,
+    });
+
+    if (!created) {
+      await record.update({ granted, created_by: createdBy });
+    }
+
+    return record;
+  }
+
+  async removePermissionOverride(userId: string, permissionId: string) {
+    const record = await this.userPermissionModel.findOne({
+      where: { id: permissionId, user_id: userId },
+    });
+    if (!record) throw new NotFoundException('Permission override not found');
+    await record.destroy();
+    return { message: 'Permission override removed — reverts to role default' };
   }
 }

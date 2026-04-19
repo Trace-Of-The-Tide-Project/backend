@@ -12,7 +12,10 @@ export class TokenService {
     private readonly refreshTokenModel: typeof RefreshToken,
   ) {}
 
-  async createRefreshToken(userId: string): Promise<string> {
+  async createRefreshToken(
+    userId: string,
+    meta: { ip_address?: string; user_agent?: string } = {},
+  ): Promise<string> {
     const token = randomBytes(64).toString('hex');
     const hashed = await bcrypt.hash(token, 10);
 
@@ -40,6 +43,8 @@ export class TokenService {
       user_id: userId,
       token: hashed,
       expires_at: this.addDays(30),
+      ip_address: meta.ip_address || null,
+      user_agent: meta.user_agent ? meta.user_agent.substring(0, 500) : null,
     } as any);
 
     return token;
