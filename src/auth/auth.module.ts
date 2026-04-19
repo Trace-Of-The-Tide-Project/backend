@@ -8,13 +8,15 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt/jwt.strategy';
 import { TokenService } from './token.service';
 import { RefreshToken } from './models/refresh-tokens.model';
+import { SecurityEvent } from './models/security-event.model';
+import { UserTwoFactor } from './models/two-factor.model';
 import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
     forwardRef(() => UsersModule),
     PassportModule,
-    SequelizeModule.forFeature([RefreshToken]),
+    SequelizeModule.forFeature([RefreshToken, SecurityEvent, UserTwoFactor]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

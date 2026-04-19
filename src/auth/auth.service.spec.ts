@@ -15,6 +15,9 @@ import {
 import * as bcrypt from 'bcrypt';
 import { EmailService } from '../email/email.service';
 import { CooldownService } from '../common/services/cooldown.service';
+import { getModelToken } from '@nestjs/sequelize';
+import { SecurityEvent } from './models/security-event.model';
+import { UserTwoFactor } from './models/two-factor.model';
 
 jest.mock('bcrypt');
 
@@ -82,6 +85,14 @@ describe('AuthService', () => {
         { provide: TokenService, useValue: tokenService },
         { provide: EmailService, useValue: emailService },
         { provide: CooldownService, useValue: cooldownService },
+        {
+          provide: getModelToken(SecurityEvent),
+          useValue: { create: jest.fn().mockResolvedValue({}), findOne: jest.fn().mockResolvedValue(null) },
+        },
+        {
+          provide: getModelToken(UserTwoFactor),
+          useValue: { create: jest.fn().mockResolvedValue({}), findOne: jest.fn().mockResolvedValue(null), upsert: jest.fn().mockResolvedValue([{}, true]) },
+        },
       ],
     }).compile();
 
@@ -182,6 +193,7 @@ describe('AuthService', () => {
       );
       expect(tokenService.createRefreshToken).toHaveBeenCalledWith(
         'user-uuid-1',
+        expect.objectContaining({}),
       );
     });
 

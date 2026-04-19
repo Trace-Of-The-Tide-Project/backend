@@ -323,4 +323,32 @@ export class DashboardController {
   async getAnalyticsContentPerformance(@Query('period') period?: string) {
     return this.dashboardService.getAnalyticsContentPerformance(period);
   }
+
+  // ============================================================
+  // SECURITY EVENTS
+  // ============================================================
+
+  @Get('security-events')
+  @ApiOperation({ summary: 'List security events (login, password changes, etc.)' })
+  @ApiQuery({ name: 'userId', required: false })
+  @ApiQuery({
+    name: 'event_type',
+    required: false,
+    enum: ['login_success', 'login_failed', 'password_reset', 'password_changed', '2fa_enabled', '2fa_disabled', 'account_locked'],
+  })
+  @ApiQuery({ name: 'from', required: false, description: 'ISO date string' })
+  @ApiQuery({ name: 'to', required: false, description: 'ISO date string' })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  async getSecurityEvents(
+    @Query('userId') userId?: string,
+    @Query('event_type') event_type?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number = 20,
+  ) {
+    const offset = (page - 1) * limit;
+    return this.dashboardService.getSecurityEvents({ userId, event_type, from, to, limit, offset });
+  }
 }

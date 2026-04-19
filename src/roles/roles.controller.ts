@@ -8,6 +8,7 @@ import {
   Body,
   Query,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -94,5 +95,45 @@ export class RolesController {
   @ApiOperation({ summary: 'Revoke a role from a user (admin only)' })
   revokeRole(@Param('userId') userId: string, @Body('role') roleName: string) {
     return this.rolesService.revokeRole(userId, roleName);
+  }
+
+  // ─── PER-USER PERMISSION OVERRIDES ───────────────────────────
+
+  @Get('permissions/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List per-user permission overrides (admin only)' })
+  getUserPermissions(@Param('userId') userId: string) {
+    return this.rolesService.getUserPermissions(userId);
+  }
+
+  @Post('permissions/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Grant or revoke a specific permission for a user (admin only)',
+    description: 'Set granted=true to explicitly grant, granted=false to explicitly deny regardless of role.',
+  })
+  grantPermission(
+    @Param('userId') userId: string,
+    @Body('permission') permission: string,
+    @Body('granted') granted: boolean,
+    @Req() req: any,
+  ) {
+    return this.rolesService.grantPermission(userId, permission, granted, req.user.sub);
+  }
+
+  @Delete('permissions/:userId/:permissionId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Remove a permission override — reverts to role default (admin only)' })
+  removePermissionOverride(
+    @Param('userId') userId: string,
+    @Param('permissionId') permissionId: string,
+  ) {
+    return this.rolesService.removePermissionOverride(userId, permissionId);
   }
 }

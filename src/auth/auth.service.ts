@@ -19,6 +19,12 @@ import { TokenService } from './token.service';
 import { EmailService } from '../email/email.service';
 import { CooldownService } from '../common/services/cooldown.service';
 import { validateEmailDomain } from '../common/utils/email-validator';
+import { InjectModel } from '@nestjs/sequelize';
+import { SecurityEvent, SecurityEventType } from './models/security-event.model';
+import { UserTwoFactor } from './models/two-factor.model';
+import { authenticator } from 'otplib';
+import * as qrcode from 'qrcode';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
@@ -28,7 +34,30 @@ export class AuthService {
     private tokenService: TokenService,
     private emailService: EmailService,
     private cooldownService: CooldownService,
+    @InjectModel(SecurityEvent)
+    private readonly securityEventModel: typeof SecurityEvent,
+    @InjectModel(UserTwoFactor)
+    private readonly twoFactorModel: typeof UserTwoFactor,
   ) {}
+
+  private async logSecurityEvent(
+    userId: string | null,
+    eventType: SecurityEventType,
+    req?: any,
+    metadata?: any,
+  ) {
+    try {
+      await this.securityEventModel.create({
+        user_id: userId,
+        event_type: eventType,
+        ip_address: req?.['clientIp'] || req?.ip || null,
+        user_agent: req?.headers?.['user-agent']?.substring(0, 500) || null,
+        metadata: metadata || null,
+      } as any);
+    } catch {
+      // Security event logging is non-critical — never let it break auth flow
+    }
+  }
 
   async checkEmail(email: string) {
     // 1. Validate domain (MX records + disposable check)
@@ -63,7 +92,7 @@ export class AuthService {
     }
   }
 
-  async validateUser(identifier: string, pass: string): Promise<any> {
+  async validateUser(identifier: string, pass: string, req?: any): Promise<any> {
     let user: User;
     try {
       user = await this.usersService.findByIdentifier(identifier);
@@ -72,7 +101,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if account is suspended/inactive
+    // Check account lifecycle state before allowing login
+    if (user.status === 'pending') {
+      throw new UnauthorizedException('Please verify your email before logging in.');
+    }
     if (user.status === 'suspended') {
       throw new UnauthorizedException('Account is suspended. Contact support.');
     }
@@ -82,6 +114,9 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(pass, user.password);
     if (!isPasswordValid) {
+      await this.logSecurityEvent(user.id, SecurityEventType.LOGIN_FAILED, req, {
+        identifier,
+      });
       throw new UnauthorizedException('Invalid credentials');
     }
 
@@ -89,13 +124,33 @@ export class AuthService {
     return result;
   }
 
-  async login(loginDto: LoginDto) {
-    const user = await this.validateUser(loginDto.email, loginDto.password);
+  async login(loginDto: LoginDto, req?: any) {
+    const user = await this.validateUser(loginDto.email, loginDto.password, req);
     const roles = await this.usersService.getUserRoles(user.id);
-    const payload = { sub: user.id, email: user.email, roles };
 
+    // Check if admin user has 2FA enabled — require second factor before issuing full tokens
+    if (roles.includes('admin')) {
+      const twoFactor = await this.twoFactorModel.findOne({
+        where: { user_id: user.id, enabled: true },
+      });
+      if (twoFactor) {
+        const tempToken = this.jwtService.sign(
+          { sub: user.id, email: user.email, purpose: '2fa-challenge' },
+          { expiresIn: '5m' },
+        );
+        return { requires_2fa: true, temp_token: tempToken };
+      }
+    }
+
+    const payload = { sub: user.id, email: user.email, roles };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
-    const refreshToken = await this.tokenService.createRefreshToken(user.id);
+    const meta = {
+      ip_address: req?.['clientIp'] || req?.ip,
+      user_agent: req?.headers?.['user-agent'],
+    };
+    const refreshToken = await this.tokenService.createRefreshToken(user.id, meta);
+
+    await this.logSecurityEvent(user.id, SecurityEventType.LOGIN_SUCCESS, req);
 
     return {
       accessToken,
@@ -108,6 +163,127 @@ export class AuthService {
         roles,
       },
     };
+  }
+
+  // ─── 2FA ─────────────────────────────────────────────────────
+
+  async setup2FA(userId: string) {
+    const user = await this.usersService.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const existing = await this.twoFactorModel.findOne({ where: { user_id: userId } });
+    if (existing?.enabled) {
+      throw new BadRequestException('2FA is already enabled');
+    }
+
+    const secret = authenticator.generateSecret();
+    const otpauthUrl = authenticator.keyuri(user.email, 'Trace of the Tide', secret);
+    const qrCodeDataUrl = await qrcode.toDataURL(otpauthUrl);
+
+    // Store secret (disabled until verified)
+    if (existing) {
+      await existing.update({ secret, enabled: false, backup_codes: undefined });
+    } else {
+      await this.twoFactorModel.create({ user_id: userId, secret, enabled: false } as any);
+    }
+
+    return { secret, qr_code: qrCodeDataUrl };
+  }
+
+  async verify2FA(userId: string, code: string) {
+    const record = await this.twoFactorModel.findOne({ where: { user_id: userId } });
+    if (!record) throw new BadRequestException('2FA setup not initiated. Call /auth/2fa/setup first.');
+    if (record.enabled) throw new BadRequestException('2FA is already enabled');
+
+    const isValid = authenticator.verify({ token: code, secret: record.secret });
+    if (!isValid) throw new UnauthorizedException('Invalid TOTP code');
+
+    // Generate 8 one-time backup codes
+    const plainCodes = Array.from({ length: 8 }, () =>
+      randomBytes(4).toString('hex').toUpperCase(),
+    );
+    const hashedCodes = await Promise.all(plainCodes.map((c) => bcrypt.hash(c, 10)));
+
+    await record.update({ enabled: true, backup_codes: JSON.stringify(hashedCodes) });
+    await this.logSecurityEvent(userId, SecurityEventType.TWO_FA_ENABLED);
+
+    return {
+      message: '2FA enabled successfully. Save these backup codes — they will not be shown again.',
+      backup_codes: plainCodes,
+    };
+  }
+
+  async validate2FA(tempToken: string, code: string, req?: any) {
+    let decoded: any;
+    try {
+      decoded = this.jwtService.verify(tempToken);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired 2FA session token');
+    }
+
+    if (decoded.purpose !== '2fa-challenge') {
+      throw new UnauthorizedException('Invalid token purpose');
+    }
+
+    const record = await this.twoFactorModel.findOne({
+      where: { user_id: decoded.sub, enabled: true },
+    });
+    if (!record) throw new UnauthorizedException('2FA not configured for this account');
+
+    // Try TOTP code first
+    const isValidTotp = authenticator.verify({ token: code, secret: record.secret });
+
+    if (!isValidTotp) {
+      // Try backup codes
+      const hashedCodes: string[] = JSON.parse(record.backup_codes || '[]');
+      let matchIndex = -1;
+      for (let i = 0; i < hashedCodes.length; i++) {
+        if (await bcrypt.compare(code, hashedCodes[i])) {
+          matchIndex = i;
+          break;
+        }
+      }
+      if (matchIndex === -1) {
+        await this.logSecurityEvent(decoded.sub, SecurityEventType.LOGIN_FAILED, req, { reason: '2fa_failed' });
+        throw new UnauthorizedException('Invalid 2FA code');
+      }
+      // Consume the backup code
+      hashedCodes.splice(matchIndex, 1);
+      await record.update({ backup_codes: JSON.stringify(hashedCodes) });
+    }
+
+    const user = await this.usersService.findOne(decoded.sub);
+    const roles = await this.usersService.getUserRoles(decoded.sub);
+    const payload = { sub: decoded.sub, email: decoded.email, roles };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '1h' });
+    const meta = {
+      ip_address: req?.['clientIp'] || req?.ip,
+      user_agent: req?.headers?.['user-agent'],
+    };
+    const refreshToken = await this.tokenService.createRefreshToken(decoded.sub, meta);
+    await this.logSecurityEvent(decoded.sub, SecurityEventType.LOGIN_SUCCESS, req, { via: '2fa' });
+
+    return {
+      accessToken,
+      refreshToken,
+      user: { id: user.id, username: user.username, email: user.email, roles },
+    };
+  }
+
+  async disable2FA(userId: string, password: string) {
+    const user = await this.usersService.findOneWithPassword(userId);
+    if (!user) throw new NotFoundException('User not found');
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) throw new UnauthorizedException('Incorrect password');
+
+    const record = await this.twoFactorModel.findOne({ where: { user_id: userId } });
+    if (!record || !record.enabled) throw new BadRequestException('2FA is not enabled');
+
+    await record.destroy();
+    await this.logSecurityEvent(userId, SecurityEventType.TWO_FA_DISABLED);
+
+    return { message: '2FA disabled successfully' };
   }
 
   async signup(signupDto: SignupDto) {
@@ -139,6 +315,7 @@ export class AuthService {
       email: signupDto.email,
       phone_number: signupDto.phone_number,
       password: hashedPassword,
+      status: 'pending',
     });
 
     // Assign default 'user' role
@@ -210,7 +387,10 @@ export class AuthService {
         return { message: 'Email is already verified' };
       }
 
-      await this.usersService.update(user.id, { email_verified: true });
+      await this.usersService.update(user.id, {
+        email_verified: true,
+        status: 'active',
+      });
       return { message: 'Email verified successfully' };
     } catch (error) {
       if (
@@ -384,6 +564,7 @@ export class AuthService {
 
       // Revoke all refresh tokens — force re-login on all devices
       await this.tokenService.revokeRefreshToken(user.id);
+      await this.logSecurityEvent(user.id, SecurityEventType.PASSWORD_RESET);
 
       return { message: 'Password reset successfully' };
     } catch (error) {
@@ -472,6 +653,7 @@ export class AuthService {
 
     // Revoke all refresh tokens — force re-login on all devices
     await this.tokenService.revokeRefreshToken(userId);
+    await this.logSecurityEvent(userId, SecurityEventType.PASSWORD_CHANGED);
 
     return { message: 'Password changed successfully' };
   }

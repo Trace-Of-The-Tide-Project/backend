@@ -26,6 +26,12 @@ export class RefreshToken extends Model<RefreshToken> {
   @Column({ type: DataType.DATE, allowNull: false })
   declare expires_at: Date;
 
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare ip_address: string;
+
+  @Column({ type: DataType.STRING, allowNull: true })
+  declare user_agent: string;
+
   @Column({ type: DataType.DATE, defaultValue: DataType.NOW })
   declare created_at: Date;
 }
