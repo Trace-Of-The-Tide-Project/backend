@@ -79,6 +79,7 @@ import { IssuePledge } from 'src/issue-pledge/models/issue-pledge.model';
 import { NewsletterSubscriber } from 'src/newsletter-subscriber/models/newsletter-subscriber.model';
 import { BookClubSelection } from 'src/book-club/models/book-club-selection.model';
 import { BookReview } from 'src/knowledge/models/book-review.model';
+import { ArticleViewSnapshot } from 'src/analytics/models/article-view-snapshot.model';
 
 @Module({
   imports: [
@@ -173,6 +174,7 @@ import { BookReview } from 'src/knowledge/models/book-review.model';
           NewsletterSubscriber,
           BookClubSelection,
           BookReview,
+          ArticleViewSnapshot,
         ],
       }),
     }),

@@ -4,6 +4,8 @@ import { User } from '../users/models/user.model';
 import { UserRole } from '../users/models/user-role.model';
 import { Role } from '../roles/models/role.model';
 import { Article } from '../articles/models/article.model';
+import { ArticleContributor } from '../articles/models/article-contributor.model';
+import { ArticleViewSnapshot } from './models/article-view-snapshot.model';
 import { Contribution } from '../contributions/models/contribution.model';
 import { Donation } from '../donations/models/donation.model';
 import { Trip } from '../trips/models/trip.model';
@@ -23,6 +25,10 @@ export class AnalyticsService {
     @InjectModel(UserRole) private readonly userRoleModel: typeof UserRole,
     @InjectModel(Role) private readonly roleModel: typeof Role,
     @InjectModel(Article) private readonly articleModel: typeof Article,
+    @InjectModel(ArticleContributor)
+    private readonly articleContributorModel: typeof ArticleContributor,
+    @InjectModel(ArticleViewSnapshot)
+    private readonly articleViewSnapshotModel: typeof ArticleViewSnapshot,
     @InjectModel(Contribution)
     private readonly contributionModel: typeof Contribution,
     @InjectModel(Donation) private readonly donationModel: typeof Donation,
@@ -72,6 +78,17 @@ export class AnalyticsService {
     const { start, end } = this.getDateRange(period);
     const prevStart = new Date(start);
     prevStart.setTime(prevStart.getTime() - (end.getTime() - start.getTime()));
+
+    // Days since first user registered (platform age)
+    const firstUserRow = (await this.userModel.findOne({
+      attributes: [[fn('MIN', col('createdAt')), 'first_at']],
+      raw: true,
+    })) as unknown as { first_at: string | null };
+    const daysActive = firstUserRow?.first_at
+      ? Math.floor(
+          (Date.now() - new Date(firstUserRow.first_at).getTime()) / 86_400_000,
+        )
+      : 0;
 
     // Current period stats
     const totalPageViews = (await this.articleModel.sum('view_count')) || 0;
@@ -134,6 +151,7 @@ export class AnalyticsService {
         published_articles: publishedArticles,
         total_contributions: totalContributions,
         new_contributions: newContributions,
+        days_active: daysActive,
       },
       charts: {
         user_growth: userGrowth,
@@ -188,6 +206,101 @@ export class AnalyticsService {
       limit: 10,
     });
 
+    const ids = topArticles.map((a) => a.id);
+
+    // ── Contributor counts per article ──────────────────────────
+    type ContributorCountRow = { article_id: string; contributor_count: string };
+    const contributorRows: ContributorCountRow[] = ids.length
+      ? ((await this.articleContributorModel.findAll({
+          attributes: [
+            'article_id',
+            [fn('COUNT', col('user_id')), 'contributor_count'],
+          ],
+          where: { article_id: { [Op.in]: ids } },
+          group: ['article_id'],
+          raw: true,
+        })) as unknown as ContributorCountRow[])
+      : [];
+
+    const contributorMap: Record<string, number> = Object.fromEntries(
+      contributorRows.map((r) => [r.article_id, parseInt(r.contributor_count, 10)]),
+    );
+
+    // ── Trend % per article ─────────────────────────────────────
+    // Find the most recent snapshot for each article taken BEFORE the current
+    // period started — that represents "views at the start of this period".
+    // Trend = (current_view_count − snapshot_view_count) / snapshot_view_count × 100
+    type SnapshotRow = { article_id: string; view_count: number; createdAt: string };
+    const snapshotRows: SnapshotRow[] = ids.length
+      ? ((await this.articleViewSnapshotModel.findAll({
+          where: {
+            article_id: { [Op.in]: ids },
+            period,
+            createdAt: { [Op.lte]: start },
+          },
+          order: [['createdAt', 'DESC']],
+          raw: true,
+        })) as unknown as SnapshotRow[])
+      : [];
+
+    // Most recent snapshot per article (descending order means first hit wins)
+    const snapshotMap: Record<string, number> = {};
+    for (const row of snapshotRows) {
+      if (!(row.article_id in snapshotMap)) {
+        snapshotMap[row.article_id] = row.view_count;
+      }
+    }
+
+    // Enrich top articles with contributor_count and trend_pct
+    const enrichedTopArticles = topArticles.map((article) => {
+      const plain = article.toJSON() as unknown as Record<string, unknown>;
+      const currentViews = article.view_count;
+      const prevViews = snapshotMap[article.id];
+
+      let trend_pct: number | null = null;
+      if (prevViews !== undefined) {
+        if (prevViews > 0) {
+          trend_pct = Math.round(((currentViews - prevViews) / prevViews) * 100);
+        } else {
+          trend_pct = currentViews > 0 ? 100 : 0;
+        }
+      }
+
+      return {
+        ...plain,
+        contributor_count: contributorMap[article.id] ?? 0,
+        trend_pct,
+      };
+    });
+
+    // Save snapshots (at most once per article/period per day)
+    if (ids.length) {
+      const oneDayAgo = new Date(Date.now() - 86_400_000);
+      type RecentRow = { article_id: string };
+      const recentRows: RecentRow[] = (await this.articleViewSnapshotModel.findAll({
+        attributes: ['article_id'],
+        where: {
+          article_id: { [Op.in]: ids },
+          period,
+          createdAt: { [Op.gte]: oneDayAgo },
+        },
+        raw: true,
+      })) as unknown as RecentRow[];
+
+      const recentlySnapshotted = new Set(recentRows.map((r) => r.article_id));
+      const toSnapshot = topArticles.filter((a) => !recentlySnapshotted.has(a.id));
+
+      if (toSnapshot.length) {
+        await this.articleViewSnapshotModel.bulkCreate(
+          toSnapshot.map((a) => ({
+            article_id: a.id,
+            period,
+            view_count: a.view_count,
+          })) as any,
+        );
+      }
+    }
+
     // Content type distribution
     const contentTypeDistribution = await this.articleModel.findAll({
       attributes: ['content_type', [fn('COUNT', col('id')), 'count']],
@@ -205,7 +318,7 @@ export class AnalyticsService {
 
     return {
       top_categories: topCategories,
-      top_articles: topArticles,
+      top_articles: enrichedTopArticles,
       content_type_distribution: contentTypeDistribution,
       status_distribution: statusDistribution,
     };
