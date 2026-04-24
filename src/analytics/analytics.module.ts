@@ -19,6 +19,8 @@ import { Discussion } from '../discussions/models/discussion.model';
 import { Comment } from '../comments/models/comment.model';
 import { Reaction } from '../reactions/models/reaction.model';
 import { Collection } from '../collections/models/collection.model';
+import { ArticleContributor } from '../articles/models/article-contributor.model';
+import { ArticleViewSnapshot } from './models/article-view-snapshot.model';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { Collection } from '../collections/models/collection.model';
       Comment,
       Reaction,
       Collection,
+      ArticleContributor,
+      ArticleViewSnapshot,
     ]),
   ],
   providers: [AnalyticsService],
