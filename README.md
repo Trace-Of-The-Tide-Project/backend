@@ -8,44 +8,39 @@ A NestJS-powered backend for the **Heritage Storytelling Platform**, a community
 - [Tech Stack](#tech-stack)
 - [Getting Started](#getting-started)
 - [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
-  - [Authentication](#authentication)
-  - [Users](#users)
-  - [Roles](#roles)
-  - [Contributions](#contributions)
-  - [Files](#files)
-  - [Collections](#collections)
-  - [Open Calls](#open-calls)
-  - [Discussions & Comments](#discussions--comments)
-  - [Reactions](#reactions)
-  - [People (Biographical & Timeline)](#people-biographical--timeline)
-  - [Tags & References](#tags--references)
-  - [Notifications](#notifications)
-  - [Moderation](#moderation)
-  - [Partners & Donations](#partners--donations)
-  - [Logs & Audits](#logs--audits)
-  - [Search](#search)
+- [API Documentation](#api-documentation)
 - [Project Structure](#project-structure)
 - [Testing](#testing)
 - [Deployment](#deployment)
-- [License](#license)
 
 ---
 
 ## Overview
 
-This API serves as the backbone for **Trace of the Tides**, enabling community members to contribute stories, documents, and memories through open calls, discover curated collections of historical content, and participate in discussions around Palestinian heritage. The platform supports content moderation, biographical timelines, tagging systems, partner/donation management, and full audit logging.
+This API serves as the backbone for **Trace of the Tides**, enabling community members to contribute stories, documents, and memories through open calls, discover curated collections of historical content, participate in collaborative trips, manage magazines and book clubs, and engage in discussions around Palestinian heritage. The platform supports content moderation, TOTP-based 2FA, fine-grained role/permission management, real-time notifications via WebSockets, scheduled jobs, and full audit logging.
 
-**Base URL:** `http://localhost:4000/api`
+**Base URL (local):** `http://localhost:3001`
+
+**Interactive API Explorer (Swagger UI):** `http://localhost:3001/api/docs`
 
 ---
 
 ## Tech Stack
 
-- **Framework:** NestJS (Node.js / TypeScript)
-- **Database:** PostgreSQL with Prisma ORM
-- **Authentication:** JWT-based
-- **File Storage:** Multipart upload support (Supabase Storage / AWS S3)
+| Layer | Technology |
+|---|---|
+| Framework | NestJS 11 (Node.js / TypeScript) |
+| Database | PostgreSQL with Sequelize ORM (`sequelize-typescript`) |
+| Authentication | JWT Bearer — 1h access token, 30d refresh token, TOTP 2FA (`otplib`) |
+| Authorization | Role-based (`@Roles`) + fine-grained permission overrides (`@RequirePermission`) |
+| File Storage | Google Cloud Storage (GCS) via `@google-cloud/storage` |
+| Caching / Rate-limiting | Redis (`ioredis`) — refresh-token store, cooldown service, throttler |
+| Real-time | WebSockets via `socket.io` / `@nestjs/websockets` |
+| Email | Nodemailer (SMTP) |
+| Scheduled Jobs | `@nestjs/schedule` (cron tasks) |
+| Security | Helmet, global throttler (20 req/60 s per IP) |
+| Validation | `class-validator` + `class-transformer` (global pipe, `whitelist: true`) |
+| API Docs | `@nestjs/swagger` + Swagger UI at `/api/docs` |
 
 ---
 
@@ -53,230 +48,162 @@ This API serves as the backbone for **Trace of the Tides**, enabling community m
 
 ### Prerequisites
 
-- Node.js (v18+)
-- npm or yarn
-- Docker & Docker Compose (for PostgreSQL and pgAdmin)
+- Node.js v18+
+- npm
+- Docker & Docker Compose (for pgAdmin)
+- A running PostgreSQL instance (local or remote)
+- A Redis instance (local or remote)
 
 ### Installation
 
 ```bash
-$ npm install
+npm install
 ```
 
-### Start the Database
+### Start pgAdmin (optional)
 
 ```bash
-$ docker-compose up -d
+docker-compose up -d
 ```
 
-This spins up PostgreSQL and pgAdmin. pgAdmin will be accessible for database management.
+pgAdmin will be available at `http://localhost:8080` (default credentials: `admin@admin.com` / `admin1234`).
+
+> **Note:** The Compose file does not spin up a PostgreSQL container. Point `DATABASE_URL` at your own instance.
 
 ### Running the Application
 
 ```bash
-# development
-$ npm run start
+# development (watch mode)
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# debug mode
+npm run start:debug
 
-# production mode
-$ npm run start:prod
+# production
+npm run start:prod
 ```
+
+The server starts on **port 3001** by default.
 
 ---
 
 ## Environment Variables
 
-Create a `.env` file in the project root based on this example:
+Create a `.env` file in the project root. All required variables are listed below.
 
 ```env
-# Database Credentials (Match the 'db' service in Compose)
-POSTGRES_USER=your_username
-POSTGRES_PASSWORD=your_password
-POSTGRES_DB= your_database 
+# ── Database ────────────────────────────────────────────────
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:5432/DATABASE
 
-# The connection string for your app container
-# format: postgresql://[USER]:[PASSWORD]@[CONTAINER_NAME]:[PORT]/[DB_NAME]
-DATABASE_URL=postgresql://admin:your_password@postgres_db:5432/TTT
+# ── JWT ─────────────────────────────────────────────────────
+JWT_SECRET=your_jwt_secret_min_32_chars
+JWT_EXPIRES_IN=1h
+JWT_REFRESH_SECRET=your_refresh_jwt_secret
+JWT_REFRESH_EXPIRES_IN=30d
 
-# pgAdmin Credentials
-PGADMIN_DEFAULT_EMAIL=your_email@example.com
-PGADMIN_DEFAULT_PASSWORD=your_pgadmin_password
+# ── Redis ───────────────────────────────────────────────────
+REDIS_HOST=localhost
+REDIS_PORT=6379
+# REDIS_PASSWORD=your_redis_password   # if required
 
-# App Secrets
-JWT_SECRET=your_jwt_secret
+# ── Google Cloud Storage ────────────────────────────────────
+GCS_BUCKET_NAME=your-gcs-bucket
+GCS_PROJECT_ID=your-gcp-project-id
+# Path to service account key file, or use ADC (recommended for Cloud Run)
+GCS_KEY_FILE=./service-account.json
+
+# ── Email (SMTP) ─────────────────────────────────────────────
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=no-reply@example.com
+SMTP_PASS=your_smtp_password
+SMTP_FROM="Trace of the Tides <no-reply@example.com>"
+
+# ── App ──────────────────────────────────────────────────────
+PORT=3001
+FRONTEND_URL=http://localhost:3000
+NODE_ENV=development
 ```
 
 ---
 
-## API Reference
+## API Documentation
 
-### Authentication
+### Interactive Explorer
 
-| Method | Endpoint         | Description                    | Auth |
-|--------|------------------|--------------------------------|------|
-| POST   | `/auth/register` | Register a new user            | No   |
-| POST   | `/auth/login`    | Login and receive a JWT token  | No   |
+The full, live API reference — try every endpoint, inspect schemas, and authorize with a JWT — is available at:
 
-**Register body:** `full_name` (required), `email` (required), `password` (required), `phone_number` (optional)
+```
+GET /api/docs
+```
 
-**Login body:** `email` (required), `password` (required)
+### Comprehensive Reference
 
----
+A developer-friendly Markdown reference (auth flows, request/response examples, error shapes, all 44 resources) lives at:
 
-### Users
+```
+docs/api/API_REFERENCE.md
+```
 
-| Method | Endpoint             | Description                 | Auth  |
-|--------|----------------------|-----------------------------|-------|
-| GET    | `/users`             | Get all users               | Admin |
-| POST   | `/users`             | Create a new user           | Admin |
-| GET    | `/users/:id`         | Get user profile by ID      | Yes   |
-| GET    | `/users/:id/profile` | Get detailed user profile   | Yes   |
+### Quick Reference
 
----
+#### Authentication flow
 
-### Roles
+```
+POST /auth/signup            Register a new account
+POST /auth/login             Login → { accessToken, refreshToken }
+                             or → { requires_2fa: true, temp_token }  (if 2FA enabled)
+POST /auth/2fa/validate      Submit TOTP code to complete 2FA login
+POST /auth/refresh-token     Rotate access token using refresh token
+POST /auth/logout            Revoke refresh token
+GET  /auth/me                Current authenticated user + roles
+```
 
-| Method | Endpoint | Description           | Auth  |
-|--------|----------|-----------------------|-------|
-| GET    | `/roles` | List all roles        | Yes   |
-| POST   | `/roles` | Create a new role     | Admin |
+#### Key resource groups
 
----
+| Group | Base Path | Notes |
+|---|---|---|
+| Users | `/users` | Profile, avatar, follow system |
+| Roles & Permissions | `/roles` | Assign roles, per-user permission overrides |
+| Articles | `/articles` | Block-based content, contributors, scheduling |
+| Collections | `/collections` | Curated sets of content |
+| Open Calls | `/open calls` | Community submission drives with file uploads |
+| Contributions | `/contributions` | Guest-friendly submissions (JWT optional) |
+| Trips | `/trips` | Itineraries with registration, waitlist, applications |
+| Collectives | `/collectives` | Groups / phases / people |
+| Magazines | `/magazine`, `/magazine-issue` | Issues, book clubs, newsletter subscribers |
+| Discussions & Comments | `/discussions`, `/comments` | Threaded replies, reactions |
+| Boards | `/boards` | Whiteboard templates, pages, elements, connectors |
+| Knowledge | `/knowledge` | Books, articles, adventures, locations |
+| CMS | `/cms` | Pages, sections, site settings |
+| Messaging | `/messaging` | Conversations, broadcasts, templates |
+| Finance | `/finance`, `/donations` | Payouts, fraud flags, invoices, exports |
+| Files & Uploads | `/files`, `/upload` | GCS-backed signed URLs, upload quotas |
+| Admin | `/dashboard`, `/analytics`, `/moderation`, `/audit-trails`, `/logs` | |
+| Tasks | `/tasks` | Task management |
+| Partners | `/partners` | Partner management |
 
-### Contributions
+All response bodies follow the standard envelope:
 
-| Method | Endpoint                    | Description                        | Auth  |
-|--------|-----------------------------|------------------------------------|-------|
-| GET    | `/contributions`            | Get all contributions              | Yes   |
-| POST   | `/contributions`            | Submit a contribution              | Yes   |
-| GET    | `/contributions/:id`        | Get a specific contribution        | Yes   |
-| PATCH  | `/contributions/:id`        | Update contribution details        | Yes   |
-| DELETE | `/contributions/:id`        | Delete a contribution              | Yes   |
-| PATCH  | `/contributions/:id/status` | Update contribution status         | Admin |
+```json
+{
+  "status": 200,
+  "results": 1,
+  "data": { }
+}
+```
 
-**Create body:** `title` (required), `description` (required), `type_id` (required), `user_id` (required), `collection_id` (optional)
+All errors follow:
 
----
-
-### Files
-
-| Method | Endpoint | Description                          | Auth |
-|--------|----------|--------------------------------------|------|
-| POST   | `/files` | Upload a file linked to contribution | Yes  |
-
-Accepts `multipart/form-data` with `file` (required) and `contribution_id` (optional).
-
----
-
-### Collections
-
-| Method | Endpoint                          | Description                              | Auth  |
-|--------|-----------------------------------|------------------------------------------|-------|
-| GET    | `/collections`                    | Get all collections                      | Yes   |
-| POST   | `/collections`                    | Create a new collection                  | Admin |
-| GET    | `/collections/:id/contributions`  | List contributions under a collection    | Yes   |
-
----
-
-### Open Calls
-
-| Method | Endpoint                          | Description                              | Auth  |
-|--------|-----------------------------------|------------------------------------------|-------|
-| GET    | `/open-calls`                     | List all open calls                      | Yes   |
-| POST   | `/open-calls`                     | Create a new open call                   | Admin |
-| POST   | `/open-calls/:id/join`            | Join an open call                        | Yes   |
-| POST   | `/open-calls/:id/contributions`   | Submit a contribution under an open call | Yes   |
-
----
-
-### Discussions & Comments
-
-| Method | Endpoint                        | Description                    | Auth |
-|--------|---------------------------------|--------------------------------|------|
-| GET    | `/discussions`                  | List all discussions           | Yes  |
-| POST   | `/discussions`                  | Create a new discussion        | Yes  |
-| GET    | `/discussions/:id/comments`     | Get comments for a discussion  | Yes  |
-| POST   | `/discussions/:id/comments`     | Add a comment to a discussion  | Yes  |
-| POST   | `/comments/:id/replies`         | Reply to a comment             | Yes  |
-
----
-
-### Reactions
-
-| Method | Endpoint     | Description                          | Auth |
-|--------|--------------|--------------------------------------|------|
-| GET    | `/reactions`  | List all reactions                   | Yes  |
-| POST   | `/reactions`  | React to a comment (like, dislike, love) | Yes  |
-
----
-
-### People (Biographical & Timeline)
-
-| Method | Endpoint               | Description                            | Auth  |
-|--------|------------------------|----------------------------------------|-------|
-| GET    | `/people`              | List all person profiles               | Yes   |
-| POST   | `/people`              | Create a new person profile            | Admin |
-| GET    | `/people/:id/timeline` | Get life events/timeline for a person  | Yes   |
-
----
-
-### Tags & References
-
-| Method | Endpoint      | Description                               | Auth  |
-|--------|---------------|-------------------------------------------|-------|
-| GET    | `/tags`       | List all tags                             | Yes   |
-| POST   | `/tags`       | Create a new tag                          | Admin |
-| POST   | `/references` | Add a reference linked to a contribution  | Yes   |
-
----
-
-### Notifications
-
-| Method | Endpoint          | Description                | Auth |
-|--------|-------------------|----------------------------|------|
-| GET    | `/notifications`  | List user notifications    | Yes  |
-| PATCH  | `/notifications`  | Mark notification as read  | Yes  |
-
----
-
-### Moderation
-
-| Method | Endpoint           | Description                            | Auth  |
-|--------|--------------------|----------------------------------------|-------|
-| GET    | `/moderation/logs` | Get moderation logs                    | Admin |
-| POST   | `/moderation/logs` | Add moderation action for contribution | Admin |
-
----
-
-### Partners & Donations
-
-| Method | Endpoint     | Description              | Auth  |
-|--------|--------------|--------------------------|-------|
-| GET    | `/partners`  | List all partners        | Yes   |
-| POST   | `/partners`  | Create a new partner     | Admin |
-| GET    | `/donations` | List all donations       | Yes   |
-| POST   | `/donations` | Record a new donation    | Yes   |
-
----
-
-### Logs & Audits
-
-| Method | Endpoint        | Description                    | Auth  |
-|--------|-----------------|--------------------------------|-------|
-| GET    | `/logs`         | Retrieve system activity logs  | Admin |
-| GET    | `/audit-trails` | Retrieve audit trail entries   | Admin |
-
----
-
-### Search
-
-| Method | Endpoint  | Description                                         | Auth |
-|--------|-----------|-----------------------------------------------------|------|
-| GET    | `/search` | Search across collections, contributions, and people | Yes  |
-
-**Query params:** `keyword` (search term), `type` (`collection`, `contribution`, `person`)
+```json
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Validation failed",
+  "timestamp": "2025-01-01T00:00:00.000Z",
+  "path": "/auth/login"
+}
+```
 
 ---
 
@@ -284,28 +211,78 @@ Accepts `multipart/form-data` with `file` (required) and `contribution_id` (opti
 
 ```
 src/
-├── auth/              # Authentication module (register, login, JWT)
-├── users/             # User management
-├── roles/             # Role-based access control
-├── contributions/     # Content contributions CRUD
-├── files/             # File upload handling
-├── collections/       # Curated content collections
-├── open-calls/        # Community open calls
-├── discussions/       # Discussion threads
-├── comments/          # Comment & reply system
-├── reactions/         # Reaction system (like, dislike, love)
-├── people/            # Biographical profiles & timelines
-├── tags/              # Tagging system
-├── references/        # Contribution references
-├── notifications/     # User notification system
-├── moderation/        # Content moderation
-├── partners/          # Partner management
-├── donations/         # Donation tracking
-├── logs/              # System activity logs
-├── audit-trails/      # Audit trail entries
-├── search/            # Cross-entity search
-├── common/            # Shared guards, decorators, pipes
-└── main.ts            # Application entry point
+├── auth/                  # JWT auth, 2FA (TOTP), refresh tokens, email verification
+├── users/                 # User profiles, avatar, account settings
+├── roles/                 # Role assignment, fine-grained permission overrides
+├── follows/               # Follow / unfollow between users
+│
+├── articles/              # Block-based articles, contributors, scheduling
+├── collections/           # Curated content collections
+├── tags/                  # Tagging system
+├── writer-profile/        # Writer public profiles
+│
+├── magazine/              # Magazine management
+├── magazine-issue/        # Magazine issues and pledges
+├── book-club/             # Book club features
+├── newsletter-subscriber/ # Newsletter subscription
+│
+├── open call/             # Community open calls with file uploads
+├── contributions/         # User and guest contributions
+├── issue-pledge/          # Pledges on magazine issues
+│
+├── trips/                 # Trip itineraries, registration, waitlist
+│
+├── collectives/           # Collectives and group management
+├── phases/                # Collective phases
+├── groups/                # Sub-groups
+├── person/                # Biographical profiles and timelines
+├── references/            # Source references
+│
+├── comments/              # Comment and reply system
+├── reactions/             # Reactions (emoji-based)
+├── discussions/           # Discussion threads
+├── notifications/         # User notification system (WebSocket + DB)
+│
+├── boards/                # Whiteboard templates, pages, elements
+│
+├── knowledge/             # Books, articles, adventures, locations
+│
+├── cms/                   # CMS pages and sections
+├── system-settings/       # Global site settings
+│
+├── author-dashboard/      # Author analytics and settings
+├── tasks/                 # Task management
+│
+├── messaging/             # Conversations, broadcasts, templates
+│
+├── finance/               # Finance summary, payouts, invoices, exports
+├── donations/             # Donation tracking
+│
+├── files/                 # File records (GCS-backed)
+├── upload/                # Upload endpoint with quota guard
+├── storage/               # StorageService (GCS)
+│
+├── dashboard/             # Admin dashboard stats
+├── analytics/             # Analytics snapshots and reports
+├── moderation/            # Content moderation queue and actions
+├── audit-trails/          # Audit trail entries
+├── logs/                  # System activity logs
+├── engagements/           # Admin engagement tracking
+│
+├── partners/              # Partner organisations
+│
+├── common/                # Shared guards, interceptors, filters, decorators, pipes
+│   ├── constants/         # Permissions enum
+│   ├── filters/           # AllExceptionsFilter
+│   ├── guards/            # ThrottlerGuard, UploadQuotaGuard, PermissionsGuard
+│   └── interceptors/      # ResponseInterceptor
+├── enums/                 # Shared enums (Role, etc.)
+├── email/                 # Email service (Nodemailer)
+├── database/              # DB bootstrap / sync service
+├── seeders/               # Database seed scripts
+│
+├── app.module.ts          # Root module — wires all 44 feature modules
+└── main.ts                # Bootstrap: global pipes, Swagger, Helmet, CORS, port 3001
 ```
 
 ---
@@ -314,25 +291,38 @@ src/
 
 ```bash
 # unit tests
-$ npm run test
+npm run test
+
+# unit tests in watch mode
+npm run test:watch
 
 # e2e tests
-$ npm run test:e2e
+npm run test:e2e
 
-# test coverage
-$ npm run test:cov
+# coverage report
+npm run test:cov
 ```
 
 ---
 
 ## Deployment
 
+The repository includes deployment configurations for multiple targets:
+
+| File | Target |
+|---|---|
+| `Dockerfile` | Generic Docker container |
+| `docker-compose.yml` | Local pgAdmin |
+| `cloudbuild.yaml` | Google Cloud Build |
+| `render.yaml` | Render.com |
+| `DEPLOYMENT.md` | Step-by-step deployment guide |
+
 ```bash
-# build for production
-$ npm run build
+# build
+npm run build
 
 # start production server
-$ npm run start:prod
+npm run start:prod
 ```
 
 ---
